@@ -42,7 +42,7 @@ import { toArabicDigits } from "@/lib/arabic-digits";
 import { cn } from "@/lib/utils";
 import { pdfDocument, openPdfDocument } from "@/lib/pdf-doc";
 
-type Tab = "active" | "overdue" | "settled" | "all";
+type Tab = "active" | "overdue" | "settled" | "all" | "returns";
 
 function isoToDDMMYYYY(iso: string): string {
   if (!iso) return "";
@@ -81,29 +81,58 @@ function InvoicesPage() {
       else if (daysLate(i) > 0) { overdue++; active++; }
       else active++;
     }
-    return { active, overdue, settled, all: data.invoices.length };
-  }, [data.invoices]);
+    return { active, overdue, settled, all: data.invoices.length, returns: data.returns.length };
+  }, [data.invoices, data.returns]);
 
   const stats = useMemo(() => {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-    let activeSalesTotal = 0;
-    let monthCollections = 0;
+    
+    let totalPaid = 0;
+    let totalSales = 0;
+    let invoiceCount = data.invoices.length;
     let overdueCount = 0;
+    let monthCollections = 0;
+    let activeSalesTotal = 0;
+    let monthSales = 0;
+
     for (const i of data.invoices) {
+      totalSales += i.total;
+      totalPaid += i.paid;
       const remaining = i.total - i.paid;
       if (remaining > 0) activeSalesTotal += remaining;
       if (remaining > 0 && daysLate(i) > 0) overdueCount++;
+      
+      const invDate = new Date(i.createdAt);
+      if (invDate >= monthStart && invDate <= monthEnd) {
+        monthSales += i.total;
+      }
     }
+
     for (const p of data.payments) {
       const d = new Date(p.paidAt);
       if (d >= monthStart && d <= monthEnd) monthCollections += p.amount;
     }
-    return { activeSalesTotal, monthCollections, overdueCount };
+
+    const collectionRate = totalSales > 0 ? (totalPaid / totalSales) * 100 : 0;
+    const avgInvoiceValue = invoiceCount > 0 ? totalSales / invoiceCount : 0;
+
+    return { 
+      totalPaid, 
+      totalSales, 
+      invoiceCount, 
+      overdueCount, 
+      monthCollections, 
+      activeSalesTotal, 
+      collectionRate, 
+      avgInvoiceValue, 
+      monthSales 
+    };
   }, [data.invoices, data.payments]);
 
   const list = useMemo(() => {
+    if (tab === "returns") return []; // Returns are handled in a separate view
     const fromTs = dateFrom ? new Date(dateFrom.getFullYear(), dateFrom.getMonth(), dateFrom.getDate()).getTime() : null;
     const toTs = dateTo ? new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 23, 59, 59).getTime() : null;
     return data.invoices
@@ -211,14 +240,22 @@ function InvoicesPage() {
         }
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-        <StatCard icon={<TrendingUp className="w-5 h-5" />} label="إجمالي المبيعات النشطة" value={`${fmt(stats.activeSalesTotal)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
-        <StatCard icon={<CalendarDays className="w-5 h-5" />} label="تحصيلات الشهر الحالي" value={`${fmt(stats.monthCollections)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
+        <StatCard icon={<Wallet className="w-5 h-5" />} label="إجمالي المسدد" value={`${fmt(stats.totalPaid)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
+        <StatCard icon={<TrendingUp className="w-5 h-5" />} label="إجمالي المبيعات" value={`${fmt(stats.totalSales)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
+        <StatCard icon={<FileText className="w-5 h-5" />} label="عدد الفواتير" value={String(stats.invoiceCount)} tone="primary" valueClassName={blurCls} />
+        
         <StatCard icon={<AlertCircle className="w-5 h-5" />} label="الفواتير المتعثرة" value={String(stats.overdueCount)} tone="danger" trend="down" valueClassName={blurCls} />
+        <StatCard icon={<CalendarDays className="w-5 h-5" />} label="تحصيلات الشهر الحالي" value={`${fmt(stats.monthCollections)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
+        <StatCard icon={<Wallet className="w-5 h-5" />} label="إجمالي المبيعات النشطة" value={`${fmt(stats.activeSalesTotal)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
+
+        <StatCard icon={<TrendingUp className="w-5 h-5" />} label="نسبة التحصيل" value={`%${stats.collectionRate.toFixed(1)}`} tone="success" trend="up" valueClassName={blurCls} />
+        <StatCard icon={<FileText className="w-5 h-5" />} label="متوسط قيمة الفاتورة" value={`${fmt(stats.avgInvoiceValue)} ج.م`} tone="primary" valueClassName={blurCls} />
+        <StatCard icon={<CalendarDays className="w-5 h-5" />} label="مبيعات الشهر الحالي" value={`${fmt(stats.monthSales)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="mb-4">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full h-auto">
+        <TabsList className="grid grid-cols-3 sm:grid-cols-5 w-full h-auto">
           <TabsTrigger value="active" className="gap-1.5 data-[state=active]:bg-primary/15 data-[state=active]:text-primary">
             فواتير نشطة <Badge variant="secondary" className="rounded-full">{counts.active}</Badge>
           </TabsTrigger>
@@ -230,6 +267,9 @@ function InvoicesPage() {
           </TabsTrigger>
           <TabsTrigger value="all" className="gap-1.5">
             الكل <Badge variant="secondary" className="rounded-full">{counts.all}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="returns" className="gap-1.5 data-[state=active]:bg-warning/15 data-[state=active]:text-warning">
+            المرتجعات <Badge variant="secondary" className="rounded-full">{counts.returns}</Badge>
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -291,19 +331,21 @@ function InvoicesPage() {
           </DropdownMenuContent>
         </DropdownMenu>
         <div className="md:ms-auto text-xs text-muted-foreground">
-          {list.length} فاتورة
+          {tab === "returns" ? data.returns.length : list.length} {tab === "returns" ? "مرتجع" : "فاتورة"}
         </div>
       </div>
 
       <Reveal delay={140}>
         <div className="flex flex-col gap-3">
-          {list.length === 0 ? (
+          {tab === "returns" ? (
+            <ReturnsView data={data} blurCls={blurCls} />
+          ) : list.length === 0 ? (
             <div className="bezel-shell">
               <div className="bezel-core px-6 py-10">
                 <EmptyState
                   icon={Receipt}
-                  title="لا توجد فواتير."
-                  hint="سجّل أول فاتورة وابدأ تتبع التحصيلات."
+                  title={tab === "active" ? "لا توجد فواتير نشطة." : tab === "overdue" ? "لا توجد فواتير متأخرة." : "لا توجد فواتير."}
+                  hint={tab === "active" ? "كل الفواتير مسددة بالكامل." : tab === "overdue" ? "لا توجد مديونيات متأخرة حالياً." : "سجّل أول فاتورة وابدأ تتبع التحصيلات."}
                 />
               </div>
             </div>
@@ -332,20 +374,20 @@ function InvoicesPage() {
                       )}>
                         <CreditCard className="h-5 w-5" />
                       </div>
-                      <div className="min-w-0">
-                        <div className="font-mono text-sm font-bold text-muted-foreground">#{invoiceNumber(data.invoices, inv.id, shopSettings.invoicePrefix)}</div>
+                      <div className="min-w-0 text-right">
+                        <div className="font-mono text-xs font-bold text-muted-foreground">#{invoiceNumber(data.invoices, inv.id, shopSettings.invoicePrefix)}</div>
                         <div className="font-bold truncate">{cust?.name ?? "عميل محذوف"}</div>
                       </div>
                     </div>
 
                     {/* المبالغ */}
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-4">
-                        <div className="flex flex-col">
+                    <div className="min-w-0 w-full md:w-auto">
+                      <div className="flex items-center justify-between md:justify-start gap-4">
+                        <div className="flex flex-col text-right">
                           <div className="text-[10px] text-muted-foreground mb-0.5">الإجمالي</div>
                           <div className={cn("text-numeric font-bold", privacy && "privacy-blur")}>{fmt(inv.total)}</div>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col text-right">
                           <div className="text-[10px] text-muted-foreground mb-0.5">المتبقي</div>
                           <div className={cn("text-numeric text-xl font-extrabold", remaining > 0 ? "text-danger" : "text-success", privacy && "privacy-blur")}>{fmt(remaining)}</div>
                         </div>
@@ -377,13 +419,16 @@ function InvoicesPage() {
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => toast.success("تم إرسال الفاتورة للطباعة")}>
+                            <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => printReceipt(inv, cust?.name ?? "—", cust?.phone ?? "—", data.invoices)}>
                               <Printer className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>طباعة</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+                      {remaining > 0 && (
+                        <PaymentDialog invoiceId={inv.id} max={remaining} />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -412,25 +457,6 @@ function InvoicesPage() {
         title="مسح باركود — بحث سريع"
       />
 
-      <HistoryDialog customer={historyFor} onClose={() => setHistoryFor(null)} invoices={data.invoices} payments={data.payments} items={data.invoiceItems} blurCls={blurCls} onEditInvoice={(i) => { setHistoryFor(null); setEditInv(i); }} />
-      <ViewInvoiceDialog inv={viewInv} customer={viewInv ? findCustomer(viewInv.customerId) ?? null : null} onClose={() => setViewInv(null)} />
-      <EditInvoiceDialog inv={editInv} onClose={() => setEditInv(null)} />
-      <ReminderDialog inv={reminderInv} customer={reminderInv ? findCustomer(reminderInv.customerId) ?? null : null} onClose={() => setReminderInv(null)} />
-      <BarcodeScanner
-        open={searchScanOpen}
-        onClose={() => setSearchScanOpen(false)}
-        onDetected={(code) => {
-          setSearchScanOpen(false);
-          const found = findStockByBarcode(data.stockItems, code);
-          if (found) {
-            setQ(found.name);
-            toast.success(`بحث عن: ${found.name}`);
-          } else {
-            toast.error(`لم يتم العثور على منتج بالكود: ${code}`);
-          }
-        }}
-        title="مسح باركود — بحث سريع"
-      />
     </>
   );
 }
@@ -1724,4 +1750,159 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
     </Dialog>
   );
 }
+
+function ReturnsView({ data, blurCls }: { data: any, blurCls: string }) {
+  const [returnType, setReturnType] = useState<"sale" | "supplier">("sale");
+  const [invoiceId, setInvoiceId] = useState("");
+  const [reason, setReason] = useState("");
+  const [items, setItems] = useState<Array<{ name: string; unitPrice: number; quantity: number }>>([]);
+  const [newItem, setNewItem] = useState({ name: "", unitPrice: 0, quantity: 1 });
+
+  const handleAddReturn = async () => {
+    if (items.length === 0) return;
+    const total = items.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0);
+    await db.addReturn({
+      invoiceId: invoiceId || null,
+      type: returnType,
+      totalAmount: total,
+      reason,
+      notes: null,
+      items
+    });
+    setInvoiceId("");
+    setReason("");
+    setItems([]);
+    toast.success("تم تسجيل المرتجع بنجاح");
+  };
+
+  const addItem = () => {
+    if (!newItem.name || newItem.quantity <= 0) return;
+    setItems([...items, newItem]);
+    setNewItem({ name: "", unitPrice: 0, quantity: 1 });
+  };
+
+  return (
+    <div className="space-y-6">
+      <BezelCard className="p-6">
+        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-right">
+          <Receipt className="w-5 h-5 text-primary" />
+          تسجيل مرتجع جديد
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-right">
+          <div className="space-y-2">
+            <Label>نوع المرتجع</Label>
+            <div className="flex gap-2">
+              <Button 
+                variant={returnType === "sale" ? "default" : "outline"} 
+                className="flex-1"
+                onClick={() => setReturnType("sale")}
+              >
+                مرتجع بيع
+              </Button>
+              <Button 
+                variant={returnType === "supplier" ? "default" : "outline"} 
+                className="flex-1"
+                onClick={() => setReturnType("supplier")}
+              >
+                مرتجع مورد
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>رقم الفاتورة (اختياري)</Label>
+            <Input value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} placeholder="مثال: #INV-001" className="text-right" />
+          </div>
+        </div>
+
+        <div className="space-y-4 mb-4 border-t pt-4 text-right">
+          <Label className="font-bold">إضافة أصناف المرتجع</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+            <div className="sm:col-span-2">
+              <Input placeholder="اسم الصنف" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} className="text-right" />
+            </div>
+            <Input type="number" placeholder="السعر" value={newItem.unitPrice || ""} onChange={(e) => setNewItem({ ...newItem, unitPrice: Number(e.target.value) })} className="text-right" />
+            <div className="flex gap-2">
+              <Input type="number" placeholder="الكمية" value={newItem.quantity || ""} onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })} className="text-right" />
+              <Button onClick={addItem} size="icon" className="shrink-0"><Plus className="w-4 h-4" /></Button>
+            </div>
+          </div>
+          
+          {items.length > 0 && (
+            <div className="bg-muted/50 rounded-xl p-3 space-y-2 text-right">
+              {items.map((it, idx) => (
+                <div key={idx} className="flex justify-between items-center text-sm border-b border-white/5 pb-1">
+                  <span>{it.name} ({it.quantity} × {fmt(it.unitPrice)})</span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold">{fmt(it.unitPrice * it.quantity)} ج.م</span>
+                    <button onClick={() => setItems(items.filter((_, i) => i !== idx))} className="text-danger hover:scale-110 transition-transform"><X className="w-3 h-3" /></button>
+                  </div>
+                </div>
+              ))}
+              <div className="flex justify-between items-center font-bold pt-2 border-t border-white/10">
+                <span>الإجمالي</span>
+                <span>{fmt(items.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0))} ج.م</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2 mb-6 text-right">
+          <Label>السبب / ملاحظات</Label>
+          <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="مثال: تلف في المنتج..." className="text-right" />
+        </div>
+
+        <Button className="w-full gap-2 py-6 text-lg" disabled={items.length === 0} onClick={handleAddReturn}>
+          <Check className="w-5 h-5" /> تسجيل المرتجع
+        </Button>
+      </BezelCard>
+
+      <div className="space-y-3 text-right">
+        <h3 className="text-lg font-bold flex items-center gap-2">
+          <History className="w-5 h-5 text-muted-foreground" />
+          سجل المرتجعات
+        </h3>
+        {data.returns.length === 0 ? (
+          <BezelCard className="p-10 text-center">
+             <EmptyState icon={History} title="لا توجد مرتجعات مسجلة بعد." hint="سيتم إدراج أي عمليات مرتجعة هنا للرجوع إليها." />
+          </BezelCard>
+        ) : (
+          data.returns.map((r: any) => (
+            <BezelCard key={r.id} className="p-4 group">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className={cn("p-2 rounded-xl", r.type === "sale" ? "bg-warning/10 text-warning" : "bg-primary/10 text-primary")}>
+                    {r.type === "sale" ? <TrendingUp className="w-5 h-5" /> : <Package className="w-5 h-5" />}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold">{r.type === "sale" ? "مرتجع مبيعات" : "مرتجع موردين"}</span>
+                      {r.invoiceId && <Badge variant="secondary" className="text-[10px] font-mono">{r.invoiceId}</Badge>}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5" dir="ltr">{format(new Date(r.createdAt), "yyyy/MM/dd - hh:mm a")}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <div className="text-[10px] text-muted-foreground uppercase">القيمة الإجمالية</div>
+                    <div className={cn("text-lg font-bold", blurCls)}>{fmt(r.totalAmount)} ج.م</div>
+                  </div>
+                  <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => db.removeReturn(r.id)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              {r.reason && (
+                <div className="mt-3 text-sm text-muted-foreground bg-white/5 p-2 rounded-lg italic">
+                  {r.reason}
+                </div>
+              )}
+            </BezelCard>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 

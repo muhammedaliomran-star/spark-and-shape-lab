@@ -97,6 +97,25 @@ export interface SupplierPayment {
   paidAt: string;
 }
 
+export interface ReturnRecord {
+  id: string;
+  invoiceId: string | null;
+  type: "sale" | "supplier";
+  totalAmount: number;
+  reason: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface ReturnItem {
+  id: string;
+  returnId: string;
+  name: string;
+  unitPrice: number;
+  quantity: number;
+  createdAt: string;
+}
+
 export type WarehouseSeason = "summer" | "winter" | "all";
 
 export interface WarehouseItem {
@@ -149,6 +168,8 @@ interface DBState {
   supplierPayments: SupplierPayment[];
   stockItems: StockItem[];
   warehouseItems: WarehouseItem[];
+  returns: ReturnRecord[];
+  returnItems: ReturnItem[];
   loading: boolean;
   refresh: () => Promise<void>;
 }
@@ -159,9 +180,12 @@ let cache: {
   suppliers: Supplier[]; purchases: Purchase[]; purchaseItems: PurchaseItem[]; supplierPayments: SupplierPayment[];
   stockItems: StockItem[];
   warehouseItems: WarehouseItem[];
+  returns: ReturnRecord[];
+  returnItems: ReturnItem[];
 } = {
   customers: [], invoices: [], payments: [], expenses: [], invoiceItems: [],
   suppliers: [], purchases: [], purchaseItems: [], supplierPayments: [], stockItems: [], warehouseItems: [],
+  returns: [], returnItems: [],
 };
 let loading = true;
 let loaded = false;
@@ -173,12 +197,12 @@ async function fetchAll() {
   notify();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    cache = { customers: [], invoices: [], payments: [], expenses: [], invoiceItems: [], suppliers: [], purchases: [], purchaseItems: [], supplierPayments: [], stockItems: [], warehouseItems: [] };
+    cache = { customers: [], invoices: [], payments: [], expenses: [], invoiceItems: [], suppliers: [], purchases: [], purchaseItems: [], supplierPayments: [], stockItems: [], warehouseItems: [], returns: [], returnItems: [] };
     loading = false;
     notify();
     return;
   }
-  const [c, i, p, e, ii, s, pu, pi, sp, st, wh] = await Promise.all([
+  const [c, i, p, e, ii, s, pu, pi, sp, st, wh, rr, ri] = await Promise.all([
     supabase.from("customers").select("*").order("name"),
     supabase.from("invoices").select("*").order("created_at", { ascending: false }),
     supabase.from("payments").select("*"),
@@ -190,6 +214,8 @@ async function fetchAll() {
     supabase.from("supplier_payments").select("*"),
     supabase.from("stock_items").select("*").order("name"),
     supabase.from("warehouse_items").select("*").order("name"),
+    supabase.from("return_records").select("*").order("created_at", { ascending: false }),
+    supabase.from("return_items").select("*").order("created_at"),
   ]);
   cache = {
     customers: (c.data ?? []).map((r: any) => ({
@@ -253,6 +279,14 @@ async function fetchAll() {
       category: r.category ?? "other",
       notes: r.notes ?? null,
       createdAt: r.created_at, updatedAt: r.updated_at,
+    })),
+    returns: (rr.data ?? []).map((r: any) => ({
+      id: r.id, invoiceId: r.invoice_id, type: r.type as "sale" | "supplier",
+      totalAmount: Number(r.total_amount), reason: r.reason, notes: r.notes, createdAt: r.created_at,
+    })),
+    returnItems: (ri.data ?? []).map((r: any) => ({
+      id: r.id, returnId: r.return_id, name: r.name,
+      unitPrice: Number(r.unit_price), quantity: Number(r.quantity), createdAt: r.created_at,
     })),
   };
   loading = false;
@@ -780,6 +814,54 @@ export const db = {
   },
   async removeWarehouseItem(id: string) {
     const { error } = await supabase.from("warehouse_items").delete().eq("id", id);
+    if (error) throw error;
+    await fetchAll();
+  },
+
+  async addReturn(r: {
+    invoiceId: string | null;
+    type: "sale" | "supplier";
+    totalAmount: number;
+    reason: string | null;
+    notes: string | null;
+    items: Array<{ name: string; unitPrice: number; quantity: number }>;
+  }) {
+    const user_id = await uid();
+    const { data, error } = await supabase.from("return_records").insert({
+      user_id,
+      invoice_id: r.invoiceId,
+      type: r.type,
+      total_amount: r.totalAmount,
+      reason: r.reason,
+      notes: r.notes,
+    }).select("id").single();
+    
+    if (error) throw error;
+    
+    const returnId = data?.id;
+    if (returnId && r.items.length > 0) {
+      const rows = r.items.map((it) => ({
+        user_id,
+        return_id: returnId,
+        name: it.name,
+        unit_price: it.unitPrice,
+        quantity: it.quantity,
+      }));
+      const { error: e2 } = await supabase.from("return_items").insert(rows);
+      if (e2) throw e2;
+      
+      // If it's a sale return, add back to stock
+      if (r.type === "sale") {
+        await restoreStockByName(r.items);
+      }
+    }
+    await fetchAll();
+  },
+  async removeReturn(id: string) {
+    // If it's a sale return, we should ideally deduct from stock again, 
+    // but the app usually treats deletion as "undoing" the entry.
+    // For simplicity and safety against negative stock, we just delete.
+    const { error } = await supabase.from("return_records").delete().eq("id", id);
     if (error) throw error;
     await fetchAll();
   },
