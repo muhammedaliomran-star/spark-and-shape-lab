@@ -1307,15 +1307,32 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="shrink-0 border-b border-foreground/10 bg-background/80 px-6 py-5 backdrop-blur-xl">
-          <span className="mr-auto w-max rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">فاتورة جديدة</span>
-          <DialogTitle className="text-right text-2xl font-extrabold tracking-tight">إنشاء فاتورة جديدة</DialogTitle>
-          <DialogDescription className="text-right">
+      <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl border-0 bg-background/95 backdrop-blur-2xl shadow-2xl">
+        <DialogHeader className="shrink-0 border-b border-white/5 bg-white/[0.02] px-6 py-6 backdrop-blur-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none">
+            <Receipt className="w-24 h-24 text-primary rotate-12" />
+          </div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">فاتورة جديدة</span>
+          </div>
+          <DialogTitle className="text-right text-3xl font-black tracking-tight mb-1">إنشاء فاتورة جديدة</DialogTitle>
+          <DialogDescription className="text-right text-muted-foreground/80 font-medium">
             {isCashMode ? "بيع فوري — سداد كامل المبلغ الآن." : "بيع بالتقسيط — مقدم ودفعات شهرية."}
           </DialogDescription>
         </DialogHeader>
-        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6 pb-8 text-right">
+        <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-6 py-8 pb-10 text-right custom-scrollbar">
+          {/* Header Stats Rows */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-[1.5rem] border border-white/5 bg-white/[0.03] p-4 text-right">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1 block">كود الفاتورة</Label>
+              <div className="text-xl font-mono font-bold tracking-wider">#0002</div>
+            </div>
+            <div className="rounded-[1.5rem] border border-white/5 bg-white/[0.03] p-4 text-right">
+              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1 block">حالة الفاتورة</Label>
+              <div className="text-xl font-bold text-warning">غير مكتملة</div>
+            </div>
+          </div>
+
           <div className="rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
            <div className="space-y-2 rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
             <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">العميل</Label>
@@ -1399,15 +1416,15 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
                       }}
                       aria-pressed={active}
                       className={cn(
-                        "rounded-[1.1rem] px-4 py-3 text-center transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]",
+                        "relative flex flex-col items-center justify-center rounded-2xl p-4 transition-all duration-300",
                         active
-                          ? "bg-primary/15 text-primary shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)] ring-1 ring-primary/40"
-                          : "text-muted-foreground hover:bg-foreground/[0.04]",
+                          ? "bg-primary/20 text-primary ring-2 ring-primary/50 shadow-lg shadow-primary/10"
+                          : "bg-white/[0.03] text-muted-foreground hover:bg-white/[0.06]",
                         locked && "cursor-not-allowed opacity-40 hover:bg-transparent",
                       )}
                     >
-                      <span className="block text-sm font-extrabold">{opt.label}</span>
-                      <span className="mt-0.5 block text-[11px] opacity-70">{locked ? "غير متاح لعميل فوري" : opt.hint}</span>
+                      <span className="text-lg font-black mb-1">{opt.label}</span>
+                      <span className="text-[10px] font-medium opacity-60 leading-tight">{locked ? "غير متاح لعميل فوري" : opt.hint}</span>
                     </button>
                   );
                 })}
@@ -1439,25 +1456,22 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
               {products.map((p, idx) => (
                 <motion.div
                   key={p.id}
-                  initial={{ opacity: 0, height: 0, y: -8, filter: "blur(4px)" }}
-                  animate={{ opacity: 1, height: "auto", y: 0, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, height: 0, y: -8, filter: "blur(4px)" }}
-                  transition={{ duration: 0.45, delay: Math.min(idx, 4) * 0.05, ease: [0.32, 0.72, 0, 1] }}
-                  style={{ overflow: "hidden" }}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="relative"
                 >
-                  <div className="mb-3 rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.03] p-1.5 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-primary/25">
-                   <div className="space-y-2 rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
-                    <div className="flex items-center justify-between">
+                  <div className="mb-4 rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-4 transition-all hover:border-primary/20">
+                    <div className="flex items-center justify-between mb-4">
                       <Button
                         type="button" size="icon" variant="ghost"
                         onClick={() => removeProduct(p.id)}
                         disabled={products.length === 1}
-                        className="h-7 w-7 text-muted-foreground hover:text-danger hover:bg-danger/10"
-                        title="حذف المنتج"
+                        className="h-8 w-8 rounded-xl text-muted-foreground hover:text-danger hover:bg-danger/10"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
-                      <span className="text-xs text-muted-foreground font-bold">منتج #{idx + 1}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">منتج #{idx + 1}</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div className="sm:col-span-2">
@@ -1499,9 +1513,10 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
                         <Input type="number" value={p.price} onChange={(e) => updateProduct(p.id, { price: e.target.value })} className={blurCls} />
                       </div>
                     </div>
-                   </div>
                   </div>
                 </motion.div>
+              ))}
+            </AnimatePresence>
               ))}
             </AnimatePresence>
           </div>
@@ -1574,15 +1589,20 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
                     <div className="space-y-2">
                       <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">المقدم (ج.م)</Label>
                       <Input type="number" value={down} onChange={(e) => setDown(e.target.value)} className={blurCls} />
-                      <div className="flex flex-wrap gap-1.5">
-                        {[0, 10, 25, 50].map((pct) => (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {([
+                          { pct: 0, label: "بدون مقدم" },
+                          { pct: 10, label: "10%" },
+                          { pct: 25, label: "25%" },
+                          { pct: 50, label: "50%" }
+                        ]).map((btn) => (
                           <button
-                            key={pct}
+                            key={btn.pct}
                             type="button"
-                            onClick={() => setDown(String(Math.round((totalPrice * pct) / 100)))}
-                            className="rounded-full bg-foreground/[0.05] px-3 py-1 text-[11px] font-bold text-muted-foreground transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/10 hover:text-primary active:scale-[0.96]"
+                            onClick={() => setDown(String(Math.round((totalPrice * btn.pct) / 100)))}
+                            className="rounded-xl bg-white/[0.05] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 transition-all hover:bg-primary/10 hover:text-primary active:scale-95"
                           >
-                            {pct}%
+                            {btn.label}
                           </button>
                         ))}
                       </div>
@@ -1597,15 +1617,17 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
                       <div>
                         <Label className="text-xs">عدد الأقساط</Label>
                         <Input type="number" value={count} onChange={(e) => setCount(e.target.value)} placeholder="مثال: 6" />
-                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        <div className="mt-2 flex flex-wrap gap-2">
                           {[3, 6, 9, 12].map((n) => (
                             <button
                               key={n}
                               type="button"
                               onClick={() => setCount(String(n))}
                               className={cn(
-                                "rounded-full px-2.5 py-1 text-[11px] font-bold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.96]",
-                                countNum === n ? "bg-primary/15 text-primary ring-1 ring-primary/40" : "bg-foreground/[0.05] text-muted-foreground hover:bg-primary/10 hover:text-primary",
+                                "flex-1 rounded-xl py-2.5 text-xs font-black transition-all active:scale-95",
+                                countNum === n 
+                                  ? "bg-primary text-black" 
+                                  : "bg-white/[0.05] text-muted-foreground hover:bg-white/[0.08]"
                               )}
                             >
                               {n}
@@ -1711,33 +1733,44 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
             </div>
           </div>
         </div>
-        <DialogFooter className="shrink-0 flex-col gap-3 border-t border-foreground/10 bg-background/80 px-6 py-4 backdrop-blur-xl sm:flex-col">
-          <div className="flex w-full items-center justify-between gap-3 text-right">
-            <div className="min-w-0">
-              <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                {isCashMode ? "المطلوب الآن" : "المقدم الآن"}
+        <DialogFooter className="shrink-0 flex-col gap-4 border-t border-white/5 bg-background/95 px-6 py-6 backdrop-blur-2xl sm:flex-col">
+          <div className="flex w-full items-end justify-between gap-3 text-right">
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">
+                {isCashMode ? "إجمالي الفاتورة" : "المقدم الآن"}
               </span>
-              <span className={cn("block text-lg font-extrabold leading-tight text-primary", blurCls)}>
-                {fmt(isCashMode ? totalPrice : downNum)} ج.م
-              </span>
+              <div className="flex items-baseline gap-1">
+                <span className={cn("text-3xl font-black leading-none text-primary", blurCls)}>
+                  {fmt(isCashMode ? totalPrice : downNum)}
+                </span>
+                <span className="text-xs font-bold text-primary">ج.م</span>
+              </div>
+              {!customerId && <span className="text-[10px] text-warning font-bold mt-1">اختر العميل أولاً</span>}
             </div>
-            <div className="min-w-0 text-left">
-              <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">إجمالي الفاتورة</span>
-              <span className={cn("block text-lg font-extrabold leading-tight text-foreground", blurCls)}>{fmt(totalPrice)} ج.م</span>
+            <div className="flex flex-col items-start">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">إجمالي الفاتورة</span>
+              <div className="flex items-baseline gap-1">
+                <span className={cn("text-xl font-bold leading-none text-foreground", blurCls)}>{fmt(totalPrice)}</span>
+                <span className="text-[10px] font-bold text-muted-foreground">ج.م</span>
+              </div>
             </div>
           </div>
+
           {blockReason && (
             <div className="w-full text-right text-[11px] font-bold text-warning">{blockReason}</div>
           )}
           <Button
             onClick={submit}
             disabled={!!blockReason}
-            className="group w-full justify-between gap-3 rounded-full py-6 pl-2 pr-6 text-base font-bold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98] disabled:opacity-50"
+            className="group relative w-full h-16 overflow-hidden rounded-2xl bg-primary text-lg font-black transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/15 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:-translate-y-[1px] group-hover:translate-x-1 group-hover:scale-105">
-              <Plus className="h-4 w-4" />
-            </span>
-            <span>إنشاء الفاتورة</span>
+            <div className="relative z-10 flex items-center justify-center gap-3 text-black">
+              <span>إنشاء الفاتورة</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/20 group-hover:bg-black/30 transition-colors">
+                <Plus className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary-foreground/10 to-primary opacity-0 group-hover:opacity-20 transition-opacity" />
           </Button>
         </DialogFooter>
         <BarcodeScanner
