@@ -1,0 +1,568 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Segilly design system — dark charcoal + emerald accent. HSL tokens. */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  --color-danger: hsl(var(--danger));
+  --color-danger-foreground: hsl(var(--danger-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+}
+
+/* Ethereal Glass — OLED-deep surfaces, emerald bloom, hairline glass edges. */
+:root {
+  --background: 165 22% 3%;
+  --foreground: 160 12% 96%;
+  --card: 166 20% 7%;
+  --card-foreground: 160 12% 96%;
+  --popover: 166 22% 6%;
+  --popover-foreground: 160 12% 96%;
+  --primary: 160 84% 39%;
+  --primary-foreground: 165 40% 4%;
+  --secondary: 165 14% 12%;
+  --secondary-foreground: 160 10% 94%;
+  --muted: 165 12% 11%;
+  --muted-foreground: 158 8% 66%;
+  --accent: 165 14% 14%;
+  --accent-foreground: 160 10% 94%;
+  --destructive: 8 78% 56%;
+  --destructive-foreground: 0 0% 98%;
+  --success: 158 76% 42%;
+  --success-foreground: 165 40% 4%;
+  --warning: 38 92% 56%;
+  --warning-foreground: 165 40% 5%;
+  --danger: 8 78% 56%;
+  --danger-foreground: 0 0% 98%;
+  --border: 165 12% 17%;
+  --input: 165 14% 13%;
+  --ring: 160 84% 45%;
+  --radius: 0.875rem;
+  --sidebar-background: 166 22% 5%;
+  --sidebar-foreground: 160 10% 94%;
+  --sidebar-primary: 160 84% 39%;
+  --sidebar-primary-foreground: 165 40% 4%;
+  --sidebar-accent: 165 14% 12%;
+  --sidebar-accent-foreground: 160 10% 96%;
+  --sidebar-border: 165 12% 16%;
+  --sidebar-ring: 160 84% 45%;
+}
+
+
+.dark { color-scheme: dark; }
+
+/* Light mode — same emerald identity on a warm paper surface. */
+.theme-light {
+  color-scheme: light;
+  --background: 150 25% 98%;
+  --foreground: 240 12% 14%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 12% 14%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 12% 14%;
+  --primary: 162 62% 34%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 150 18% 94%;
+  --secondary-foreground: 240 12% 18%;
+  --muted: 150 16% 94%;
+  --muted-foreground: 240 6% 42%;
+  --accent: 150 20% 92%;
+  --accent-foreground: 240 12% 18%;
+  --destructive: 12 72% 46%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 162 62% 34%;
+  --success-foreground: 0 0% 100%;
+  --warning: 32 85% 42%;
+  --warning-foreground: 0 0% 100%;
+  --danger: 12 72% 46%;
+  --danger-foreground: 0 0% 100%;
+  --border: 150 12% 86%;
+  --input: 150 12% 90%;
+  --ring: 162 62% 34%;
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 240 12% 18%;
+  --sidebar-primary: 162 62% 34%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 150 18% 94%;
+  --sidebar-accent-foreground: 240 12% 18%;
+  --sidebar-border: 150 12% 86%;
+  --sidebar-ring: 162 62% 34%;
+}
+
+
+@layer base {
+  * { border-color: hsl(var(--border)); }
+  html { font-family: 'Cairo', system-ui, sans-serif; }
+  body {
+    background-color: hsl(var(--background));
+    background-image: var(--gradient-mesh);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    color: hsl(var(--foreground));
+    font-family: 'Cairo', system-ui, sans-serif;
+  }
+
+  [role="dialog"][data-state="open"] {
+    animation: dialog-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes dialog-pop-in {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+    60% { opacity: 1; transform: translate(-50%, -50%) scale(1.03); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+}
+
+@layer utilities {
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes pulse-soft { 0%,100%{opacity:1} 50%{opacity:.7} }
+
+  .privacy-blur { filter: blur(8px); transition: filter .4s ease; user-select: none; }
+  .privacy-clear { filter: blur(0); transition: filter .4s ease; }
+
+  .action-btn { transition: transform .18s ease, box-shadow .25s ease, background-color .2s ease, color .2s ease; }
+  .action-btn:hover { transform: scale(1.15); box-shadow: 0 0 12px hsl(var(--primary) / 0.45); }
+  .action-btn.danger:hover { box-shadow: 0 0 12px hsl(var(--destructive) / 0.5); }
+
+  .row-hover { transition: background-color .25s ease, transform .18s ease; }
+  .row-hover:hover { background-color: hsl(var(--primary) / 0.06); }
+
+  .fab-rotate-open { transform: rotate(135deg) scale(1.05); }
+
+  @keyframes fab-spring-in {
+    0% { opacity: 0; transform: scale(0) rotate(-90deg); }
+    60% { opacity: 1; transform: scale(1.15) rotate(10deg); }
+    80% { transform: scale(0.95) rotate(-4deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0); }
+  }
+  .animate-fab-spring { animation: fab-spring-in .6s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+  @keyframes float-soft { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  .animate-float-soft { animation: float-soft 3s ease-in-out infinite; }
+
+  @keyframes row-fade-out {
+    0% { opacity: 1; transform: translateX(0) scale(1); background-color: transparent; }
+    30% { background-color: hsl(var(--destructive) / 0.12); }
+    100% { opacity: 0; transform: translateX(-30px) scale(0.97); background-color: hsl(var(--destructive) / 0.08); }
+  }
+  .animate-row-fade-out { animation: row-fade-out .32s ease-in forwards; }
+}
+
+@layer utilities {
+  @keyframes scan-line {
+    0% { top: 6%; opacity: 1; }
+    50% { top: 92%; opacity: 1; }
+    50.01% { opacity: 0; }
+    50.02% { top: 6%; opacity: 0; }
+    51% { opacity: 1; }
+    100% { top: 92%; opacity: 1; }
+  }
+  .animate-scan-line { animation: scan-line 2s ease-in-out infinite; }
+}
+
+/* ============================================================
+   High-end layer: bezel architecture, fluid motion, ambience
+   ============================================================ */
+
+@theme inline {
+  --font-display: "Zain", "Cairo", system-ui, sans-serif;
+  --font-numeric: "Space Grotesk", "Cairo", system-ui, sans-serif;
+}
+
+:root {
+  --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --bezel-outer-radius: 1.75rem;
+  --bezel-pad: 0.375rem;
+
+  /* 8pt rhythm */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+  --space-6: 3rem;
+  --space-8: 4rem;
+
+  --hairline: hsl(0 0% 100% / 0.07);
+  --shadow-ambient: 0 28px 70px -28px hsl(165 40% 1% / 0.85), 0 10px 24px -14px hsl(165 40% 1% / 0.6);
+  --shadow-soft: 0 2px 4px -2px hsl(165 40% 1% / 0.5), 0 12px 32px -18px hsl(165 40% 1% / 0.65);
+  --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.2), 0 20px 50px -22px hsl(var(--primary) / 0.4);
+  --gradient-mesh:
+    radial-gradient(58rem 38rem at 86% -12%, hsl(160 84% 42% / 0.26), transparent 62%),
+    radial-gradient(44rem 34rem at 4% 12%, hsl(186 78% 46% / 0.14), transparent 62%),
+    radial-gradient(52rem 40rem at 48% 112%, hsl(160 70% 38% / 0.18), transparent 66%);
+}
+
+
+/* --- Ambience ------------------------------------------------ */
+@utility ambient-mesh {
+  background-image: var(--gradient-mesh);
+}
+
+@utility ambient-noise {
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* --- Double-Bezel ------------------------------------------- */
+@utility bezel-shell {
+  padding: var(--bezel-pad);
+  border-radius: var(--bezel-outer-radius);
+  background: linear-gradient(160deg, hsl(0 0% 100% / 0.06), hsl(0 0% 100% / 0.015));
+  box-shadow:
+    inset 0 1px 0 hsl(0 0% 100% / 0.07),
+    0 0 0 1px hsl(0 0% 100% / 0.05),
+    var(--shadow-ambient);
+  transition:
+    transform 0.7s var(--ease-fluid),
+    box-shadow 0.7s var(--ease-fluid);
+}
+
+@utility bezel-core {
+  height: 100%;
+  border-radius: calc(var(--bezel-outer-radius) - var(--bezel-pad));
+  background: linear-gradient(165deg, hsl(var(--card)), hsl(var(--card) / 0.82));
+  box-shadow:
+    inset 0 1px 1px hsl(0 0% 100% / 0.08),
+    inset 0 0 0 1px hsl(0 0% 100% / 0.035);
+}
+
+@utility bezel-lift {
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / 0.1),
+      var(--shadow-glow),
+      var(--shadow-ambient);
+  }
+}
+
+/* --- Island button (button-in-button) ------------------------ */
+@utility island-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: 9999px;
+  padding: 0.4rem 0.45rem 0.4rem 0.4rem;
+  padding-inline-start: 1.25rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  transition:
+    transform 0.45s var(--ease-fluid),
+    box-shadow 0.45s var(--ease-fluid),
+    background-color 0.45s var(--ease-fluid);
+  &:hover {
+    box-shadow: var(--shadow-glow);
+  }
+  &:active {
+    transform: scale(0.975);
+  }
+  &:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+@utility island-btn-icon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  background: hsl(240 10% 8% / 0.16);
+  transition: transform 0.45s var(--ease-fluid);
+  .group:hover & {
+    transform: translateX(-3px) scale(1.06);
+  }
+}
+
+/* --- Scroll reveal ------------------------------------------- */
+@utility reveal {
+  opacity: 0;
+  transform: translateY(2.5rem);
+  filter: blur(6px);
+  transition:
+    opacity 0.85s var(--ease-fluid),
+    transform 0.85s var(--ease-fluid),
+    filter 0.85s var(--ease-fluid);
+}
+
+@utility reveal-in {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* --- Typography rhythm --------------------------------------- */
+@layer base {
+  h1, h2 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+  }
+  .tabular, table td, table th {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@utility text-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+@utility text-numeric {
+  font-family: var(--font-numeric);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+@utility eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--primary));
+  box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.2);
+}
+
+/* --- Surface plate: بديل موحّد للبطاقات المسطّحة ------------- */
+@utility plate {
+  border-radius: 1.4rem;
+  background: linear-gradient(165deg, hsl(var(--card)), hsl(var(--card) / 0.82));
+  box-shadow:
+    inset 0 1px 1px hsl(0 0% 100% / 0.075),
+    inset 0 0 0 1px hsl(0 0% 100% / 0.05),
+    0 20px 50px -26px hsl(240 20% 2% / 0.7);
+  transition:
+    transform 0.7s var(--ease-fluid),
+    box-shadow 0.7s var(--ease-fluid);
+}
+
+@utility plate-accent {
+  box-shadow:
+    inset 0 1px 1px hsl(0 0% 100% / 0.075),
+    inset 0 0 0 1px hsl(var(--primary) / 0.28),
+    0 20px 50px -26px hsl(var(--primary) / 0.4);
+}
+
+@utility plate-danger {
+  box-shadow:
+    inset 0 1px 1px hsl(0 0% 100% / 0.075),
+    inset 0 0 0 1px hsl(var(--danger) / 0.3),
+    0 20px 50px -26px hsl(var(--danger) / 0.35);
+}
+
+@utility plate-warning {
+  box-shadow:
+    inset 0 1px 1px hsl(0 0% 100% / 0.075),
+    inset 0 0 0 1px hsl(var(--warning) / 0.3),
+    0 20px 50px -26px hsl(var(--warning) / 0.35);
+}
+
+/* Horizontal mobile nav strip: hide the scrollbar but keep scrolling. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================================
+   Ethereal Glass layer — glass surfaces, rhythm, stagger, focus
+   ============================================================ */
+
+/* --- Glass surfaces (fixed/sticky only) --------------------- */
+@utility glass {
+  background:
+    linear-gradient(165deg, hsl(0 0% 100% / 0.055), hsl(0 0% 100% / 0.02)),
+    linear-gradient(hsl(var(--background) / 0.82), hsl(var(--background) / 0.82));
+  backdrop-filter: blur(28px) saturate(150%);
+  box-shadow:
+    inset 0 1px 0 hsl(0 0% 100% / 0.08),
+    0 0 0 1px var(--hairline),
+    var(--shadow-soft);
+}
+
+@utility glass-panel {
+  border-radius: 1.5rem;
+  background: linear-gradient(165deg, hsl(var(--card) / 0.72), hsl(var(--card) / 0.5));
+  backdrop-filter: blur(22px) saturate(140%);
+  box-shadow:
+    inset 0 1px 1px hsl(0 0% 100% / 0.07),
+    0 0 0 1px var(--hairline),
+    var(--shadow-soft);
+}
+
+@utility hairline {
+  box-shadow: 0 0 0 1px var(--hairline);
+}
+
+/* --- Vertical rhythm (8pt) ---------------------------------- */
+@utility section-rhythm {
+  padding-block: var(--space-6);
+  @media (min-width: 768px) {
+    padding-block: calc(var(--space-8) * 1.5);
+  }
+}
+
+@utility stack-2 { display: flex; flex-direction: column; gap: var(--space-2); }
+@utility stack-3 { display: flex; flex-direction: column; gap: var(--space-3); }
+@utility stack-4 { display: flex; flex-direction: column; gap: var(--space-4); }
+
+/* --- Fluid typography --------------------------------------- */
+@utility text-hero {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 6.5vw, 5.25rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+
+@utility text-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3.6vw, 3rem);
+  line-height: 1.08;
+  letter-spacing: -0.022em;
+  font-weight: 800;
+}
+
+@utility text-lede {
+  font-size: clamp(0.95rem, 1.15vw, 1.125rem);
+  line-height: 1.75;
+  letter-spacing: 0.002em;
+  color: hsl(var(--muted-foreground));
+}
+
+/* --- Staggered entrances ------------------------------------ */
+@utility stagger {
+  & > * {
+    animation: stagger-rise 0.8s var(--ease-fluid) both;
+  }
+  & > *:nth-child(1) { animation-delay: 0.04s; }
+  & > *:nth-child(2) { animation-delay: 0.1s; }
+  & > *:nth-child(3) { animation-delay: 0.16s; }
+  & > *:nth-child(4) { animation-delay: 0.22s; }
+  & > *:nth-child(5) { animation-delay: 0.28s; }
+  & > *:nth-child(6) { animation-delay: 0.34s; }
+  & > *:nth-child(7) { animation-delay: 0.4s; }
+  & > *:nth-child(8) { animation-delay: 0.46s; }
+}
+
+@keyframes stagger-rise {
+  from { opacity: 0; transform: translateY(1.25rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stagger > * { animation: none; }
+}
+
+/* --- Interaction feedback ----------------------------------- */
+@layer base {
+  :where(a, button, [role="button"], input, select, textarea):focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(var(--ring) / 0.55);
+    border-radius: inherit;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.28);
+    color: hsl(var(--foreground));
+  }
+
+  * { scrollbar-width: thin; scrollbar-color: hsl(var(--border)) transparent; }
+  *::-webkit-scrollbar { width: 8px; height: 8px; }
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 9999px;
+  }
+  *::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.45); }
+}
+
+@utility press {
+  transition: transform 0.4s var(--ease-fluid), box-shadow 0.4s var(--ease-fluid), background-color 0.4s var(--ease-fluid), color 0.4s var(--ease-fluid);
+  &:active { transform: scale(0.975); }
+}
+
+/* لمعان هياكل التحميل (Skeletons) */
+@keyframes shimmer {
+  100% { transform: translateX(200%); }
+}
+
+/* إخفاء شارة "Made with Lovable" نهائياً */
+#lovable-badge,
+#lovable-badge-wrapper,
+a[href*="lovable.dev/projects"],
+a[href*="lovable.dev?utm"],
+a[href*="lovable.dev/?utm"],
+[data-lovable-badge],
+[class*="lovable-badge"],
+gpt-eng-badge {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
