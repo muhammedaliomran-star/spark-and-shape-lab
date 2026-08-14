@@ -270,7 +270,6 @@ ${list.map((it) => {
             <ScanLine className="w-4 h-4" />
           </button>
         </div>
-        </div>
       </div>
     </div>
 
