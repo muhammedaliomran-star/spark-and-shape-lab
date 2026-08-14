@@ -263,97 +263,164 @@ ${list.map((it) => {
         </div>
       </div>
 
-      <div className="bg-card plate overflow-hidden animate-[fade-in_0.4s_ease-out]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-foreground/[0.04] text-muted-foreground">
-              <tr>
-                <th className="text-right p-4 font-medium">اسم المنتج</th>
-                <th className="text-right p-4 font-medium">الكمية المتوفرة</th>
-                <th className="text-right p-4 font-medium">متوسط سعر الشراء</th>
-                <th className="text-right p-4 font-medium">سعر البيع</th>
-                <th className="text-right p-4 font-medium">الربح / الوحدة</th>
-                <th className="text-right p-4 font-medium">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              <AnimatePresence initial={false}>
-                {list.length === 0 && (
-                  <tr>
-                    <td colSpan={6}>
-                      <EmptyState
-                        icon={Package}
-                        title="المخزن فاضي."
-                        hint="أضف فاتورة شراء وهيتعبّى المخزن تلقائيًا بأصنافها."
-                      />
-                    </td>
-                  </tr>
-                )}
+      <Reveal delay={140}>
+        <div className="mb-3 flex items-center justify-between gap-3 px-2">
+          <div className="flex items-center gap-1.5">
+            <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{list.length} صنف</div>
+          </div>
+        </div>
 
-                {list.map((it) => {
-                  const out = it.quantity <= 0;
-                  const low = !out && it.quantity < LOW_STOCK();
-                  const profit = it.salePrice - it.lastUnitCost;
-                  const margin = it.salePrice > 0 ? (profit / it.salePrice) * 100 : 0;
-                  return (
-                    <motion.tr
-                      key={it.id}
-                      layout
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.25 }}
-                      className={cn(
-                        "border-t border-[var(--hairline)] transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-                        out ? "bg-danger/5 hover:bg-danger/10" : low ? "bg-warning/5 hover:bg-warning/10" : "hover:bg-foreground/[0.035]",
-                      )}
-                    >
-                      <td className="p-4">
-                        <div className="font-bold text-primary">{it.name}</div>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-                          {(it.itemType || it.size) && (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-                              <Scale className="h-3 w-3" />
-                              {it.itemType || "غير محدد"}{it.size ? ` — ${it.size}` : ""}
-                            </span>
-                          )}
-                          {it.barcode && (
-                            <span className="inline-flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
-                              <ScanLine className="h-3 w-3" /> {it.barcode}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      <td className="p-4">
+        {list.length === 0 ? (
+          <div className="bezel-shell">
+            <div className="bezel-core px-6 py-10">
+              <EmptyState
+                icon={Package}
+                title="المخزن فاضي."
+                hint="أضف فاتورة شراء وهيتعبّى المخزن تلقائيًا بأصنافها."
+                action={<Button size="sm" onClick={() => { setAddPrefillBarcode(undefined); setAddOpen(true); }} className="gap-2"><Plus className="w-4 h-4" /> إضافة أول منتج</Button>}
+              />
+            </div>
+          </div>
+        ) : (
+          <ScrollArea className="max-h-[64vh]">
+            <div className="flex flex-col gap-3 pl-1">
+              {list.map((it, idx) => {
+                const out = it.quantity <= 0;
+                const low = !out && it.quantity < LOW_STOCK();
+                const profit = it.salePrice - it.lastUnitCost;
+                const margin = it.salePrice > 0 ? (profit / it.salePrice) * 100 : 0;
+                
+                return (
+                  <div
+                    key={it.id}
+                    className="group bezel-shell bezel-lift animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)] both"
+                    style={{ animationDelay: `${Math.min(idx, 12) * 45}ms` }}
+                  >
+                    <div className="bezel-core grid grid-cols-1 items-center gap-5 p-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] md:gap-6">
+                      {/* الهوية */}
+                      <div className="flex min-w-0 items-center gap-3">
                         <span className={cn(
-                          "inline-flex items-center gap-1.5 font-bold tabular-nums",
-                          out ? "text-danger" : low ? "text-warning" : "text-foreground",
-                          blurCls,
+                          "text-display grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-lg font-bold",
+                          out ? "bg-danger/12 text-danger ring-1 ring-danger/25" : 
+                          low ? "bg-warning/12 text-warning ring-1 ring-warning/25" : 
+                          "bg-primary/12 text-primary ring-1 ring-primary/25"
                         )}>
-                          {(out || low) && <AlertTriangle className="w-4 h-4" />}
-                          {fmt(it.quantity)}
+                          <Package className="h-5 w-5" />
                         </span>
-                      </td>
-                      <td className={cn("p-4 tabular-nums", blurCls)}>{fmt(it.lastUnitCost)} ج.م</td>
-                      <td className={cn("p-4 tabular-nums", blurCls)}>{fmt(it.salePrice)} ج.م</td>
-                      <td className={cn("p-4 tabular-nums", blurCls)}>
-                        <span className={cn("inline-flex items-center gap-1 font-bold", profit >= 0 ? "text-success" : "text-danger")}>
-                          {profit >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                          {fmt(profit)} ج.م
-                          {it.salePrice > 0 && (
-                            <span className="text-[11px] text-muted-foreground">({margin.toFixed(0)}%)</span>
-                          )}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-0.5">
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-success hover:bg-success/10" title="تسوية كمية" onClick={() => setAdjustItem(it)}>
-                            <Scale className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10" title="سجل الحركة" onClick={() => setHistoryItem(it)}>
-                            <History className="w-4 h-4" />
-                          </Button>
+                        <div className="min-w-0">
+                          <div className="truncate font-bold leading-tight">{it.name}</div>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                            {(it.itemType || it.size) && (
+                              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                                <Scale className="h-3 w-3" />
+                                {it.itemType || "غير محدد"}{it.size ? ` — ${it.size}` : ""}
+                              </span>
+                            )}
+                            {it.barcode && (
+                              <span className="inline-flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
+                                <ScanLine className="h-3 w-3" /> {it.barcode}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* المقاييس */}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-4">
+                          <div className="flex flex-col">
+                            <div className="text-[10px] text-muted-foreground mb-0.5">الكمية</div>
+                            <div className={cn("text-numeric text-xl font-extrabold leading-none", out ? "text-danger" : low ? "text-warning" : "text-foreground", privacy && "privacy-blur")}>
+                              {fmt(it.quantity)}
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col">
+                            <div className="text-[10px] text-muted-foreground mb-0.5">الربح المتوقع</div>
+                            <div className={cn("text-numeric font-bold leading-none flex items-center gap-1", profit >= 0 ? "text-success" : "text-danger", privacy && "privacy-blur")}>
+                              {profit >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+                              {fmt(profit)} <span className="text-[10px]">ج.م</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                          <div className={cn("rounded-lg bg-foreground/[0.03] p-1.5 text-center", privacy && "privacy-blur")}>
+                            <div className="text-[9px] text-muted-foreground uppercase">التكلفة</div>
+                            <div className="text-xs font-bold">{fmt(it.lastUnitCost)}</div>
+                          </div>
+                          <div className={cn("rounded-lg bg-primary/5 p-1.5 text-center", privacy && "privacy-blur")}>
+                            <div className="text-[9px] text-primary/70 uppercase">البيع</div>
+                            <div className="text-xs font-bold text-primary">{fmt(it.salePrice)}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* الإجراءات */}
+                      <div className="flex flex-wrap items-center justify-end gap-1.5 md:opacity-70 md:transition-opacity md:duration-500 md:ease-[cubic-bezier(0.32,0.72,0,1)] md:group-hover:opacity-100 md:focus-within:opacity-100">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => setAdjustItem(it)}>
+                                <Scale className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">تسوية كمية</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => setHistoryItem(it)}>
+                                <History className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">سجل الحركة</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-warning hover:bg-warning/10" onClick={() => setEditing(it)}>
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">تعديل الصنف</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => setMoveItem(it)}>
+                                <Boxes className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">نقل للمخازن</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="icon" variant="ghost" className="action-btn danger rounded-full text-danger hover:bg-danger/10 hover:text-danger" onClick={() => setDeleteId(it.id)}>
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">حذف</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        )}
+      </Reveal>
                           <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-warning hover:bg-warning/10" title="تعديل المنتج" onClick={() => setEditing(it)}>
                             <Pencil className="w-4 h-4" />
                           </Button>
