@@ -88,19 +88,47 @@ function InvoicesPage() {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-    let activeSalesTotal = 0;
-    let monthCollections = 0;
+    
+    let totalPaid = 0;
+    let totalSales = 0;
+    let invoiceCount = data.invoices.length;
     let overdueCount = 0;
+    let monthCollections = 0;
+    let activeSalesTotal = 0;
+    let monthSales = 0;
+
     for (const i of data.invoices) {
+      totalSales += i.total;
+      totalPaid += i.paid;
       const remaining = i.total - i.paid;
       if (remaining > 0) activeSalesTotal += remaining;
       if (remaining > 0 && daysLate(i) > 0) overdueCount++;
+      
+      const invDate = new Date(i.createdAt);
+      if (invDate >= monthStart && invDate <= monthEnd) {
+        monthSales += i.total;
+      }
     }
+
     for (const p of data.payments) {
       const d = new Date(p.paidAt);
       if (d >= monthStart && d <= monthEnd) monthCollections += p.amount;
     }
-    return { activeSalesTotal, monthCollections, overdueCount };
+
+    const collectionRate = totalSales > 0 ? (totalPaid / totalSales) * 100 : 0;
+    const avgInvoiceValue = invoiceCount > 0 ? totalSales / invoiceCount : 0;
+
+    return { 
+      totalPaid, 
+      totalSales, 
+      invoiceCount, 
+      overdueCount, 
+      monthCollections, 
+      activeSalesTotal, 
+      collectionRate, 
+      avgInvoiceValue, 
+      monthSales 
+    };
   }, [data.invoices, data.payments]);
 
   const list = useMemo(() => {
