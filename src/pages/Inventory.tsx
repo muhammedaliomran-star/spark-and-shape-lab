@@ -421,26 +421,9 @@ ${list.map((it) => {
           </ScrollArea>
         )}
       </Reveal>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-warning hover:bg-warning/10" title="تعديل المنتج" onClick={() => setEditing(it)}>
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10" title="نقل للمخزن" onClick={() => setMoveItem(it)}>
-                            <PackagePlus className="w-4 h-4" />
-                          </Button>
-
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-danger hover:bg-danger/10" title="حذف" onClick={() => setDeleteId(it.id)}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  );
-                })}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <AdjustDialog item={adjustItem} onClose={() => setAdjustItem(null)} />
+      <MoveToWarehouseDialog item={moveItem} onClose={() => setMoveItem(null)} />
+      <EditDialog item={editing} onClose={() => setEditing(null)} existingBarcodes={data.stockItems.map((s) => s.barcode)} />
 
       <AdjustDialog item={adjustItem} onClose={() => setAdjustItem(null)} />
       <MoveToWarehouseDialog item={moveItem} onClose={() => setMoveItem(null)} />
