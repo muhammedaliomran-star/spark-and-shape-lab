@@ -21,6 +21,14 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Reveal } from "@/components/Reveal";
 import { db, useDB, fmt, fetchStockHistory, findStockByBarcode, lowStockThreshold, useShopSettings, PRODUCT_TYPES, WAREHOUSE_SEASONS, WAREHOUSE_CATEGORIES, type WarehouseSeason, type StockItem, type StockHistoryEntry } from "@/lib/store";
 import {
   Package, Search, Eye, EyeOff, AlertTriangle, Boxes, Wallet, Pencil, Trash2,
