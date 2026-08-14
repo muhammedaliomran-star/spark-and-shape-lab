@@ -457,25 +457,6 @@ function InvoicesPage() {
         title="مسح باركود — بحث سريع"
       />
 
-      <HistoryDialog customer={historyFor} onClose={() => setHistoryFor(null)} invoices={data.invoices} payments={data.payments} items={data.invoiceItems} blurCls={blurCls} onEditInvoice={(i) => { setHistoryFor(null); setEditInv(i); }} />
-      <ViewInvoiceDialog inv={viewInv} customer={viewInv ? findCustomer(viewInv.customerId) ?? null : null} onClose={() => setViewInv(null)} />
-      <EditInvoiceDialog inv={editInv} onClose={() => setEditInv(null)} />
-      <ReminderDialog inv={reminderInv} customer={reminderInv ? findCustomer(reminderInv.customerId) ?? null : null} onClose={() => setReminderInv(null)} />
-      <BarcodeScanner
-        open={searchScanOpen}
-        onClose={() => setSearchScanOpen(false)}
-        onDetected={(code) => {
-          setSearchScanOpen(false);
-          const found = findStockByBarcode(data.stockItems, code);
-          if (found) {
-            setQ(found.name);
-            toast.success(`بحث عن: ${found.name}`);
-          } else {
-            toast.error(`لم يتم العثور على منتج بالكود: ${code}`);
-          }
-        }}
-        title="مسح باركود — بحث سريع"
-      />
     </>
   );
 }
