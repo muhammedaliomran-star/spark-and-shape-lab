@@ -1517,8 +1517,6 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
                 </motion.div>
               ))}
             </AnimatePresence>
-              ))}
-            </AnimatePresence>
           </div>
 
           {/* لوح الدفع الموحّد — يتبدّل بحركة حسب نوع الفاتورة */}
