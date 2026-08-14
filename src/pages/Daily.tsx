@@ -279,8 +279,8 @@ function DailyPage() {
       />
 
       {/* فلترة */}
-      <Reveal>
-        <BezelCard className="mb-8" innerClassName="p-5 sm:p-6">
+      <Reveal className="sticky-search-bar mb-8">
+        <BezelCard innerClassName="p-5 sm:p-6">
           <div className="mb-5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
             <div className="order-2 flex min-w-0 items-center justify-end gap-2">
               <span className="truncate text-sm font-bold text-foreground">فلترة اليومية</span>

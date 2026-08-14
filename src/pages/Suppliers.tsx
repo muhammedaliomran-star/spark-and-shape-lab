@@ -151,7 +151,8 @@ function SuppliersPage() {
         />
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="mb-4">
+      <div className="sticky-search-bar">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="mb-4">
         <TabsList className="grid grid-cols-4 w-full h-auto">
           <TabsTrigger value="all" className="gap-1.5">
             الكل <Badge variant="secondary" className="rounded-full">{enriched.length}</Badge>
@@ -176,6 +177,7 @@ function SuppliersPage() {
           </div>
         </div>
       )}
+    </div>
 
       {tab === "purchases" ? (
         <PurchasesTable privacy={privacy} />

@@ -220,7 +220,8 @@ function ExpensesPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-card plate p-4 mb-6">
+      <div className="sticky-search-bar mb-6">
+        <div className="bg-card plate p-4">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
           <div className="relative md:col-span-2">
             <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
@@ -278,6 +279,7 @@ function ExpensesPage() {
           <span className="text-xs text-muted-foreground">{filtered.length} قيد</span>
         </div>
       </div>
+    </div>
 
       <Reveal delay={140}>
         <div className="flex flex-col gap-3">

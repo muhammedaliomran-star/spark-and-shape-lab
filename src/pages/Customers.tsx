@@ -344,7 +344,7 @@ function CustomersPage() {
       </Reveal>
 
       {/* شريط التحكّم: فلاتر + بحث */}
-      <Reveal delay={80} className="mb-8">
+      <Reveal delay={80} className="sticky-search-bar mb-8">
         <div className="bezel-shell">
           <div className="bezel-core grid grid-cols-1 gap-3 p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
             <div className="relative min-w-0">
