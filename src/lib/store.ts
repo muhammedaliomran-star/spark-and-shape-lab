@@ -97,6 +97,25 @@ export interface SupplierPayment {
   paidAt: string;
 }
 
+export interface ReturnRecord {
+  id: string;
+  invoiceId: string | null;
+  type: "sale" | "supplier";
+  totalAmount: number;
+  reason: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface ReturnItem {
+  id: string;
+  returnId: string;
+  name: string;
+  unitPrice: number;
+  quantity: number;
+  createdAt: string;
+}
+
 export type WarehouseSeason = "summer" | "winter" | "all";
 
 export interface WarehouseItem {
@@ -149,6 +168,8 @@ interface DBState {
   supplierPayments: SupplierPayment[];
   stockItems: StockItem[];
   warehouseItems: WarehouseItem[];
+  returns: ReturnRecord[];
+  returnItems: ReturnItem[];
   loading: boolean;
   refresh: () => Promise<void>;
 }
