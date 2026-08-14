@@ -240,14 +240,22 @@ function InvoicesPage() {
         }
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-        <StatCard icon={<TrendingUp className="w-5 h-5" />} label="إجمالي المبيعات النشطة" value={`${fmt(stats.activeSalesTotal)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
-        <StatCard icon={<CalendarDays className="w-5 h-5" />} label="تحصيلات الشهر الحالي" value={`${fmt(stats.monthCollections)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
+        <StatCard icon={<Wallet className="w-5 h-5" />} label="إجمالي المسدد" value={`${fmt(stats.totalPaid)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
+        <StatCard icon={<TrendingUp className="w-5 h-5" />} label="إجمالي المبيعات" value={`${fmt(stats.totalSales)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
+        <StatCard icon={<FileText className="w-5 h-5" />} label="عدد الفواتير" value={String(stats.invoiceCount)} tone="primary" valueClassName={blurCls} />
+        
         <StatCard icon={<AlertCircle className="w-5 h-5" />} label="الفواتير المتعثرة" value={String(stats.overdueCount)} tone="danger" trend="down" valueClassName={blurCls} />
+        <StatCard icon={<CalendarDays className="w-5 h-5" />} label="تحصيلات الشهر الحالي" value={`${fmt(stats.monthCollections)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
+        <StatCard icon={<Wallet className="w-5 h-5" />} label="إجمالي المبيعات النشطة" value={`${fmt(stats.activeSalesTotal)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
+
+        <StatCard icon={<TrendingUp className="w-5 h-5" />} label="نسبة التحصيل" value={`%${stats.collectionRate.toFixed(1)}`} tone="success" trend="up" valueClassName={blurCls} />
+        <StatCard icon={<FileText className="w-5 h-5" />} label="متوسط قيمة الفاتورة" value={`${fmt(stats.avgInvoiceValue)} ج.م`} tone="primary" valueClassName={blurCls} />
+        <StatCard icon={<CalendarDays className="w-5 h-5" />} label="مبيعات الشهر الحالي" value={`${fmt(stats.monthSales)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="mb-4">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full h-auto">
+        <TabsList className="grid grid-cols-3 sm:grid-cols-5 w-full h-auto">
           <TabsTrigger value="active" className="gap-1.5 data-[state=active]:bg-primary/15 data-[state=active]:text-primary">
             فواتير نشطة <Badge variant="secondary" className="rounded-full">{counts.active}</Badge>
           </TabsTrigger>
@@ -259,6 +267,9 @@ function InvoicesPage() {
           </TabsTrigger>
           <TabsTrigger value="all" className="gap-1.5">
             الكل <Badge variant="secondary" className="rounded-full">{counts.all}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="returns" className="gap-1.5 data-[state=active]:bg-warning/15 data-[state=active]:text-warning">
+            المرتجعات <Badge variant="secondary" className="rounded-full">{counts.returns}</Badge>
           </TabsTrigger>
         </TabsList>
       </Tabs>
