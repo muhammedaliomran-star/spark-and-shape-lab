@@ -81,8 +81,8 @@ function InvoicesPage() {
       else if (daysLate(i) > 0) { overdue++; active++; }
       else active++;
     }
-    return { active, overdue, settled, all: data.invoices.length };
-  }, [data.invoices]);
+    return { active, overdue, settled, all: data.invoices.length, returns: data.returns.length };
+  }, [data.invoices, data.returns]);
 
   const stats = useMemo(() => {
     const now = new Date();
