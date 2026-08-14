@@ -180,79 +180,109 @@ function SuppliersPage() {
       {tab === "purchases" ? (
         <PurchasesTable privacy={privacy} />
       ) : (
-      <div className="bg-card plate overflow-hidden animate-[fade-in_0.4s_ease-out]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-foreground/[0.04] text-muted-foreground">
-              <tr>
-                <th className="text-right p-4 font-medium">المورد</th>
-                <th className="text-right p-4 font-medium">الهاتف</th>
-                <th className="text-right p-4 font-medium">المديونية للمورد</th>
-                <th className="text-right p-4 font-medium">الحالة</th>
-                <th className="text-right p-4 font-medium">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.length === 0 && (
-                <tr>
-                  <td colSpan={5}>
-                    <EmptyState
-                      icon={Truck}
-                      title="لا يوجد موردين."
-                      hint="أضف مورد وابدأ تسجيل فواتير الشراء ومتابعة المستحق عليه."
-                    />
-                  </td>
-                </tr>
-              )}
+      <Reveal delay={140}>
+        <div className="flex flex-col gap-3">
+          {list.length === 0 ? (
+            <div className="bezel-shell">
+              <div className="bezel-core px-6 py-10">
+                <EmptyState
+                  icon={Truck}
+                  title="لا يوجد موردين."
+                  hint="أضف مورد وابدأ تسجيل فواتير الشراء ومتابعة المستحق عليه."
+                />
+              </div>
+            </div>
+          ) : (
+            list.map(({ s, balance }, idx) => (
+              <div
+                key={s.id}
+                className="group bezel-shell bezel-lift animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)] both"
+                style={{ animationDelay: `${Math.min(idx, 12) * 45}ms` }}
+              >
+                <div className="bezel-core grid grid-cols-1 items-center gap-5 p-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] md:gap-6">
+                  {/* الهوية */}
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="text-display grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/25">
+                      <Truck className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-bold">{s.name}</div>
+                      <div className="text-numeric text-xs text-muted-foreground mt-0.5" dir="ltr">{s.contact || "لا يوجد رقم"}</div>
+                    </div>
+                  </div>
 
-              {list.map(({ s, balance }, idx) => (
-                <tr
-                  key={s.id}
-                  className="border-t border-[var(--hairline)] hover:bg-foreground/[0.035] transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] animate-[fade-in_0.3s_ease-out_both]"
-                  style={{ animationDelay: `${idx * 25}ms` }}
-                >
-                  <td className="p-4">
-                    <button
-                      onClick={() => setProfileFor(s)}
-                      className="font-bold text-primary hover:underline underline-offset-4"
-                    >
-                      {s.name}
-                    </button>
-                    {s.notes && <div className="text-xs text-muted-foreground mt-0.5 truncate max-w-[240px]">{s.notes}</div>}
-                  </td>
-                  <td className="p-4 text-muted-foreground" dir="ltr">{s.contact || "—"}</td>
-                  <td className="p-4">
-                    <div className={cn("font-bold tabular-nums", balance > 0 ? "text-danger" : "text-success", blurCls)}>
-                      {fmt(Math.abs(balance))} ج.م
+                  {/* المديونية */}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-4">
+                      <div className="flex flex-col">
+                        <div className="text-[10px] text-muted-foreground mb-0.5">المديونية</div>
+                        <div className={cn("text-numeric text-xl font-extrabold", balance > 0 ? "text-danger" : "text-success", blurCls)}>
+                          {fmt(Math.abs(balance))} <span className="text-xs font-bold text-muted-foreground">ج.م</span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="text-[10px] text-muted-foreground mb-0.5">الحالة</div>
+                        <div className="mt-0.5">
+                          {balance > 0 ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-xl text-[10px] font-bold border bg-warning/15 text-warning border-warning/30">عليه مديونية</span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-xl text-[10px] font-bold border bg-success/15 text-success border-success/30">مسدد</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </td>
-                  <td className="p-4">
-                    {balance > 0 ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-xl text-xs font-medium border bg-warning/15 text-warning border-warning/30">عليه مديونية</span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-xl text-xs font-medium border bg-success/15 text-success border-success/30">مسدد</span>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-0.5">
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10" title="السجل" onClick={() => setProfileFor(s)}>
-                        <History className="w-4 h-4" />
-                      </Button>
-                      <PaymentDialog supplier={s} balance={balance} />
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-warning hover:bg-warning/10" title="تعديل" onClick={() => { setEditing(s); setOpenSupplier(true); }}>
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-danger hover:bg-danger/10" title="حذف" onClick={() => setDeleteId(s.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    {s.notes && <div className="mt-2 text-xs text-muted-foreground truncate max-w-[300px]">{s.notes}</div>}
+                  </div>
+
+                  {/* الإجراءات */}
+                  <div className="flex items-center justify-end gap-1.5 md:opacity-70 md:transition-opacity md:group-hover:opacity-100">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => setProfileFor(s)}>
+                            <History className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>السجل</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="inline-block">
+                            <PaymentDialog supplier={s} balance={balance} />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>إضافة دفعة</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-warning hover:bg-warning/10" onClick={() => { setEditing(s); setOpenSupplier(true); }}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>تعديل</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="icon" variant="ghost" className="action-btn danger rounded-full text-danger hover:bg-danger/10" onClick={() => setDeleteId(s.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>حذف</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      </div>
+      </Reveal>
       )}
 
       <SupplierFormDialog
