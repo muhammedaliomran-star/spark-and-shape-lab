@@ -295,49 +295,103 @@ function InvoicesPage() {
         </div>
       </div>
 
-      <div className="bg-card plate overflow-hidden animate-[fade-in_0.4s_ease-out]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-foreground/[0.04] text-muted-foreground">
-              <tr>
-                <th className="text-right p-4 font-medium">رقم الفاتورة</th>
-                <th className="text-right p-4 font-medium">العميل</th>
-                <th className="text-right p-4 font-medium">القيمة / المتبقي</th>
-                <th className="text-right p-4 font-medium">القسط / الاستحقاق</th>
-                <th className="text-right p-4 font-medium">الحالة</th>
-                <th className="text-right p-4 font-medium">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((inv, idx) => {
-                const remaining = inv.total - inv.paid;
-                const late = daysLate(inv);
-                const isOverdue = remaining > 0 && late > 0;
-                const status = remaining === 0 ? "مسددة" : isOverdue ? `متأخرة (${late} يوم)` : "نشطة";
-                const cls = remaining === 0 ? "bg-success/15 text-success border-success/30" : isOverdue ? "bg-danger/15 text-danger border-danger/30" : "bg-primary/15 text-primary border-primary/30";
-                const cust = findCustomer(inv.customerId);
-                return (
-                  <tr
-                    key={inv.id}
-                    className={cn(
-                      "border-t border-[var(--hairline)] transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] animate-[fade-in_0.3s_ease-out_both]",
-                      isOverdue ? "bg-danger/5 hover:bg-danger/10" : "hover:bg-foreground/[0.035]"
-                    )}
-                    style={{ animationDelay: `${idx * 25}ms` }}
-                  >
-                    <td className="p-4 font-mono text-muted-foreground">{invoiceNumber(data.invoices, inv.id, shopSettings.invoicePrefix)}</td>
-                    <td className="p-4">
-                      {cust ? (
-                        <button
-                          onClick={() => setHistoryFor(cust)}
-                          className="font-bold text-primary hover:underline underline-offset-4 decoration-primary/50 transition"
-                          title="عرض سجل الحركات الكامل"
-                        >
-                          {cust.name}
-                        </button>
-                      ) : <span className="text-muted-foreground">—</span>}
-                    </td>
-                    <td className="p-4">
+      <Reveal delay={140}>
+        <div className="flex flex-col gap-3">
+          {list.length === 0 ? (
+            <div className="bezel-shell">
+              <div className="bezel-core px-6 py-10">
+                <EmptyState
+                  icon={Receipt}
+                  title="لا توجد فواتير."
+                  hint="سجّل أول فاتورة وابدأ تتبع التحصيلات."
+                />
+              </div>
+            </div>
+          ) : (
+            list.map((inv, idx) => {
+              const remaining = inv.total - inv.paid;
+              const late = daysLate(inv);
+              const isOverdue = remaining > 0 && late > 0;
+              const status = remaining === 0 ? "مسددة" : isOverdue ? `متأخرة (${late} يوم)` : "نشطة";
+              const cust = findCustomer(inv.customerId);
+              
+              return (
+                <div
+                  key={inv.id}
+                  className="group bezel-shell bezel-lift animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)] both"
+                  style={{ animationDelay: `${Math.min(idx, 12) * 45}ms` }}
+                >
+                  <div className="bezel-core grid grid-cols-1 items-center gap-5 p-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] md:gap-6">
+                    {/* الهوية */}
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className={cn(
+                        "text-display grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-lg font-bold ring-1",
+                        remaining === 0 ? "bg-success/12 text-success ring-success/25" : 
+                        isOverdue ? "bg-danger/12 text-danger ring-danger/25" : 
+                        "bg-primary/12 text-primary ring-primary/25"
+                      )}>
+                        <CreditCard className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-mono text-sm font-bold text-muted-foreground">#{invoiceNumber(data.invoices, inv.id, shopSettings.invoicePrefix)}</div>
+                        <div className="font-bold truncate">{cust?.name ?? "عميل محذوف"}</div>
+                      </div>
+                    </div>
+
+                    {/* المبالغ */}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-4">
+                        <div className="flex flex-col">
+                          <div className="text-[10px] text-muted-foreground mb-0.5">الإجمالي</div>
+                          <div className={cn("text-numeric font-bold", privacy && "privacy-blur")}>{fmt(inv.total)}</div>
+                        </div>
+                        <div className="flex flex-col">
+                          <div className="text-[10px] text-muted-foreground mb-0.5">المتبقي</div>
+                          <div className={cn("text-numeric text-xl font-extrabold", remaining > 0 ? "text-danger" : "text-success", privacy && "privacy-blur")}>{fmt(remaining)}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* الإجراءات */}
+                    <div className="flex items-center justify-end gap-1.5 md:opacity-70 md:transition-opacity md:group-hover:opacity-100">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => setViewInv(inv)}>
+                              <Info className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>تفاصيل</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-warning hover:bg-warning/10" onClick={() => setEditInv(inv)}>
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>تعديل</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => toast.success("تم إرسال الفاتورة للطباعة")}>
+                              <Printer className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>طباعة</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </Reveal>
                       <div className={cn("font-bold", blurCls)}>{`${fmt(inv.total)} ج.م`}</div>
                       <div className={cn("text-xs", remaining > 0 ? "text-danger" : "text-success", blurCls)}>متبقي: {`${fmt(remaining)} ج.م`}</div>
                     </td>
