@@ -272,64 +272,65 @@ function InvoicesPage() {
         </TabsList>
       </Tabs>
 
-      <div className="mb-5 flex flex-col md:flex-row md:items-center gap-2">
-        <div className="relative md:w-72">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث بالاسم أو الهاتف..." className="pr-10 pl-10" />
-          <button
-            type="button"
-            onClick={() => setSearchScanOpen(true)}
-            className="absolute left-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
-            title="مسح باركود"
-          >
-            <ScanLine className="w-4 h-4" />
-          </button>
-        </div>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2 justify-start font-normal">
-              <CalendarIcon className="w-4 h-4" />
-              {dateFrom || dateTo ? (
-                <span dir="ltr" className="text-xs">
-                  {dateFrom ? format(dateFrom, "dd/MM/yy") : "..."} – {dateTo ? format(dateTo, "dd/MM/yy") : "..."}
-                </span>
-              ) : <span>تصفية بالتاريخ</span>}
-              {(dateFrom || dateTo) && (
-                <X
-                  className="w-3.5 h-3.5 opacity-60 hover:opacity-100"
-                  onClick={(e) => { e.stopPropagation(); setDateFrom(undefined); setDateTo(undefined); }}
-                />
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="range"
-              selected={{ from: dateFrom, to: dateTo }}
-              onSelect={(r: any) => { setDateFrom(r?.from); setDateTo(r?.to); }}
-              numberOfMonths={1}
-              className={cn("p-3 pointer-events-auto")}
-            />
-          </PopoverContent>
-        </Popover>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Download className="w-4 h-4" />
-              تصدير التقرير
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={exportCSV} className="gap-2">
-              <FileSpreadsheet className="w-4 h-4 text-success" /> Excel (CSV)
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={exportPDF} className="gap-2">
-              <FileText className="w-4 h-4 text-danger" /> PDF
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <div className="md:ms-auto text-xs text-muted-foreground">
-          {list.length} فاتورة
+        <div className="mb-5 flex flex-col md:flex-row md:items-center gap-2">
+          <div className="relative md:w-72">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث بالاسم أو الهاتف..." className="pr-10 pl-10" />
+            <button
+              type="button"
+              onClick={() => setSearchScanOpen(true)}
+              className="absolute left-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
+              title="مسح باركود"
+            >
+              <ScanLine className="w-4 h-4" />
+            </button>
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2 justify-start font-normal">
+                <CalendarIcon className="w-4 h-4" />
+                {dateFrom || dateTo ? (
+                  <span dir="ltr" className="text-xs">
+                    {dateFrom ? format(dateFrom, "dd/MM/yy") : "..."} – {dateTo ? format(dateTo, "dd/MM/yy") : "..."}
+                  </span>
+                ) : <span>تصفية بالتاريخ</span>}
+                {(dateFrom || dateTo) && (
+                  <X
+                    className="w-3.5 h-3.5 opacity-60 hover:opacity-100"
+                    onClick={(e) => { e.stopPropagation(); setDateFrom(undefined); setDateTo(undefined); }}
+                  />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                selected={{ from: dateFrom, to: dateTo }}
+                onSelect={(r: any) => { setDateFrom(r?.from); setDateTo(r?.to); }}
+                numberOfMonths={1}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Download className="w-4 h-4" />
+                تصدير التقرير
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={exportCSV} className="gap-2">
+                <FileSpreadsheet className="w-4 h-4 text-success" /> Excel (CSV)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportPDF} className="gap-2">
+                <FileText className="w-4 h-4 text-danger" /> PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <div className="md:ms-auto text-xs text-muted-foreground">
+            {list.length} فاتورة
+          </div>
         </div>
       </div>
 
