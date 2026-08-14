@@ -1924,3 +1924,157 @@ function ReturnsView({ data, blurCls }: { data: any, blurCls: string }) {
   );
 }
 
+function ReturnsView({ data, blurCls }: { data: any, blurCls: string }) {
+  const [returnType, setReturnType] = useState<"sale" | "supplier">("sale");
+  const [invoiceId, setInvoiceId] = useState("");
+  const [reason, setReason] = useState("");
+  const [items, setItems] = useState<Array<{ name: string; unitPrice: number; quantity: number }>>([]);
+  const [newItem, setNewItem] = useState({ name: "", unitPrice: 0, quantity: 1 });
+
+  const handleAddReturn = async () => {
+    if (items.length === 0) return;
+    const total = items.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0);
+    await db.addReturn({
+      invoiceId: invoiceId || null,
+      type: returnType,
+      totalAmount: total,
+      reason,
+      notes: null,
+      items
+    });
+    setInvoiceId("");
+    setReason("");
+    setItems([]);
+    toast.success("تم تسجيل المرتجع بنجاح");
+  };
+
+  const addItem = () => {
+    if (!newItem.name || newItem.quantity <= 0) return;
+    setItems([...items, newItem]);
+    setNewItem({ name: "", unitPrice: 0, quantity: 1 });
+  };
+
+  return (
+    <div className="space-y-6">
+      <BezelCard className="p-6">
+        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-right">
+          <Receipt className="w-5 h-5 text-primary" />
+          تسجيل مرتجع جديد
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-right">
+          <div className="space-y-2">
+            <Label>نوع المرتجع</Label>
+            <div className="flex gap-2">
+              <Button 
+                variant={returnType === "sale" ? "default" : "outline"} 
+                className="flex-1"
+                onClick={() => setReturnType("sale")}
+              >
+                مرتجع بيع
+              </Button>
+              <Button 
+                variant={returnType === "supplier" ? "default" : "outline"} 
+                className="flex-1"
+                onClick={() => setReturnType("supplier")}
+              >
+                مرتجع مورد
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>رقم الفاتورة (اختياري)</Label>
+            <Input value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} placeholder="مثال: #INV-001" className="text-right" />
+          </div>
+        </div>
+
+        <div className="space-y-4 mb-4 border-t pt-4 text-right">
+          <Label className="font-bold">إضافة أصناف المرتجع</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+            <div className="sm:col-span-2">
+              <Input placeholder="اسم الصنف" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} className="text-right" />
+            </div>
+            <Input type="number" placeholder="السعر" value={newItem.unitPrice || ""} onChange={(e) => setNewItem({ ...newItem, unitPrice: Number(e.target.value) })} className="text-right" />
+            <div className="flex gap-2">
+              <Input type="number" placeholder="الكمية" value={newItem.quantity || ""} onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })} className="text-right" />
+              <Button onClick={addItem} size="icon" className="shrink-0"><Plus className="w-4 h-4" /></Button>
+            </div>
+          </div>
+          
+          {items.length > 0 && (
+            <div className="bg-muted/50 rounded-xl p-3 space-y-2 text-right">
+              {items.map((it, idx) => (
+                <div key={idx} className="flex justify-between items-center text-sm border-b border-white/5 pb-1">
+                  <span>{it.name} ({it.quantity} × {fmt(it.unitPrice)})</span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold">{fmt(it.unitPrice * it.quantity)} ج.م</span>
+                    <button onClick={() => setItems(items.filter((_, i) => i !== idx))} className="text-danger hover:scale-110 transition-transform"><X className="w-3 h-3" /></button>
+                  </div>
+                </div>
+              ))}
+              <div className="flex justify-between items-center font-bold pt-2 border-t border-white/10">
+                <span>الإجمالي</span>
+                <span>{fmt(items.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0))} ج.م</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2 mb-6 text-right">
+          <Label>السبب / ملاحظات</Label>
+          <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="مثال: تلف في المنتج..." className="text-right" />
+        </div>
+
+        <Button className="w-full gap-2 py-6 text-lg" disabled={items.length === 0} onClick={handleAddReturn}>
+          <Check className="w-5 h-5" /> تسجيل المرتجع
+        </Button>
+      </BezelCard>
+
+      <div className="space-y-3 text-right">
+        <h3 className="text-lg font-bold flex items-center gap-2">
+          <History className="w-5 h-5 text-muted-foreground" />
+          سجل المرتجعات
+        </h3>
+        {data.returns.length === 0 ? (
+          <BezelCard className="p-10 text-center">
+             <EmptyState icon={History} title="لا توجد مرتجعات مسجلة بعد." hint="سيتم إدراج أي عمليات مرتجعة هنا للرجوع إليها." />
+          </BezelCard>
+        ) : (
+          data.returns.map((r: any) => (
+            <BezelCard key={r.id} className="p-4 group">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className={cn("p-2 rounded-xl", r.type === "sale" ? "bg-warning/10 text-warning" : "bg-primary/10 text-primary")}>
+                    {r.type === "sale" ? <TrendingUp className="w-5 h-5" /> : <Package className="w-5 h-5" />}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold">{r.type === "sale" ? "مرتجع مبيعات" : "مرتجع موردين"}</span>
+                      {r.invoiceId && <Badge variant="secondary" className="text-[10px] font-mono">{r.invoiceId}</Badge>}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5" dir="ltr">{format(new Date(r.createdAt), "yyyy/MM/dd - hh:mm a")}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <div className="text-[10px] text-muted-foreground uppercase">القيمة الإجمالية</div>
+                    <div className={cn("text-lg font-bold", blurCls)}>{fmt(r.totalAmount)} ج.م</div>
+                  </div>
+                  <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => db.removeReturn(r.id)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              {r.reason && (
+                <div className="mt-3 text-sm text-muted-foreground bg-white/5 p-2 rounded-lg italic">
+                  {r.reason}
+                </div>
+              )}
+            </BezelCard>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
