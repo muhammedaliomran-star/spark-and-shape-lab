@@ -176,8 +176,8 @@ function SuppliersPage() {
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث باسم المورد أو رقم الهاتف..." className="pr-10" />
           </div>
         </div>
-      </div>
       )}
+      </div>
 
       {tab === "purchases" ? (
         <PurchasesTable privacy={privacy} />
