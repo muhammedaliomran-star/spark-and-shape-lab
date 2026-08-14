@@ -244,18 +244,18 @@ ${list.map((it) => {
 
       <div className="sticky-search-bar">
         <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="mb-4">
-        <TabsList className="grid grid-cols-3 w-full h-auto">
-          <TabsTrigger value="all" className="gap-1.5">
-            الكل <Badge variant="secondary" className="rounded-full">{data.stockItems.length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="low" className="gap-1.5 data-[state=active]:bg-warning/15 data-[state=active]:text-warning">
-            ناقص <Badge variant="secondary" className="rounded-full">{data.stockItems.filter((it) => it.quantity > 0 && it.quantity < LOW_STOCK()).length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="out" className="gap-1.5 data-[state=active]:bg-danger/15 data-[state=active]:text-danger">
-            نفذ <Badge variant="secondary" className="rounded-full">{data.stockItems.filter((it) => it.quantity <= 0).length}</Badge>
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+          <TabsList className="grid grid-cols-3 w-full h-auto">
+            <TabsTrigger value="all" className="gap-1.5">
+              الكل <Badge variant="secondary" className="rounded-full">{data.stockItems.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="low" className="gap-1.5 data-[state=active]:bg-warning/15 data-[state=active]:text-warning">
+              ناقص <Badge variant="secondary" className="rounded-full">{data.stockItems.filter((it) => it.quantity > 0 && it.quantity < LOW_STOCK()).length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="out" className="gap-1.5 data-[state=active]:bg-danger/15 data-[state=active]:text-danger">
+              نفذ <Badge variant="secondary" className="rounded-full">{data.stockItems.filter((it) => it.quantity <= 0).length}</Badge>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <div className="mb-5">
           <div className="relative">
@@ -267,11 +267,11 @@ ${list.map((it) => {
               className="absolute left-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
               title="مسح باركود"
             >
-            <ScanLine className="w-4 h-4" />
-          </button>
+              <ScanLine className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
       <Reveal delay={140}>
         <div className="mb-3 flex items-center justify-between gap-3 px-2">
