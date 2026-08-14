@@ -267,10 +267,11 @@ ${list.map((it) => {
               className="absolute left-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
               title="مسح باركود"
             >
-              <ScanLine className="w-4 h-4" />
-            </button>
-          </div>
+            <ScanLine className="w-4 h-4" />
+          </button>
         </div>
+      </div>
+    </div>
       </div>
 
       <Reveal delay={140}>
