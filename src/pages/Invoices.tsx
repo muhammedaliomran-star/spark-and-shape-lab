@@ -392,72 +392,25 @@ function InvoicesPage() {
           )}
         </div>
       </Reveal>
-                      <div className={cn("font-bold", blurCls)}>{`${fmt(inv.total)} ج.م`}</div>
-                      <div className={cn("text-xs", remaining > 0 ? "text-danger" : "text-success", blurCls)}>متبقي: {`${fmt(remaining)} ج.م`}</div>
-                    </td>
-                    <td className="p-4">
-                      <div className={blurCls}>{`${fmt(inv.monthlyInstallment)} ج.م`} / شهر</div>
-                      <div className="text-xs text-muted-foreground" dir="ltr">{isoToDDMMYYYY(inv.firstDueDate)}</div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-xl text-xs font-medium border", cls)}>{status}</span>
-                        {isOverdue && (
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-warning hover:bg-warning/15 action-btn" title="تذكير العميل" onClick={() => setReminderInv(inv)}>
-                            <Bell className="w-3.5 h-3.5" />
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-0.5">
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 action-btn" title="عرض" onClick={() => setViewInv(inv)}>
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-warning hover:bg-warning/10 action-btn" title="تعديل" onClick={() => setEditInv(inv)}>
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 action-btn" title="طباعة" onClick={() => printReceipt(inv, cust?.name ?? "—", cust?.phone ?? "", data.invoices)}>
-                          <Printer className="w-4 h-4" />
-                        </Button>
-                        {remaining > 0 && <PaymentDialog invoiceId={inv.id} max={remaining} />}
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-danger hover:bg-danger/10 action-btn danger" title="حذف"><Trash2 className="w-4 h-4" /></Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>حذف الفاتورة</AlertDialogTitle>
-                              <AlertDialogDescription>هل أنت متأكد؟ سيتم تحديث رصيد العميل تلقائياً.</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => { db.removeInvoice(inv.id); toast.success("تم الحذف"); }}>حذف</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-              {data.loading && list.length === 0 && <TableSkeleton rows={5} cols={6} />}
-              {!data.loading && list.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="p-4">
-                    <EmptyState
-                      icon={FileText}
-                      title="لا توجد فواتير في هذا التصنيف"
-                      hint="ابدأ بإصدار فاتورة جديدة وهتلاقيها هنا مع حالة السداد والأقساط."
-                      action={<NewInvoiceDialog trigger={<Button className="gap-2"><Plus className="w-4 h-4" /> فاتورة جديدة</Button>} />}
-                    />
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <HistoryDialog customer={historyFor} onClose={() => setHistoryFor(null)} invoices={data.invoices} payments={data.payments} items={data.invoiceItems} blurCls={blurCls} onEditInvoice={(i) => { setHistoryFor(null); setEditInv(i); }} />
+      <ViewInvoiceDialog inv={viewInv} customer={viewInv ? findCustomer(viewInv.customerId) ?? null : null} onClose={() => setViewInv(null)} />
+      <EditInvoiceDialog inv={editInv} onClose={() => setEditInv(null)} />
+      <ReminderDialog inv={reminderInv} customer={reminderInv ? findCustomer(reminderInv.customerId) ?? null : null} onClose={() => setReminderInv(null)} />
+      <BarcodeScanner
+        open={searchScanOpen}
+        onClose={() => setSearchScanOpen(false)}
+        onDetected={(code) => {
+          setSearchScanOpen(false);
+          const found = findStockByBarcode(data.stockItems, code);
+          if (found) {
+            setQ(found.name);
+            toast.success(`بحث عن: ${found.name}`);
+          } else {
+            toast.error(`لم يتم العثور على منتج بالكود: ${code}`);
+          }
+        }}
+        title="مسح باركود — بحث سريع"
+      />
 
       <HistoryDialog customer={historyFor} onClose={() => setHistoryFor(null)} invoices={data.invoices} payments={data.payments} items={data.invoiceItems} blurCls={blurCls} onEditInvoice={(i) => { setHistoryFor(null); setEditInv(i); }} />
       <ViewInvoiceDialog inv={viewInv} customer={viewInv ? findCustomer(viewInv.customerId) ?? null : null} onClose={() => setViewInv(null)} />
