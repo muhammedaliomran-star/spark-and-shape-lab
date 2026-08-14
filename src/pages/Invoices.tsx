@@ -331,19 +331,21 @@ function InvoicesPage() {
           </DropdownMenuContent>
         </DropdownMenu>
         <div className="md:ms-auto text-xs text-muted-foreground">
-          {list.length} فاتورة
+          {tab === "returns" ? data.returns.length : list.length} {tab === "returns" ? "مرتجع" : "فاتورة"}
         </div>
       </div>
 
       <Reveal delay={140}>
         <div className="flex flex-col gap-3">
-          {list.length === 0 ? (
+          {tab === "returns" ? (
+            <ReturnsView data={data} blurCls={blurCls} />
+          ) : list.length === 0 ? (
             <div className="bezel-shell">
               <div className="bezel-core px-6 py-10">
                 <EmptyState
                   icon={Receipt}
-                  title="لا توجد فواتير."
-                  hint="سجّل أول فاتورة وابدأ تتبع التحصيلات."
+                  title={tab === "active" ? "لا توجد فواتير نشطة." : tab === "overdue" ? "لا توجد فواتير متأخرة." : "لا توجد فواتير."}
+                  hint={tab === "active" ? "كل الفواتير مسددة بالكامل." : tab === "overdue" ? "لا توجد مديونيات متأخرة حالياً." : "سجّل أول فاتورة وابدأ تتبع التحصيلات."}
                 />
               </div>
             </div>
@@ -372,20 +374,20 @@ function InvoicesPage() {
                       )}>
                         <CreditCard className="h-5 w-5" />
                       </div>
-                      <div className="min-w-0">
-                        <div className="font-mono text-sm font-bold text-muted-foreground">#{invoiceNumber(data.invoices, inv.id, shopSettings.invoicePrefix)}</div>
+                      <div className="min-w-0 text-right">
+                        <div className="font-mono text-xs font-bold text-muted-foreground">#{invoiceNumber(data.invoices, inv.id, shopSettings.invoicePrefix)}</div>
                         <div className="font-bold truncate">{cust?.name ?? "عميل محذوف"}</div>
                       </div>
                     </div>
 
                     {/* المبالغ */}
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-4">
-                        <div className="flex flex-col">
+                    <div className="min-w-0 w-full md:w-auto">
+                      <div className="flex items-center justify-between md:justify-start gap-4">
+                        <div className="flex flex-col text-right">
                           <div className="text-[10px] text-muted-foreground mb-0.5">الإجمالي</div>
                           <div className={cn("text-numeric font-bold", privacy && "privacy-blur")}>{fmt(inv.total)}</div>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col text-right">
                           <div className="text-[10px] text-muted-foreground mb-0.5">المتبقي</div>
                           <div className={cn("text-numeric text-xl font-extrabold", remaining > 0 ? "text-danger" : "text-success", privacy && "privacy-blur")}>{fmt(remaining)}</div>
                         </div>
@@ -417,13 +419,16 @@ function InvoicesPage() {
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => toast.success("تم إرسال الفاتورة للطباعة")}>
+                            <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => printReceipt(inv, cust?.name ?? "—", cust?.phone ?? "—", data.invoices)}>
                               <Printer className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>طباعة</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+                      {remaining > 0 && (
+                        <PaymentDialog invoiceId={inv.id} max={remaining} />
+                      )}
                     </div>
                   </div>
                 </div>
