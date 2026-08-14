@@ -459,6 +459,22 @@
 }
 
 /* --- Vertical rhythm (8pt) ---------------------------------- */
+@utility sticky-search-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 1rem 0.5rem;
+  margin: -1rem -0.5rem 1rem -0.5rem;
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--background) / 0.95) 0%,
+    hsl(var(--background) / 0.8) 60%,
+    transparent 100%
+  );
+  backdrop-filter: blur(12px);
+  mask-image: linear-gradient(to bottom, black 85%, transparent);
+}
+
 @utility section-rhythm {
   padding-block: var(--space-6);
   @media (min-width: 768px) {

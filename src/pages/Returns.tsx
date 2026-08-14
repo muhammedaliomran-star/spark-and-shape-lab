@@ -72,7 +72,7 @@ function ReturnsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Registration Form */}
         <div className="lg:col-span-1">
-          <BezelCard className="p-6">
+          <BezelCard className="p-6 bezel-lift">
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-right">
               <Receipt className="w-5 h-5 text-primary" />
               تسجيل مرتجع جديد
@@ -173,7 +173,7 @@ function ReturnsPage() {
                 </BezelCard>
               ) : (
                 data.returns.map((r: any) => (
-                  <BezelCard key={r.id} className="p-4 group border-transparent hover:border-primary/20 transition-all duration-500">
+                  <BezelCard key={r.id} className="p-4 group bezel-lift border-transparent hover:border-primary/20 transition-all duration-500">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex items-center gap-3 order-2 md:order-1">
                         <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => db.removeReturn(r.id)}>
