@@ -329,10 +329,10 @@ function InvoicesPage() {
             </DropdownMenuContent>
           </DropdownMenu>
           <div className="md:ms-auto text-xs text-muted-foreground">
-          {list.length} فاتورة
+            {list.length} فاتورة
+          </div>
         </div>
       </div>
-    </div>
 
       <Reveal delay={140}>
         <div className="flex flex-col gap-3">
