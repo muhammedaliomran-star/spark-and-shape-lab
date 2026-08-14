@@ -1,5 +1,15 @@
 import { EmptyState } from "@/components/EmptyState";
 import { PageTransition } from "@/components/PageTransition";
+import { Reveal } from "@/components/Reveal";
+import { BezelCard } from "@/components/BezelCard";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
@@ -23,7 +33,7 @@ import {
 } from "@/lib/store";
 import {
   Plus, Search, Truck, Eye, EyeOff, Pencil, Trash2, Wallet, Banknote,
-  History, Phone, Receipt, X, ShoppingCart, ScanLine,
+  History, Phone, Receipt, X, ShoppingCart, ScanLine, Info, CreditCard,
 } from "lucide-react";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { motion, AnimatePresence } from "framer-motion";
