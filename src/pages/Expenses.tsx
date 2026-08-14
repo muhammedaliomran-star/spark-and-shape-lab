@@ -1,5 +1,14 @@
 import { EmptyState } from "@/components/EmptyState";
 import { PageTransition } from "@/components/PageTransition";
+import { Reveal } from "@/components/Reveal";
+import { BezelCard } from "@/components/BezelCard";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
@@ -23,7 +32,7 @@ import {
   db, useDB, fmt, EXPENSE_CATEGORIES, expenseCategoryLabel,
   type Expense, type ExpenseCategory,
 } from "@/lib/store";
-import { Plus, Pencil, Trash2, Search, Receipt, Wallet, Download, FileSpreadsheet, FileText, X, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Receipt, Wallet, Download, FileSpreadsheet, FileText, X, Loader2, Calendar } from "lucide-react";
 import { Eye, EyeOff } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CountUp } from "@/components/CountUp";
@@ -270,67 +279,74 @@ function ExpensesPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <div key={`table-${pulseKey}`} className="bg-card plate overflow-hidden animate-pulse-soft">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-secondary/40">
-              <tr className="text-muted-foreground text-xs">
-                <th className="text-right py-3 px-4 font-semibold">التاريخ</th>
-                <th className="text-right py-3 px-4 font-semibold">التصنيف</th>
-                <th className="text-right py-3 px-4 font-semibold">المبلغ</th>
-                <th className="text-right py-3 px-4 font-semibold">ملاحظات</th>
-                <th className="text-left py-3 px-4 font-semibold">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 && (
-                <tr><td colSpan={5}>
-                  <EmptyState
-                    icon={Wallet}
-                    title="لا توجد مصروفات مسجلة."
-                    hint="سجّل مصروفات المحل عشان الربح الظاهر يبقى ربح حقيقي."
-                  />
-                </td></tr>
-              )}
-
-              {filtered.map((e) => (
-                <tr
-                  key={e.id}
-                  onDoubleClick={() => onEdit(e)}
-                  title="انقر مرتين للتعديل السريع"
-                  className={cn(
-                    "border-t border-[var(--hairline)] hover:bg-foreground/[0.035] transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer select-none",
-                    fadingId === e.id && "animate-row-fade-out pointer-events-none"
-                  )}
-                >
-                  <td className="py-3 px-4 tabular-nums" dir="ltr">{e.expenseDate}</td>
-                  <td className="py-3 px-4">
-                    <span className={cn(
-                      "inline-flex items-center px-2 py-0.5 rounded-xl text-xs font-bold border",
-                      categoryClass(e.category),
-                    )}>
-                      {expenseCategoryLabel(e.category)}
-                    </span>
-                  </td>
-                  <td className={cn("py-3 px-4 font-bold text-danger tabular-nums", blurCls)}>{fmt(e.amount)} ج.م</td>
-                  <td className="py-3 px-4 text-muted-foreground max-w-xs truncate">{e.notes || "—"}</td>
-                  <td className="py-3 px-4 text-left">
-                    <div className="flex items-center gap-1 justify-end">
-                      <button onClick={(ev) => { ev.stopPropagation(); onEdit(e); }} className="w-8 h-8 rounded-xl hover:bg-primary/10 text-primary grid place-items-center action-btn" title="تعديل">
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={(ev) => { ev.stopPropagation(); setDeleteId(e.id); }} className="w-8 h-8 rounded-xl hover:bg-danger/10 text-danger grid place-items-center action-btn danger" title="حذف">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+      <Reveal delay={140}>
+        <div className="flex flex-col gap-3">
+          {filtered.length === 0 ? (
+            <div className="bezel-shell">
+              <div className="bezel-core px-6 py-10">
+                <EmptyState
+                  icon={Wallet}
+                  title="لا توجد مصروفات مسجلة."
+                  hint="سجّل مصروفات المحل عشان الربح الظاهر يبقى ربح حقيقي."
+                />
+              </div>
+            </div>
+          ) : (
+            filtered.map((e, idx) => (
+              <div
+                key={e.id}
+                className="group bezel-shell bezel-lift animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)] both"
+                style={{ animationDelay: `${Math.min(idx, 12) * 45}ms` }}
+              >
+                <div className="bezel-core grid grid-cols-1 items-center gap-5 p-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] md:gap-6">
+                  {/* الهوية */}
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="text-display grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-danger/12 text-danger ring-1 ring-danger/25">
+                      <Receipt className="h-5 w-5" />
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <div className="min-w-0">
+                      <div className="font-bold">{expenseCategoryLabel(e.category)}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5" dir="ltr">{e.expenseDate}</div>
+                    </div>
+                  </div>
+
+                  {/* المبلغ */}
+                  <div className="min-w-0">
+                    <div className={cn("text-numeric text-xl font-extrabold text-danger", blurCls)}>
+                      {fmt(e.amount)} <span className="text-xs font-bold text-muted-foreground">ج.م</span>
+                    </div>
+                    <div className="mt-1 text-sm text-muted-foreground truncate">{e.notes || "لا توجد ملاحظات"}</div>
+                  </div>
+
+                  {/* الإجراءات */}
+                  <div className="flex items-center justify-end gap-1.5 md:opacity-70 md:transition-opacity md:group-hover:opacity-100">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-warning hover:bg-warning/10" onClick={() => onEdit(e)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>تعديل</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="icon" variant="ghost" className="action-btn danger rounded-full text-danger hover:bg-danger/10" onClick={() => setDeleteId(e.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>حذف</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      </div>
+      </Reveal>
 
       <ExpenseFormDialog
         open={openForm}
