@@ -180,9 +180,12 @@ let cache: {
   suppliers: Supplier[]; purchases: Purchase[]; purchaseItems: PurchaseItem[]; supplierPayments: SupplierPayment[];
   stockItems: StockItem[];
   warehouseItems: WarehouseItem[];
+  returns: ReturnRecord[];
+  returnItems: ReturnItem[];
 } = {
   customers: [], invoices: [], payments: [], expenses: [], invoiceItems: [],
   suppliers: [], purchases: [], purchaseItems: [], supplierPayments: [], stockItems: [], warehouseItems: [],
+  returns: [], returnItems: [],
 };
 let loading = true;
 let loaded = false;
@@ -194,12 +197,12 @@ async function fetchAll() {
   notify();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    cache = { customers: [], invoices: [], payments: [], expenses: [], invoiceItems: [], suppliers: [], purchases: [], purchaseItems: [], supplierPayments: [], stockItems: [], warehouseItems: [] };
+    cache = { customers: [], invoices: [], payments: [], expenses: [], invoiceItems: [], suppliers: [], purchases: [], purchaseItems: [], supplierPayments: [], stockItems: [], warehouseItems: [], returns: [], returnItems: [] };
     loading = false;
     notify();
     return;
   }
-  const [c, i, p, e, ii, s, pu, pi, sp, st, wh] = await Promise.all([
+  const [c, i, p, e, ii, s, pu, pi, sp, st, wh, rr, ri] = await Promise.all([
     supabase.from("customers").select("*").order("name"),
     supabase.from("invoices").select("*").order("created_at", { ascending: false }),
     supabase.from("payments").select("*"),
@@ -211,6 +214,8 @@ async function fetchAll() {
     supabase.from("supplier_payments").select("*"),
     supabase.from("stock_items").select("*").order("name"),
     supabase.from("warehouse_items").select("*").order("name"),
+    supabase.from("return_records").select("*").order("created_at", { ascending: false }),
+    supabase.from("return_items").select("*").order("created_at"),
   ]);
   cache = {
     customers: (c.data ?? []).map((r: any) => ({
@@ -274,6 +279,14 @@ async function fetchAll() {
       category: r.category ?? "other",
       notes: r.notes ?? null,
       createdAt: r.created_at, updatedAt: r.updated_at,
+    })),
+    returns: (rr.data ?? []).map((r: any) => ({
+      id: r.id, invoiceId: r.invoice_id, type: r.type as "sale" | "supplier",
+      totalAmount: Number(r.total_amount), reason: r.reason, notes: r.notes, createdAt: r.created_at,
+    })),
+    returnItems: (ri.data ?? []).map((r: any) => ({
+      id: r.id, returnId: r.return_id, name: r.name,
+      unitPrice: Number(r.unit_price), quantity: Number(r.quantity), createdAt: r.created_at,
     })),
   };
   loading = false;
