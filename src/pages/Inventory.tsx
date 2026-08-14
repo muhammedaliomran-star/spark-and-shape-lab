@@ -242,7 +242,8 @@ ${list.map((it) => {
         <StatBox label="نواقص" value={String(totals.low)} icon={<AlertTriangle className="w-5 h-5" />} tone={totals.low > 0 ? "danger" : "primary"} sub={`أقل من ${LOW_STOCK()} وحدات • مرتبط بالمنبه`} />
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="mb-4">
+      <div className="sticky-search-bar">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="mb-4">
         <TabsList className="grid grid-cols-3 w-full h-auto">
           <TabsTrigger value="all" className="gap-1.5">
             الكل <Badge variant="secondary" className="rounded-full">{data.stockItems.length}</Badge>

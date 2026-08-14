@@ -139,8 +139,8 @@ function WarehousePage() {
       </Reveal>
 
       {/* البحث + فلاتر الموسم */}
-      <Reveal delay={80}>
-        <div className="mt-5 flex flex-col-reverse gap-3 md:flex-row-reverse md:items-center">
+      <Reveal delay={80} className="sticky-search-bar mt-5">
+        <div className="flex flex-col-reverse gap-3 md:flex-row-reverse md:items-center">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute end-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input

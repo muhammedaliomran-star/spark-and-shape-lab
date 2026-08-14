@@ -254,7 +254,8 @@ function InvoicesPage() {
         <StatCard icon={<CalendarDays className="w-5 h-5" />} label="مبيعات الشهر الحالي" value={`${fmt(stats.monthSales)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="mb-4">
+      <div className="sticky-search-bar">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="mb-4">
         <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full h-auto">
           <TabsTrigger value="active" className="gap-1.5 data-[state=active]:bg-primary/15 data-[state=active]:text-primary">
             فواتير نشطة <Badge variant="secondary" className="rounded-full">{counts.active}</Badge>
