@@ -132,6 +132,7 @@ function InvoicesPage() {
   }, [data.invoices, data.payments]);
 
   const list = useMemo(() => {
+    if (tab === "returns") return []; // Returns are handled in a separate view
     const fromTs = dateFrom ? new Date(dateFrom.getFullYear(), dateFrom.getMonth(), dateFrom.getDate()).getTime() : null;
     const toTs = dateTo ? new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 23, 59, 59).getTime() : null;
     return data.invoices
