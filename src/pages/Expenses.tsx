@@ -279,7 +279,6 @@ function ExpensesPage() {
           <span className="text-xs text-muted-foreground">{filtered.length} قيد</span>
         </div>
       </div>
-      </div>
 
       <Reveal delay={140}>
         <div className="flex flex-col gap-3">

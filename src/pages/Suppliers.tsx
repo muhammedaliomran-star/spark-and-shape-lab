@@ -177,7 +177,7 @@ function SuppliersPage() {
           </div>
         </div>
       )}
-      </div>
+    </div>
 
       {tab === "purchases" ? (
         <PurchasesTable privacy={privacy} />
