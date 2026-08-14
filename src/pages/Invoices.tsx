@@ -333,7 +333,6 @@ function InvoicesPage() {
         </div>
       </div>
     </div>
-      </div>
 
       <Reveal delay={140}>
         <div className="flex flex-col gap-3">

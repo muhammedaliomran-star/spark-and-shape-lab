@@ -270,9 +270,9 @@ ${list.map((it) => {
             <ScanLine className="w-4 h-4" />
           </button>
         </div>
+        </div>
       </div>
     </div>
-      </div>
 
       <Reveal delay={140}>
         <div className="mb-3 flex items-center justify-between gap-3 px-2">
