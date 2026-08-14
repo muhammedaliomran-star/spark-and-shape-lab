@@ -22,7 +22,7 @@ import {
 } from "@/lib/store";
 import {
   Warehouse as WarehouseIcon, Boxes, Wallet, Sun, Snowflake, Search, Plus,
-  ArrowLeft, Trash2, Layers,
+  ArrowLeft, Trash2, Layers, Store, Pencil
 } from "lucide-react";
 import { usePrivacy } from "@/lib/privacy";
 import { cn } from "@/lib/utils";
