@@ -1,5 +1,14 @@
 import { EmptyState } from "@/components/EmptyState";
 import { PageTransition } from "@/components/PageTransition";
+import { Reveal } from "@/components/Reveal";
+import { BezelCard } from "@/components/BezelCard";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
@@ -23,7 +32,7 @@ import {
   db, useDB, fmt, EXPENSE_CATEGORIES, expenseCategoryLabel,
   type Expense, type ExpenseCategory,
 } from "@/lib/store";
-import { Plus, Pencil, Trash2, Search, Receipt, Wallet, Download, FileSpreadsheet, FileText, X, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Receipt, Wallet, Download, FileSpreadsheet, FileText, X, Loader2, Calendar } from "lucide-react";
 import { Eye, EyeOff } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { CountUp } from "@/components/CountUp";
