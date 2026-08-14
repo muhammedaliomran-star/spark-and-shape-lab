@@ -1502,15 +1502,15 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
                       </div>
                       <div>
                         <Label className="text-xs">الكمية</Label>
-                        <Input type="number" min="1" value={p.quantity} onChange={(e) => updateProduct(p.id, { quantity: e.target.value })} />
+                        <Input type="number" min="1" value={p.quantity} onChange={(e) => updateProduct(p.id, { quantity: e.target.value })} className="bg-white/5 border-white/10" />
                       </div>
                       <div>
                         <Label className="text-xs">تكلفة الوحدة (ج.م)</Label>
-                        <Input type="number" value={p.cost} onChange={(e) => updateProduct(p.id, { cost: e.target.value })} className={blurCls} />
+                        <Input type="number" value={p.cost} onChange={(e) => updateProduct(p.id, { cost: e.target.value })} className={cn(blurCls, "bg-white/5 border-white/10")} />
                       </div>
                       <div className="sm:col-span-2">
                         <Label className="text-xs">سعر البيع للوحدة (ج.م)</Label>
-                        <Input type="number" value={p.price} onChange={(e) => updateProduct(p.id, { price: e.target.value })} className={blurCls} />
+                        <Input type="number" value={p.price} onChange={(e) => updateProduct(p.id, { price: e.target.value })} className={cn(blurCls, "bg-white/5 border-white/10")} />
                       </div>
                     </div>
                   </div>
@@ -1701,31 +1701,40 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
             </div>
           </div>
 
-          <div>
-            <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">ملاحظات إضافية</Label>
-            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="ملاحظات..." maxLength={200} />
+          <div className="rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-4">
+            <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2 block">ملاحظات إضافية</Label>
+            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="ملاحظات..." maxLength={200} className="bg-transparent border-white/10" />
           </div>
 
-          <div className={cn("rounded-[1.75rem] border p-1.5 transition-colors duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
-            profit > 0 ? "border-success/40 bg-success/5" : profit < 0 ? "border-danger/40 bg-danger/5" : "border-foreground/10 bg-foreground/[0.03]"
+          <div className={cn("rounded-[2rem] border-2 p-1.5 transition-all duration-500",
+            profit > 0 ? "border-success/30 bg-success/5" : profit < 0 ? "border-danger/30 bg-danger/5" : "border-white/5 bg-white/[0.02]"
           )}>
-            <div className="rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-[calc(2rem-0.375rem)] bg-background/40 p-6 backdrop-blur-md">
+              <div className="grid grid-cols-2 gap-y-6 gap-x-4">
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">إجمالي التكلفة</span>
-                  <span className={cn("block text-lg font-bold tracking-tight", blurCls)}>{fmt(totalCost)} ج.م</span>
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">إجمالي التكلفة</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className={cn("text-xl font-bold tracking-tight", blurCls)}>{fmt(totalCost)}</span>
+                    <span className="text-[10px] font-bold text-muted-foreground/40">ج.م</span>
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">إجمالي سعر البيع</span>
-                  <span className={cn("block text-lg font-bold tracking-tight", blurCls)}>{fmt(totalPrice)} ج.م</span>
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">إجمالي سعر البيع</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className={cn("text-xl font-bold tracking-tight", blurCls)}>{fmt(totalPrice)}</span>
+                    <span className="text-[10px] font-bold text-muted-foreground/40">ج.م</span>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">صافي الربح</span>
-                  <span className={cn("block text-[clamp(1.35rem,4.5vw,2rem)] font-extrabold leading-none tracking-tight", blurCls, profit > 0 ? "text-success" : profit < 0 ? "text-danger" : "text-muted-foreground")}>{fmt(profit)} ج.م</span>
+                <div className="space-y-1 border-t border-white/5 pt-4">
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">صافي الربح</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className={cn("text-3xl font-black tracking-tighter", blurCls, profit > 0 ? "text-success" : profit < 0 ? "text-danger" : "text-muted-foreground")}>{fmt(profit)}</span>
+                    <span className="text-xs font-bold text-muted-foreground/40">ج.م</span>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">نسبة الربح</span>
-                  <span className={cn("block text-[clamp(1.35rem,4.5vw,2rem)] font-extrabold leading-none tracking-tight", blurCls, profit > 0 ? "text-success" : profit < 0 ? "text-danger" : "text-muted-foreground")}>{profitPct.toFixed(1)}%</span>
+                <div className="space-y-1 border-t border-white/5 pt-4">
+                  <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">نسبة الربح</span>
+                  <span className={cn("block text-3xl font-black tracking-tighter", blurCls, profit > 0 ? "text-success" : profit < 0 ? "text-danger" : "text-muted-foreground")}>{profitPct.toFixed(1)}%</span>
                 </div>
               </div>
             </div>
