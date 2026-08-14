@@ -42,7 +42,7 @@ import { toArabicDigits } from "@/lib/arabic-digits";
 import { cn } from "@/lib/utils";
 import { pdfDocument, openPdfDocument } from "@/lib/pdf-doc";
 
-type Tab = "active" | "overdue" | "settled" | "all";
+type Tab = "active" | "overdue" | "settled" | "all" | "returns";
 
 function isoToDDMMYYYY(iso: string): string {
   if (!iso) return "";
