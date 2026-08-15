@@ -148,27 +148,30 @@ function ReturnsPage() {
                   </div>
 
                   {/* Invoice ID */}
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">رقم الفاتورة (اختياري)</Label>
-                    <Input value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} placeholder="مثال: #INV-001" className="text-right h-12 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
+                  <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
+                    <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">رقم الفاتورة (اختياري)</Label>
+                    <Input value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} placeholder="مثال: #INV-001" className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-bold" />
                   </div>
 
                   {/* Add Items Section */}
                   <div className="space-y-4 border-t border-[var(--hairline)] pt-6">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">إضافة أصناف المرتجع</Label>
-                    <div className="space-y-3 p-4 bg-muted/10 rounded-2xl ring-1 ring-inset ring-[var(--hairline)]">
-                      <Input placeholder="اسم الصنف" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} className="text-right h-11 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <Label className="text-[9px] font-bold text-muted-foreground mr-2">السعر</Label>
-                          <Input type="number" placeholder="0.00" value={newItem.unitPrice || ""} onChange={(e) => setNewItem({ ...newItem, unitPrice: Number(e.target.value) })} className="text-right h-11 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
+                    <div className="space-y-4 p-5 bg-muted/10 rounded-2xl ring-1 ring-inset ring-[var(--hairline)]">
+                      <div className="space-y-2 group/subfield">
+                        <Label className="text-[10px] font-bold text-muted-foreground mr-2 group-focus-within/subfield:text-primary transition-colors">اسم الصنف</Label>
+                        <Input placeholder="اسم الصنف" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} className="text-right h-11 bg-background/40 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-bold" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2 group/subfield">
+                          <Label className="text-[10px] font-bold text-muted-foreground mr-2 group-focus-within/subfield:text-primary transition-colors">السعر</Label>
+                          <Input type="number" placeholder="0.00" value={newItem.unitPrice || ""} onChange={(e) => setNewItem({ ...newItem, unitPrice: Number(e.target.value) })} className="text-right h-11 bg-background/40 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-black" />
                         </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-[9px] font-bold text-muted-foreground mr-2">الكمية</Label>
-                          <Input type="number" placeholder="1" value={newItem.quantity || ""} onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })} className="text-right h-11 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
+                        <div className="space-y-2 group/subfield">
+                          <Label className="text-[10px] font-bold text-muted-foreground mr-2 group-focus-within/subfield:text-primary transition-colors">الكمية</Label>
+                          <Input type="number" placeholder="1" value={newItem.quantity || ""} onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })} className="text-right h-11 bg-background/40 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-black" />
                         </div>
                       </div>
-                      <Button onClick={addItem} className="w-full gap-2 rounded-xl h-12 bg-background/50 hover:bg-background border-[var(--hairline)] font-bold" variant="outline">
+                      <Button onClick={addItem} className="w-full gap-2 rounded-xl h-12 bg-background/50 hover:bg-background border-[var(--hairline)] font-bold transition-all hover:scale-[1.01]" variant="outline">
                         <Plus className="w-4 h-4" /> إضافة للمرتجع
                       </Button>
                     </div>
