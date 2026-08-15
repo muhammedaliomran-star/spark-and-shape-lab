@@ -16,13 +16,14 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   db, useDB, fmt, WAREHOUSE_SEASONS, WAREHOUSE_CATEGORIES,
   type WarehouseItem, type WarehouseSeason,
 } from "@/lib/store";
 import {
   Warehouse as WarehouseIcon, Boxes, Wallet, Sun, Snowflake, Search, Plus,
-  ArrowLeft, Trash2, Layers, Store, Pencil
+  ArrowLeft, Trash2, Layers, Store, Pencil, Check
 } from "lucide-react";
 import { usePrivacy } from "@/lib/privacy";
 import { cn } from "@/lib/utils";
