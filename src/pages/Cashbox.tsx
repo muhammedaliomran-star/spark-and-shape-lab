@@ -192,6 +192,7 @@ export default function CashboxPage() {
             icon={<ArrowUpRight className="w-4 h-4 text-success" />} 
             color="success" 
             privacy={privacy}
+            glow
           />
           <MetricCard 
             label="إجمالي المصروفات" 
@@ -199,6 +200,7 @@ export default function CashboxPage() {
             icon={<ArrowDownRight className="w-4 h-4 text-danger" />} 
             color="danger" 
             privacy={privacy}
+            glow
           />
           <MetricCard 
             label="صافي التدفق" 
@@ -206,6 +208,7 @@ export default function CashboxPage() {
             icon={<TrendingUp className="w-4 h-4 text-primary" />} 
             color="primary" 
             privacy={privacy}
+            glow
           />
           <MetricCard 
             label="متوسط يومي" 
@@ -213,6 +216,7 @@ export default function CashboxPage() {
             icon={<History className="w-4 h-4 text-muted-foreground" />} 
             color="muted" 
             privacy={privacy}
+            glow
           />
         </div>
 
@@ -364,23 +368,40 @@ export default function CashboxPage() {
   );
 }
 
-function MetricCard({ label, value, icon, color, privacy }: { label: string, value: number, icon: React.ReactNode, color: string, privacy: boolean }) {
+function MetricCard({ label, value, icon, color, privacy, isCount, glow }: { label: string, value: number, icon: React.ReactNode, color: string, privacy: boolean, isCount?: boolean, glow?: boolean }) {
   const blurCls = privacy ? "privacy-blur" : "privacy-clear";
   const colorCls = {
     success: "text-success",
     danger: "text-danger",
     primary: "text-primary",
+    warning: "text-warning",
     muted: "text-muted-foreground"
-  }[color as "success" | "danger" | "primary" | "muted"] || "text-foreground";
+  }[color as "success" | "danger" | "primary" | "warning" | "muted"] || "text-foreground";
+
+  const glowCls = glow ? {
+    success: "shadow-[0_0_30px_-10px_hsl(var(--success)/0.3)]",
+    danger: "shadow-[0_0_30px_-10px_hsl(var(--danger)/0.3)]",
+    primary: "shadow-[0_0_30px_-10px_hsl(var(--primary)/0.3)]",
+    warning: "shadow-[0_0_30px_-10px_hsl(var(--warning)/0.3)]",
+    muted: "shadow-none"
+  }[color as "success" | "danger" | "primary" | "warning" | "muted"] : "";
 
   return (
-    <div className="plate p-4 flex flex-col items-center justify-center text-center bezel-lift">
-      <div className="flex items-center gap-2 mb-1">
-        {icon}
-        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{label}</span>
+    <div className={cn("plate p-5 flex flex-col items-center justify-center text-center bezel-lift group relative overflow-hidden", glowCls)}>
+      {glow && (
+        <div className={cn(
+          "absolute -right-4 -top-4 w-12 h-12 blur-2xl opacity-20 transition-opacity group-hover:opacity-40",
+          color === 'primary' ? "bg-primary" : color === 'success' ? "bg-success" : color === 'danger' ? "bg-danger" : "bg-muted"
+        )} />
+      )}
+      <div className="flex items-center gap-2 mb-1.5">
+        <div className="p-1.5 rounded-lg bg-muted/20 ring-1 ring-inset ring-[var(--hairline)]">
+          {icon}
+        </div>
+        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">{label}</span>
       </div>
-      <div className={cn("text-lg font-black tabular-nums", colorCls, blurCls)}>
-        <CountUp value={value} format={n => fmt(n)} /> <span className="text-[10px] font-bold">ج.م</span>
+      <div className={cn("text-2xl font-black tabular-nums tracking-tighter", colorCls, blurCls)}>
+        {isCount ? <CountUp value={value} /> : <><CountUp value={value} format={(n: number) => fmt(n)} /> <span className="text-xs font-bold opacity-60">ج.م</span></>}
       </div>
     </div>
   );
