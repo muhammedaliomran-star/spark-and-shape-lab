@@ -6,8 +6,8 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useDB, fmt } from "@/lib/store";
-import { Wallet, Search, ArrowUpRight, ArrowDownRight, TrendingUp, History, Filter, Download, Plus, Trash2, Pencil, Calendar } from "lucide-react";
+import { useDB, db, fmt } from "@/lib/store";
+import { Wallet, Search, ArrowUpRight, ArrowDownRight, TrendingUp, History, Filter, Download, Plus, Trash2, Pencil, Calendar, Check } from "lucide-react";
 import { usePrivacy } from "@/lib/privacy";
 import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
@@ -15,15 +15,34 @@ import { CountUp } from "@/components/CountUp";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 export default function CashboxPage() {
-  const { invoices, payments, expenses, purchases, supplierPayments, loading } = useDB();
+  const { invoices, payments, expenses, purchases, supplierPayments } = useDB();
   const { privacy } = usePrivacy();
   const blurCls = privacy ? "privacy-blur" : "privacy-clear";
 
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<"all" | "in" | "out">("all");
   const [daysFilter, setDaysFilter] = useState("30");
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newTransaction, setNewTransaction] = useState({
+    type: "in" as "in" | "out",
+    amount: 0,
+    category: "",
+    notes: "",
+    date: new Date().toISOString().split('T')[0]
+  });
 
   // Transactions are derived from:
   // 1. Payments (Customer installments) -> IN
