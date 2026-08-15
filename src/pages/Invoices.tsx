@@ -1305,34 +1305,34 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl border-0 bg-background/95 backdrop-blur-2xl shadow-2xl">
-        <DialogHeader className="shrink-0 border-b border-white/5 bg-white/[0.02] px-6 py-6 backdrop-blur-xl relative overflow-hidden">
+        <DialogHeader className="shrink-0 border-b border-white/5 bg-white/[0.02] px-6 py-6 backdrop-blur-xl relative overflow-hidden sticky top-0 z-50">
           <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none">
             <Receipt className="w-24 h-24 text-primary rotate-12" />
           </div>
           <div className="flex items-center justify-between mb-2">
             <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">فاتورة جديدة</span>
           </div>
-          <DialogTitle className="text-right text-3xl font-black tracking-tight mb-1">إنشاء فاتورة جديدة</DialogTitle>
-          <DialogDescription className="text-right text-muted-foreground/80 font-medium">
-            {isCashMode ? "بيع فوري — سداد كامل المبلغ الآن." : "بيع بالتقسيط — مقدم ودفعات شهرية."}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-6 py-8 pb-10 text-right custom-scrollbar">
-          {/* Header Stats Rows */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-[1.5rem] border border-white/5 bg-white/[0.03] p-4 text-right">
-              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1 block">كود الفاتورة</Label>
-              <div className="text-xl font-mono font-bold tracking-wider">#0002</div>
+          <DialogTitle className="text-right text-3xl font-black tracking-tight mb-4">إنشاء فاتورة جديدة</DialogTitle>
+          
+          <div className="grid grid-cols-2 gap-3 mb-1">
+            <div className="rounded-[1.25rem] border border-white/5 bg-white/[0.03] p-3 text-right">
+              <Label className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-0.5 block">كود الفاتورة</Label>
+              <div className="text-lg font-mono font-bold tracking-wider">#0002</div>
             </div>
-            <div className="rounded-[1.5rem] border border-white/5 bg-white/[0.03] p-4 text-right">
-              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1 block">حالة الفاتورة</Label>
-              <div className="text-xl font-bold text-warning">غير مكتملة</div>
+            <div className="rounded-[1.25rem] border border-white/5 bg-white/[0.03] p-3 text-right">
+              <Label className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-0.5 block">حالة الفاتورة</Label>
+              <div className="text-lg font-bold text-warning">غير مكتملة</div>
             </div>
           </div>
+        </DialogHeader>
+        <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-6 py-8 pb-10 text-right custom-scrollbar">
+          <div className="space-y-4">
 
-          <div className="rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
-           <div className="space-y-2 rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
-            <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">العميل</Label>
+
+            <div className="rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
+              <div className="space-y-2 rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">العميل</Label>
+
             <Select
               value={customerId}
               onValueChange={(v) => {
@@ -1377,8 +1377,10 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
             </div>
           )}
 
-           </div>
+              </div>
+            </div>
           </div>
+
 
           {blocked && (
             <div className="rounded-2xl border-2 border-danger/40 bg-danger/10 p-3 text-sm text-danger flex items-start gap-2 animate-[scale-in_0.2s_ease-out]">
@@ -1749,7 +1751,7 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
                 </span>
                 <span className="text-xs font-bold text-primary">ج.م</span>
               </div>
-              {!customerId && <span className="text-[10px] text-warning font-bold mt-1">اختر العميل أولاً</span>}
+              
             </div>
             <div className="flex flex-col items-start">
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">إجمالي الفاتورة</span>
