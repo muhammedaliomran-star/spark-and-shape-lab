@@ -269,9 +269,10 @@ export default function CashboxPage() {
                       <span className={cn("font-bold text-danger", blurCls)}>{fmt(totalOut)} ج.م</span>
                    </div>
                    
-                   <Button className="w-full gap-2 mt-4" size="sm">
-                      <Plus className="w-4 h-4" /> إضافة معاملة
-                   </Button>
+                    <Button className="w-full gap-2 mt-4 rounded-xl py-6 shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all duration-300 font-black relative overflow-hidden group" size="sm">
+                      <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                      <Plus className="w-4 h-4 relative z-10" /> <span className="relative z-10">إضافة معاملة</span>
+                    </Button>
                 </div>
              </BezelCard>
           </div>
