@@ -189,13 +189,23 @@ function ReturnsPage() {
         {/* Returns History */}
         <div className="lg:col-span-2 space-y-4">
           <div className="sticky-search-bar mb-4">
-            <div className="bg-card plate p-4 flex flex-col md:flex-row gap-3 items-center justify-between">
-              <div className="flex items-center gap-2 order-2 md:order-1">
-                <Badge variant="secondary" className="px-3 py-1 rounded-full">{data.returns.length} عملية</Badge>
+            <div className="bg-card plate p-4 flex flex-col md:flex-row gap-4 items-center justify-between border-primary/10">
+              <div className="flex items-center gap-3 order-2 md:order-1">
+                <div className="flex -space-x-2 rtl:space-x-reverse">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 ring-2 ring-background flex items-center justify-center">
+                    <TrendingUp className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-warning/20 ring-2 ring-background flex items-center justify-center">
+                    <Package className="w-4 h-4 text-warning" />
+                  </div>
+                </div>
+                <Badge variant="secondary" className="px-3 py-1 rounded-full font-black text-[10px] tracking-widest uppercase bg-muted/50">{data.returns.length} عملية مسجلة</Badge>
               </div>
-              <h3 className="text-sm font-bold flex items-center gap-2 text-right order-1 md:order-2">
+              <h3 className="text-sm font-black flex items-center gap-2 text-right order-1 md:order-2 uppercase tracking-tighter">
                 سجل المرتجعات التاريخي
-                <History className="w-4 h-4 text-muted-foreground" />
+                <div className="p-1.5 rounded-lg bg-muted/20">
+                  <History className="w-4 h-4 text-primary" />
+                </div>
               </h3>
             </div>
           </div>
