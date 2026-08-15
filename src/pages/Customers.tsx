@@ -189,7 +189,7 @@ function CustomersPage() {
 
   const exportPDF = () => {
     const tabLabel: Record<FilterTab, string> = { all: "كل العملاء", installment: "عملاء الأقساط", cash: "العملاء الفوريون", overdue: "العملاء المتأخرون", bajah: "العملاء البجحون", settled: "العملاء الخالصون" };
-    const today = new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" });
+    const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
     const rows = list.map(({ c, m }, i) => `
       <tr>
         <td>${i + 1}</td>
@@ -627,8 +627,8 @@ function CustomersPage() {
                           return (
                             <tr key={p.id} className="border-t border-[var(--hairline)] hover:bg-foreground/[0.035]">
                               <td className="p-2.5 text-muted-foreground">{payments.length - i}</td>
-                              <td className="p-2.5" dir="ltr">{d.toLocaleDateString("ar-EG", { year: "numeric", month: "2-digit", day: "2-digit" })}</td>
-                              <td className="p-2.5 text-muted-foreground" dir="ltr">{d.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}</td>
+                              <td className="p-2.5" dir="ltr">{d.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" })}</td>
+                              <td className="p-2.5 text-muted-foreground" dir="ltr">{d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</td>
                               <td className={cn("p-2.5 font-bold text-success", privacy && "privacy-blur")}>+ {fmt(p.amount)} ج.م</td>
                             </tr>
                           );
@@ -964,7 +964,7 @@ function exportStatementPDF(
 ) {
   const timelineDesc = buildTimeline(c, invoices, payments);
   const timeline = [...timelineDesc].reverse(); // chronological for the report
-  const today = new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" });
+  const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const joining = isoToDDMMYYYY(c.joiningDate);
 
   const rows = timeline.map((t, i) => {
@@ -1039,7 +1039,7 @@ function shareStatement(
   const lines: string[] = [];
   lines.push(`📋 كشف حساب — ${c.name}`);
   lines.push(`📞 ${c.phone}`);
-  lines.push(`📅 ${new Date().toLocaleDateString("ar-EG")}`);
+  lines.push(`📅 ${new Date().toLocaleDateString("en-US")}`);
   lines.push("―――――――――――――");
   lines.push(`💰 إجمالي المعاملات: ${fmt(m.totalCharged)} ج.م`);
   lines.push(`✅ إجمالي المسدد: ${fmt(m.totalPaid)} ج.م`);
@@ -1057,7 +1057,7 @@ function shareStatement(
   if (payments.length) {
     lines.push("💵 آخر المدفوعات:");
     payments.slice(0, 5).forEach((p) => {
-      lines.push(`• ${fmt(p.amount)} ج.م — ${new Date(p.paidAt).toLocaleDateString("ar-EG")}`);
+      lines.push(`• ${fmt(p.amount)} ج.م — ${new Date(p.paidAt).toLocaleDateString("en-US")}`);
     });
   }
   lines.push("");

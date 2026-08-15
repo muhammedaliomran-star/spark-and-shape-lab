@@ -205,7 +205,7 @@ function AlertsPage() {
                       <Phone className="w-3 h-3" />
                       <span>
                         {upcoming ? "يستحق في: " : "مستحق منذ: "}
-                        {new Date(inv.firstDueDate).toLocaleDateString("ar-EG", { day: "2-digit", month: "long" })}
+                        {new Date(inv.firstDueDate).toLocaleDateString("en-US", { day: "2-digit", month: "long" })}
                       </span>
                       <Calendar className="w-3 h-3" />
                     </div>

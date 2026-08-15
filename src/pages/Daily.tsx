@@ -182,7 +182,7 @@ function DailyPage() {
 
   const money = (n: number) => `${fmt(n)} ج.م`;
   const rangeLabel = from === to
-    ? new Date(from || todayISO()).toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" })
+    ? new Date(from || todayISO()).toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" })
     : `${from} — ${to}`;
 
   const saveNote = () => {
@@ -201,7 +201,7 @@ function DailyPage() {
       const isCash = (c?.customerType ?? "installment") === "cash";
       return [
         invoiceNumber(invoices, inv.id),
-        new Date(inv.createdAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }),
+        new Date(inv.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
         c?.name ?? "—",
         inv.total, inv.paid, Math.max(0, inv.total - inv.paid),
         isCash ? "فوري" : "قسط",
@@ -472,7 +472,7 @@ function DailyPage() {
                       <tr key={inv.id} className="border-b border-[var(--hairline)] transition-colors last:border-0 hover:bg-foreground/[0.03]">
                         <td className="p-4 font-semibold text-muted-foreground" dir="ltr">{invoiceNumber(invoices, inv.id)}</td>
                         <td className="p-4 text-muted-foreground">
-                          {new Date(inv.createdAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
+                          {new Date(inv.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                         </td>
                         <td className="p-4 font-semibold text-foreground">{c?.name ?? "—"}</td>
                         <td className={cn("p-4 text-numeric font-bold", masked && "privacy-blur")}>{money(inv.total)}</td>

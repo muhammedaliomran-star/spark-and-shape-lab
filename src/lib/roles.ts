@@ -144,5 +144,5 @@ export function relativeTime(iso: string | null): string {
   if (h < 24) return `قبل ${h} ساعة`;
   const d = Math.floor(h / 24);
   if (d < 30) return `قبل ${d} يوم`;
-  return new Date(iso).toLocaleDateString("ar-EG");
+  return new Date(iso).toLocaleDateString("en-US");
 }

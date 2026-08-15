@@ -920,7 +920,7 @@ export function daysLate(inv: Invoice) {
 }
 
 export function fmt(n: number) {
-  return new Intl.NumberFormat("ar-EG").format(Math.round(n));
+  return new Intl.NumberFormat("en-US").format(Math.round(n));
 }
 
 /** عدد أيام التذكير المُبكِّر المضبوط في الإعدادات. */

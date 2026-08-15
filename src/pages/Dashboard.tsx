@@ -268,7 +268,7 @@ export function Dashboard() {
     for (let i = 5; i >= 0; i--) {
       const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
-      const label = d.toLocaleDateString("ar-EG", { month: "short" });
+      const label = d.toLocaleDateString("en-US", { month: "short" });
       months.push({ key, label, total: 0, forecast: null });
     }
     for (const p of data.payments) {
@@ -299,7 +299,7 @@ export function Dashboard() {
     lastReal.forecast = lastReal.total;
     months.push({
       key: nextKey,
-      label: next.toLocaleDateString("ar-EG", { month: "short" }) + " (متوقع)",
+      label: next.toLocaleDateString("en-US", { month: "short" }) + " (متوقع)",
       total: null,
       forecast,
     });
@@ -555,7 +555,7 @@ export function Dashboard() {
               tone={dailyCollections > 0 ? "positive" : "neutral"}
               icon={CalendarCheck}
               series={monthBuckets.payments}
-              sub={today.toLocaleDateString("ar-EG", { day: "2-digit", month: "long" })}
+              sub={today.toLocaleDateString("en-US", { day: "2-digit", month: "long" })}
             />
           </Reveal>
 
@@ -716,7 +716,7 @@ export function Dashboard() {
                       tickFormatter={(v) =>
                         privacy
                           ? "•••"
-                          : new Intl.NumberFormat("ar-EG", { notation: "compact" }).format(v)
+                          : new Intl.NumberFormat("en-US", { notation: "compact" }).format(v)
                       }
                     />
                     <Tooltip

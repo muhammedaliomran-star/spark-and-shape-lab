@@ -233,9 +233,9 @@ ${opts.lede ? `<p class="doc-lede">${opts.lede}</p>` : ""}
 ${opts.kpis?.length ? pdfKpis(opts.kpis) : ""}
 ${opts.body}
 ${opts.footerNote ? `<div class="note">${opts.footerNote}</div>` : ""}
-<footer class="doc-foot"><span>تم إصدار هذا المستند آلياً من تطبيق سِجلّي</span><span>${new Date().toLocaleString("ar-EG")}</span></footer>
+<footer class="doc-foot"><span>تم إصدار هذا المستند آلياً من تطبيق سِجلّي</span><span>${new Date().toLocaleString("en-US")}</span></footer>
 </main>
-${arabicDigitsScript}
+
 </body></html>`;
 }
 

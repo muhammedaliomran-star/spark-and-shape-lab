@@ -38,6 +38,6 @@ export function CountUp({ value, duration = 1000, format, className, suffix, dis
 
   if (disabled) return <span className={className}>{children}</span>;
 
-  const text = format ? format(display) : Math.round(display).toLocaleString("ar-EG");
+  const text = format ? format(display) : Math.round(display).toLocaleString("en-US");
   return <span className={className}>{text}{suffix}</span>;
 }

@@ -36,14 +36,14 @@ export default function Page() {
 
 type Range = "3" | "6" | "12";
 
-const MONTHS_AR = ["يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function monthKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 function monthLabel(key: string) {
   const [y, m] = key.split("-");
-  return `${MONTHS_AR[Number(m) - 1]} ${String(y).slice(2)}`;
+  return `${MONTHS_EN[Number(m) - 1]} ${String(y).slice(2)}`;
 }
 function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
@@ -194,7 +194,7 @@ function ReportsPage() {
       { label: "المحل", value: escapeHtml(shopName) },
       ...(settings.phone ? [{ label: "تليفون", value: escapeHtml(settings.phone) }] : []),
       { label: "الفترة", value: `${monthLabel(months[0])} — ${monthLabel(months[months.length - 1])}` },
-      { label: "تاريخ التقرير", value: new Date().toLocaleDateString("ar-EG") },
+      { label: "تاريخ التقرير", value: new Date().toLocaleDateString("en-US") },
     ];
     const body = `
 <h2 class="sec">الملخص الشهري</h2>
