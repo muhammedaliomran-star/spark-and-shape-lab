@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/EmptyState";
-import { Plus, History, TrendingUp, X, Check, Trash2, Receipt, Package, Undo2 } from "lucide-react";
+import { Plus, History, TrendingUp, X, Check, Trash2, Receipt, Package, Undo2, Search } from "lucide-react";
 import { CountUp } from "@/components/CountUp";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePrivacy } from "@/lib/privacy";
@@ -17,6 +17,14 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Page() {
   return (
@@ -38,6 +46,8 @@ function ReturnsPage() {
   const [reason, setReason] = useState("");
   const [items, setItems] = useState<Array<{ name: string; unitPrice: number; quantity: number }>>([]);
   const [newItem, setNewItem] = useState({ name: "", unitPrice: 0, quantity: 1 });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleAddReturn = async () => {
     if (items.length === 0) return;
@@ -53,6 +63,7 @@ function ReturnsPage() {
     setInvoiceId("");
     setReason("");
     setItems([]);
+    setIsDialogOpen(false);
     toast.success("تم تسجيل المرتجع بنجاح");
   };
 
@@ -62,14 +73,167 @@ function ReturnsPage() {
     setNewItem({ name: "", unitPrice: 0, quantity: 1 });
   };
 
+  const filteredReturns = data.returns.filter(r => {
+    const term = searchQuery.toLowerCase();
+    return (
+      r.invoiceId?.toLowerCase().includes(term) ||
+      r.reason?.toLowerCase().includes(term) ||
+      (r.type === 'sale' ? 'مرتجع بيع' : 'مرتجع مورد').includes(term)
+    );
+  });
+
   return (
     <>
       <PageHeader
         title="المرتجعات"
         subtitle="إدارة مرتجعات المبيعات والمشتريات والربط مع المخازن."
         icon={<Undo2 className="w-8 h-8 text-primary" />}
+        action={
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 rounded-2xl h-12 px-6 shadow-xl shadow-primary/20 hover:scale-105 transition-transform">
+                <Plus className="w-5 h-5" /> تسجيل مرتجع جديد
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl overflow-hidden p-0 border-none bg-card/95 backdrop-blur-2xl">
+              <DialogHeader className="p-6 pb-2 sticky top-0 bg-card/50 backdrop-blur-xl z-20 border-b border-[var(--hairline)]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center">
+                      <Undo2 className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-right text-xl font-black">تسجيل مرتجع جديد</DialogTitle>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mt-0.5">Register New Return Entry</p>
+                    </div>
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <ScrollArea className="max-h-[80vh] p-6">
+                <div className="space-y-6 text-right" dir="rtl">
+                  {/* Type Selection */}
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">نوع المرتجع</Label>
+                    <div className="grid grid-cols-2 gap-2 p-1.5 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] relative overflow-hidden">
+                      <motion.div 
+                        layoutId="active-tab"
+                        className={cn(
+                          "absolute inset-y-1 w-[calc(50%-6px)] rounded-xl shadow-lg z-0",
+                          returnType === "sale" ? "bg-primary left-1.5" : "bg-warning right-1.5"
+                        )}
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      />
+                      <Button 
+                        variant="ghost"
+                        className={cn(
+                          "relative z-10 rounded-xl h-11 font-black transition-colors",
+                          returnType === "sale" ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                        )}
+                        onClick={() => setReturnType("sale")}
+                      >
+                        مرتجع بيع
+                      </Button>
+                      <Button 
+                        variant="ghost"
+                        className={cn(
+                          "relative z-10 rounded-xl h-11 font-black transition-colors",
+                          returnType === "supplier" ? "text-warning-foreground" : "text-muted-foreground hover:text-foreground"
+                        )}
+                        onClick={() => setReturnType("supplier")}
+                      >
+                        مرتجع مورد
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Invoice ID */}
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">رقم الفاتورة (اختياري)</Label>
+                    <Input value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} placeholder="مثال: #INV-001" className="text-right h-12 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
+                  </div>
+
+                  {/* Add Items Section */}
+                  <div className="space-y-4 border-t border-[var(--hairline)] pt-6">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">إضافة أصناف المرتجع</Label>
+                    <div className="space-y-3 p-4 bg-muted/10 rounded-2xl ring-1 ring-inset ring-[var(--hairline)]">
+                      <Input placeholder="اسم الصنف" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} className="text-right h-11 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-[9px] font-bold text-muted-foreground mr-2">السعر</Label>
+                          <Input type="number" placeholder="0.00" value={newItem.unitPrice || ""} onChange={(e) => setNewItem({ ...newItem, unitPrice: Number(e.target.value) })} className="text-right h-11 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-[9px] font-bold text-muted-foreground mr-2">الكمية</Label>
+                          <Input type="number" placeholder="1" value={newItem.quantity || ""} onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })} className="text-right h-11 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
+                        </div>
+                      </div>
+                      <Button onClick={addItem} className="w-full gap-2 rounded-xl h-12 bg-background/50 hover:bg-background border-[var(--hairline)] font-bold" variant="outline">
+                        <Plus className="w-4 h-4" /> إضافة للمرتجع
+                      </Button>
+                    </div>
+                    
+                    {/* Selected Items Preview */}
+                    <AnimatePresence>
+                      {items.length > 0 && (
+                        <motion.div 
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          className="bg-muted/20 rounded-2xl p-5 space-y-3 ring-1 ring-inset ring-[var(--hairline)]"
+                        >
+                          {items.map((it, idx) => (
+                            <div key={idx} className="flex justify-between items-center text-sm border-b border-[var(--hairline)]/50 pb-3 last:border-0">
+                              <div className="flex items-center gap-3">
+                                <button onClick={() => setItems(items.filter((_, i) => i !== idx))} className="w-8 h-8 flex items-center justify-center rounded-xl bg-danger/10 text-danger hover:scale-110 transition-transform"><X className="w-4 h-4" /></button>
+                                <div className="text-left">
+                                  <span className={cn("font-black text-numeric text-primary block", blurCls)}>{fmt(it.unitPrice * it.quantity)} <span className="text-[10px]">ج.م</span></span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-foreground font-black block">{it.name}</span>
+                                <span className="text-[10px] text-muted-foreground uppercase font-bold">{it.quantity} قطعة × {fmt(it.unitPrice)}</span>
+                              </div>
+                            </div>
+                          ))}
+                          <div className="flex justify-between items-center font-black pt-4 border-t border-[var(--hairline)]">
+                            <div className="text-left">
+                              <span className={cn("text-primary text-2xl text-numeric", blurCls)}>{fmt(items.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0))} <span className="text-xs">ج.م</span></span>
+                            </div>
+                            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">الإجمالي النهائي للمرتجع</span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Reason */}
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">السبب / ملاحظات</Label>
+                    <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="مثال: تلف في المنتج أو خطأ في المقاس..." className="text-right h-12 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
+                  </div>
+
+                  <Button 
+                    className={cn(
+                      "w-full gap-2 py-8 text-xl rounded-2xl shadow-2xl transition-all duration-500 font-black relative overflow-hidden group",
+                      returnType === 'sale' 
+                        ? "bg-primary text-primary-foreground hover:shadow-primary/30" 
+                        : "bg-warning text-warning-foreground hover:shadow-warning/30"
+                    )} 
+                    disabled={items.length === 0} 
+                    onClick={handleAddReturn}
+                  >
+                    <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                    <Check className="w-6 h-6 relative z-10" /> <span className="relative z-10">تأكيد وتسجيل المرتجع</span>
+                  </Button>
+                </div>
+              </ScrollArea>
+            </DialogContent>
+          </Dialog>
+        }
       />
 
+      {/* Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <MetricCard label="إجمالي المرتجعات" value={data.returns.reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Undo2 className="w-4 h-4 text-primary" />} color="primary" privacy={privacy} glow />
         <MetricCard label="مرتجعات مبيعات" value={data.returns.filter(r => r.type === "sale").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<TrendingUp className="w-4 h-4 text-warning" />} color="warning" privacy={privacy} glow />
@@ -77,203 +241,120 @@ function ReturnsPage() {
         <MetricCard label="عدد العمليات" value={data.returns.length} icon={<History className="w-4 h-4 text-muted-foreground" />} color="muted" privacy={privacy} isCount glow />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Registration Form */}
-        <div className="lg:col-span-1">
-          <BezelCard className="p-0 overflow-hidden bezel-lift">
-            <div className="p-4 border-b border-[var(--hairline)] flex items-center justify-between">
-              <span className="font-bold text-sm">تسجيل مرتجع جديد</span>
-              <Receipt className="w-5 h-5 text-primary" />
+      {/* Full Width History Table/List */}
+      <div className="space-y-4">
+        <div className="sticky-search-bar mb-4">
+          <div className="bg-card/50 plate p-5 flex flex-col lg:flex-row gap-5 items-center justify-between border-primary/10 backdrop-blur-xl">
+            <div className="flex items-center gap-4 order-2 lg:order-1 w-full lg:w-auto">
+              <div className="relative flex-1 lg:w-80">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  placeholder="بحث في المرتجعات (رقم الفاتورة، السبب...)" 
+                  className="pr-10 h-11 glass border-none"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Badge variant="secondary" className="px-4 py-2 rounded-xl font-black text-[10px] tracking-widest uppercase bg-muted/50 hidden md:flex shrink-0">
+                {filteredReturns.length} عملية مؤرشفة
+              </Badge>
             </div>
-            
-            <div className="p-5 space-y-4 text-right">
-              <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">نوع المرتجع</Label>
-                <div className="grid grid-cols-2 gap-2 p-1.5 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] relative overflow-hidden">
-                  <motion.div 
-                    layoutId="active-tab"
-                    className={cn(
-                      "absolute inset-y-1 w-[calc(50%-6px)] rounded-xl shadow-lg z-0",
-                      returnType === "sale" ? "bg-primary left-1.5" : "bg-warning right-1.5"
-                    )}
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                  <Button 
-                    variant="ghost"
-                    className={cn(
-                      "relative z-10 rounded-xl h-10 font-bold transition-colors",
-                      returnType === "sale" ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                    )}
-                    onClick={() => setReturnType("sale")}
-                  >
-                    مرتجع بيع
-                  </Button>
-                  <Button 
-                    variant="ghost"
-                    className={cn(
-                      "relative z-10 rounded-xl h-10 font-bold transition-colors",
-                      returnType === "supplier" ? "text-warning-foreground" : "text-muted-foreground hover:text-foreground"
-                    )}
-                    onClick={() => setReturnType("supplier")}
-                  >
-                    مرتجع مورد
-                  </Button>
-                </div>
+            <h3 className="text-sm font-black flex items-center gap-3 text-right order-1 lg:order-2 w-full lg:w-auto justify-end uppercase tracking-tighter">
+              سجل المرتجعات الشامل
+              <div className="p-2 rounded-xl bg-primary/10 ring-1 ring-primary/20">
+                <History className="w-5 h-5 text-primary" />
               </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">رقم الفاتورة (اختياري)</Label>
-                <Input value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} placeholder="مثال: #INV-001" className="text-right h-11 glass" />
-              </div>
-
-              <div className="space-y-4 border-t border-[var(--hairline)] pt-4">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">إضافة أصناف المرتجع</Label>
-                <div className="space-y-2 p-3 bg-muted/10 rounded-2xl ring-1 ring-inset ring-[var(--hairline)]">
-                  <Input placeholder="اسم الصنف" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} className="text-right h-10 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input type="number" placeholder="السعر" value={newItem.unitPrice || ""} onChange={(e) => setNewItem({ ...newItem, unitPrice: Number(e.target.value) })} className="text-right h-10 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
-                    <Input type="number" placeholder="الكمية" value={newItem.quantity || ""} onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })} className="text-right h-10 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
-                  </div>
-                  <Button onClick={addItem} className="w-full gap-2 rounded-xl h-10 bg-background/50 hover:bg-background border-[var(--hairline)]" variant="outline">
-                    <Plus className="w-4 h-4" /> إضافة للمرتجع
-                  </Button>
-                </div>
-                
-                <AnimatePresence>
-                  {items.length > 0 && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="bg-muted/20 rounded-2xl p-4 space-y-2 ring-1 ring-inset ring-[var(--hairline)]"
-                    >
-                      {items.map((it, idx) => (
-                        <div key={idx} className="flex justify-between items-center text-sm border-b border-[var(--hairline)]/50 pb-2 last:border-0">
-                          <div className="flex items-center gap-2">
-                            <button onClick={() => setItems(items.filter((_, i) => i !== idx))} className="w-6 h-6 flex items-center justify-center rounded-full bg-danger/10 text-danger hover:scale-110 transition-transform"><X className="w-3.5 h-3.5" /></button>
-                            <span className={cn("font-bold text-numeric text-primary", blurCls)}>{fmt(it.unitPrice * it.quantity)} <span className="text-[10px]">ج.م</span></span>
-                          </div>
-                          <span className="text-muted-foreground font-medium">{it.name} <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-md mx-1">{it.quantity} × {fmt(it.unitPrice)}</span></span>
-                        </div>
-                      ))}
-                      <div className="flex justify-between items-center font-black pt-2 border-t border-[var(--hairline)]">
-                        <span className={cn("text-primary text-xl text-numeric", blurCls)}>{fmt(items.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0))} <span className="text-xs">ج.م</span></span>
-                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">الإجمالي المستحق</span>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">السبب / ملاحظات</Label>
-                <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="مثال: تلف في المنتج..." className="text-right h-12 glass" />
-              </div>
-
-              <Button 
-                className={cn(
-                  "w-full gap-2 py-7 text-lg rounded-2xl shadow-2xl transition-all duration-500 font-black",
-                  returnType === 'sale' 
-                    ? "bg-primary text-primary-foreground hover:shadow-primary/30" 
-                    : "bg-warning text-warning-foreground hover:shadow-warning/30"
-                )} 
-                disabled={items.length === 0} 
-                onClick={handleAddReturn}
-              >
-                <Check className="w-6 h-6" /> تسجيل المرتجع
-              </Button>
-            </div>
-          </BezelCard>
+            </h3>
+          </div>
         </div>
 
-        {/* Returns History */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="sticky-search-bar mb-4">
-            <div className="bg-card plate p-4 flex flex-col md:flex-row gap-4 items-center justify-between border-primary/10">
-              <div className="flex items-center gap-3 order-2 md:order-1">
-                <div className="flex -space-x-2 rtl:space-x-reverse">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 ring-2 ring-background flex items-center justify-center">
-                    <TrendingUp className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="w-8 h-8 rounded-full bg-warning/20 ring-2 ring-background flex items-center justify-center">
-                    <Package className="w-4 h-4 text-warning" />
-                  </div>
-                </div>
-                <Badge variant="secondary" className="px-3 py-1 rounded-full font-black text-[10px] tracking-widest uppercase bg-muted/50">{data.returns.length} عملية مسجلة</Badge>
-              </div>
-              <h3 className="text-sm font-black flex items-center gap-2 text-right order-1 md:order-2 uppercase tracking-tighter">
-                سجل المرتجعات التاريخي
-                <div className="p-1.5 rounded-lg bg-muted/20">
-                  <History className="w-4 h-4 text-primary" />
-                </div>
-              </h3>
-            </div>
-          </div>
-
-          <Reveal delay={100}>
-            <div className="flex flex-col gap-3">
-              {data.returns.length === 0 ? (
-                <BezelCard className="p-20 text-center bezel-lift group relative overflow-hidden">
+        <Reveal delay={100}>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredReturns.length === 0 ? (
+              <div className="col-span-full">
+                <BezelCard className="p-24 text-center bezel-lift group relative overflow-hidden">
                    <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                    <div className="relative z-10 flex flex-col items-center">
-                     <div className="w-24 h-24 mb-6 relative">
-                        <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
-                        <div className="relative w-full h-full rounded-3xl bg-card plate flex items-center justify-center ring-1 ring-primary/20">
-                          <History className="w-10 h-10 text-primary animate-float-soft" />
+                     <div className="w-28 h-28 mb-8 relative">
+                        <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full animate-pulse" />
+                        <div className="relative w-full h-full rounded-[2rem] bg-card plate flex items-center justify-center ring-1 ring-primary/20 shadow-2xl">
+                          <History className="w-12 h-12 text-primary animate-float-soft" />
                         </div>
                      </div>
-                     <h3 className="text-xl font-black mb-2">لا توجد مرتجعات مسجلة</h3>
-                     <p className="text-muted-foreground text-sm max-w-[280px] leading-relaxed">بانتظار تسجيل أول عملية مرتجع للنظام لبدء الأرشفة والتحليل المالي.</p>
+                     <h3 className="text-2xl font-black mb-3">لا توجد سجلات مطابقة</h3>
+                     <p className="text-muted-foreground text-sm max-w-[320px] leading-relaxed">لم نتمكن من العثور على أي عمليات مرتجعة مسجلة تطابق معايير البحث الحالية.</p>
                    </div>
                 </BezelCard>
-              ) : (
-                data.returns.map((r: any) => (
-                  <BezelCard key={r.id} className="p-0 overflow-hidden group bezel-lift border-transparent hover:border-primary/20 transition-all duration-500 relative">
+              </div>
+            ) : (
+              filteredReturns.map((r: any, idx) => (
+                <Reveal key={r.id} delay={idx * 50}>
+                  <BezelCard className="p-0 overflow-hidden group bezel-lift border-transparent hover:border-primary/20 transition-all duration-500 relative h-full">
                     <div className={cn(
-                      "absolute top-0 right-0 w-1 h-full",
-                      r.type === "sale" ? "bg-warning/50" : "bg-primary/50"
+                      "absolute top-0 right-0 w-1.5 h-full z-20",
+                      r.type === "sale" ? "bg-warning" : "bg-primary"
                     )} />
-                    <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-                      <div className="flex items-center gap-4 order-2 md:order-1">
-                        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl bg-danger/5 text-muted-foreground hover:text-danger hover:bg-danger/10 md:opacity-0 group-hover:opacity-100 transition-all duration-300" onClick={() => db.removeReturn(r.id)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                        <div className="text-right">
-                          <div className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em] mb-0.5">القيمة الإجمالية</div>
-                          <div className={cn("text-2xl font-black text-numeric tracking-tighter", r.type === 'sale' ? "text-warning" : "text-primary", blurCls)}>
-                            {fmt(r.totalAmount)} <span className="text-xs font-bold opacity-60">ج.م</span>
-                          </div>
+                    <div className="p-6 flex flex-col justify-between h-full gap-6 relative z-10">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex flex-col gap-2">
+                           <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl bg-danger/5 text-muted-foreground hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-all duration-300" onClick={() => db.removeReturn(r.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-4 order-1 md:order-2 text-right">
-                        <div className="space-y-1">
+                        <div className="text-right space-y-2">
                           <div className="flex items-center justify-end gap-2">
                             {r.invoiceId && <Badge variant="secondary" className="text-[10px] font-mono bg-muted/50 ring-1 ring-inset ring-[var(--hairline)]">{r.invoiceId}</Badge>}
-                            <span className="font-black text-sm tracking-tight">{r.type === "sale" ? "مرتجع مبيعات" : "مرتجع موردين"}</span>
+                            <span className={cn(
+                              "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md",
+                              r.type === 'sale' ? "bg-warning/10 text-warning" : "bg-primary/10 text-primary"
+                            )}>
+                              {r.type === "sale" ? "مرتجع مبيعات" : "مرتجع موردين"}
+                            </span>
                           </div>
-                          <div className="text-[10px] font-medium text-muted-foreground bg-muted/30 px-2 py-0.5 rounded-full inline-block" dir="ltr">{format(new Date(r.createdAt), "yyyy/MM/dd - hh:mm a")}</div>
+                          <div className="text-[10px] font-medium text-muted-foreground" dir="ltr">{format(new Date(r.createdAt), "yyyy/MM/dd - hh:mm a")}</div>
                         </div>
-                        <div className={cn(
-                          "w-12 h-12 rounded-2xl flex items-center justify-center ring-1 ring-inset",
-                          r.type === "sale" ? "bg-warning/10 text-warning ring-warning/20 shadow-[0_0_20px_-5px_hsl(var(--warning)/0.2)]" : "bg-primary/10 text-primary ring-primary/20 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.2)]"
-                        )}>
-                          {r.type === "sale" ? <TrendingUp className="w-6 h-6" /> : <Package className="w-6 h-6" />}
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 ring-1 ring-inset ring-[var(--hairline)]">
+                           <div className={cn("text-2xl font-black text-numeric tracking-tighter", r.type === 'sale' ? "text-warning" : "text-primary", blurCls)}>
+                            {fmt(r.totalAmount)} <span className="text-xs font-bold opacity-60">ج.م</span>
+                          </div>
+                          <div className={cn(
+                            "w-12 h-12 rounded-2xl flex items-center justify-center ring-1 ring-inset",
+                            r.type === "sale" ? "bg-warning/10 text-warning ring-warning/20 shadow-[0_0_20px_-5px_hsl(var(--warning)/0.2)]" : "bg-primary/10 text-primary ring-primary/20 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.2)]"
+                          )}>
+                            {r.type === "sale" ? <TrendingUp className="w-6 h-6" /> : <Package className="w-6 h-6" />}
+                          </div>
                         </div>
+
+                        {r.reason && (
+                          <div className="text-[11px] text-muted-foreground leading-relaxed bg-muted/5 p-3 rounded-xl border border-[var(--hairline)]/50 italic text-right">
+                            <span className="text-[9px] font-black uppercase tracking-widest block mb-1 opacity-50 not-italic">ملاحظات العملية:</span>
+                            {r.reason}
+                          </div>
+                        )}
+                        
+                        {r.items && r.items.length > 0 && (
+                          <div className="space-y-1">
+                             <span className="text-[9px] font-black uppercase tracking-widest block mb-1.5 opacity-50 text-right">الأصناف المرتجعة ({r.items.length}):</span>
+                             <div className="flex flex-wrap gap-1.5 justify-end">
+                               {r.items.map((item: any, i: number) => (
+                                 <Badge key={i} variant="outline" className="text-[9px] py-0 px-2 bg-muted/20 border-none font-bold">
+                                   {item.name} ({item.quantity})
+                                 </Badge>
+                               ))}
+                             </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    {r.reason && (
-                      <div className="mx-5 mb-5 text-[11px] text-muted-foreground leading-relaxed bg-muted/10 p-3 rounded-2xl border border-[var(--hairline)]/50 italic text-right relative z-10">
-                        <span className="text-[10px] font-black uppercase tracking-widest block mb-1 opacity-50 not-italic">سبب المرتجع:</span>
-                        {r.reason}
-                      </div>
-                    )}
                   </BezelCard>
-                ))
-              )}
-            </div>
-          </Reveal>
-        </div>
+                </Reveal>
+              ))
+            )}
+          </div>
+        </Reveal>
       </div>
     </>
   );
@@ -317,4 +398,3 @@ function MetricCard({ label, value, icon, color, privacy, isCount, glow }: { lab
     </div>
   );
 }
-
