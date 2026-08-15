@@ -438,7 +438,7 @@ function MoveToShopDialog({ item, open, onOpenChange }: { item: WarehouseItem; o
 }
 
 
-function AddDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("0");
   const [unitCost, setUnitCost] = useState("0");
@@ -475,62 +475,117 @@ function AddDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: bo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent dir="rtl" className="text-right sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-right">إضافة صنف للمخزن</DialogTitle>
-          <DialogDescription className="text-right">أضف بضاعة مركونة جديدة مع تحديد موسمها.</DialogDescription>
+      <DialogContent className="max-w-2xl overflow-hidden p-0 border-none bg-card/95 backdrop-blur-2xl">
+        <DialogHeader className="p-6 pb-2 sticky top-0 bg-card/50 backdrop-blur-xl z-20 border-b border-[var(--hairline)]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center">
+                <WarehouseIcon className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <DialogTitle className="text-right text-xl font-black">إضافة صنف للمخزن</DialogTitle>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mt-0.5">Add New Warehouse Item</p>
+              </div>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <Label>اسم الصنف</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="مثال: بنطلون صيفي..." className="rounded-2xl text-right" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="grid gap-2">
-              <Label>الكمية</Label>
-              <Input type="number" inputMode="numeric" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="text-numeric rounded-2xl text-right" />
+        <ScrollArea className="max-h-[80vh] p-6">
+          <div className="space-y-6 text-right" dir="rtl">
+            {/* Name */}
+            <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
+              <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">اسم الصنف</Label>
+              <Input 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                placeholder="مثال: بنطلون صيفي قطن..." 
+                className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-bold" 
+              />
             </div>
-            <div className="grid gap-2">
-              <Label>سعر التكلفة (ج.م)</Label>
-              <Input type="number" inputMode="decimal" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} className="text-numeric rounded-2xl text-right" />
-            </div>
-          </div>
-          <div className="grid gap-2">
-            <Label>سعر البيع (ج.م) — اختياري</Label>
-            <Input type="number" inputMode="decimal" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} className="text-numeric rounded-2xl text-right" />
-          </div>
-          <div className="grid gap-2">
-            <Label>الموسم</Label>
-            <Select value={season} onValueChange={(v) => setSeason(v as WarehouseSeason)}>
-              <SelectTrigger className="rounded-2xl text-right"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {WAREHOUSE_SEASONS.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-2">
-            <Label>الفئة / القسم</Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="rounded-2xl text-right"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {WAREHOUSE_CATEGORIES.map((c) => (
-                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
 
-        <DialogFooter className="flex-row-reverse justify-start gap-2 sm:justify-start">
-          <Button onClick={submit} disabled={busy} className="rounded-full">
-            <Plus className="me-2 h-4 w-4" />
-            إضافة للمخزن
-          </Button>
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-full">إلغاء</Button>
-        </DialogFooter>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Quantity */}
+              <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
+                <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">الكمية</Label>
+                <Input 
+                  type="number" 
+                  value={quantity} 
+                  onChange={(e) => setQuantity(e.target.value)} 
+                  className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-black" 
+                />
+              </div>
+
+              {/* Cost */}
+              <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
+                <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">سعر التكلفة</Label>
+                <div className="relative">
+                  <Input 
+                    type="number" 
+                    value={unitCost} 
+                    onChange={(e) => setUnitCost(e.target.value)} 
+                    className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-black" 
+                  />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground opacity-50">EGP</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Sale Price */}
+              <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
+                <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">سعر البيع المتوقع</Label>
+                <div className="relative">
+                  <Input 
+                    type="number" 
+                    value={salePrice} 
+                    onChange={(e) => setSalePrice(e.target.value)} 
+                    className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-black" 
+                  />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground opacity-50">EGP</div>
+                </div>
+              </div>
+
+              {/* Season */}
+              <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
+                <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">الموسم</Label>
+                <Select value={season} onValueChange={(v) => setSeason(v as WarehouseSeason)}>
+                  <SelectTrigger className="h-12 bg-background/50 border-none rounded-xl text-right font-bold">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WAREHOUSE_SEASONS.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Category */}
+            <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
+              <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">الفئة / القسم</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="h-12 bg-background/50 border-none rounded-xl text-right font-bold">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {WAREHOUSE_CATEGORIES.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button 
+              className="w-full gap-2 py-8 text-xl rounded-2xl shadow-2xl transition-all duration-500 font-black relative overflow-hidden group bg-primary text-primary-foreground hover:shadow-primary/30" 
+              onClick={submit}
+              disabled={busy}
+            >
+              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+              <Check className="w-6 h-6 relative z-10" /> <span className="relative z-10">إضافة للمخزن</span>
+            </Button>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
