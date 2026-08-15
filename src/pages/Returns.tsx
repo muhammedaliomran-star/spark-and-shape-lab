@@ -211,9 +211,9 @@ function ReturnsPage() {
                   </div>
 
                   {/* Reason */}
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">السبب / ملاحظات</Label>
-                    <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="مثال: تلف في المنتج أو خطأ في المقاس..." className="text-right h-12 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
+                  <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
+                    <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">السبب / ملاحظات</Label>
+                    <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="مثال: تلف في المنتج أو خطأ في المقاس..." className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30" />
                   </div>
 
                   <Button 
