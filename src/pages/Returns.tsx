@@ -87,19 +87,33 @@ function ReturnsPage() {
             </div>
             
             <div className="p-5 space-y-4 text-right">
-              <div className="space-y-2">
-                <Label>نوع المرتجع</Label>
-                <div className="flex gap-2 p-1 bg-muted/30 rounded-2xl ring-1 ring-inset ring-[var(--hairline)]">
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">نوع المرتجع</Label>
+                <div className="grid grid-cols-2 gap-2 p-1.5 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] relative overflow-hidden">
+                  <motion.div 
+                    layoutId="active-tab"
+                    className={cn(
+                      "absolute inset-y-1 w-[calc(50%-6px)] rounded-xl shadow-lg z-0",
+                      returnType === "sale" ? "bg-primary left-1.5" : "bg-warning right-1.5"
+                    )}
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
                   <Button 
-                    variant={returnType === "sale" ? "default" : "ghost"} 
-                    className={cn("flex-1 rounded-xl h-9", returnType === "sale" ? "shadow-lg" : "")}
+                    variant="ghost"
+                    className={cn(
+                      "relative z-10 rounded-xl h-10 font-bold transition-colors",
+                      returnType === "sale" ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    )}
                     onClick={() => setReturnType("sale")}
                   >
                     مرتجع بيع
                   </Button>
                   <Button 
-                    variant={returnType === "supplier" ? "default" : "ghost"} 
-                    className={cn("flex-1 rounded-xl h-9", returnType === "supplier" ? "shadow-lg" : "")}
+                    variant="ghost"
+                    className={cn(
+                      "relative z-10 rounded-xl h-10 font-bold transition-colors",
+                      returnType === "supplier" ? "text-warning-foreground" : "text-muted-foreground hover:text-foreground"
+                    )}
                     onClick={() => setReturnType("supplier")}
                   >
                     مرتجع مورد
@@ -180,8 +194,18 @@ function ReturnsPage() {
           <Reveal delay={100}>
             <div className="flex flex-col gap-3">
               {data.returns.length === 0 ? (
-                <BezelCard className="p-20 text-center">
-                  <EmptyState icon={History} title="لا توجد مرتجعات مسجلة بعد." hint="سيتم إدراج أي عمليات مرتجعة هنا للرجوع إليها." />
+                <BezelCard className="p-20 text-center bezel-lift group relative overflow-hidden">
+                   <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                   <div className="relative z-10 flex flex-col items-center">
+                     <div className="w-24 h-24 mb-6 relative">
+                        <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
+                        <div className="relative w-full h-full rounded-3xl bg-card plate flex items-center justify-center ring-1 ring-primary/20">
+                          <History className="w-10 h-10 text-primary animate-float-soft" />
+                        </div>
+                     </div>
+                     <h3 className="text-xl font-black mb-2">لا توجد مرتجعات مسجلة</h3>
+                     <p className="text-muted-foreground text-sm max-w-[280px] leading-relaxed">بانتظار تسجيل أول عملية مرتجع للنظام لبدء الأرشفة والتحليل المالي.</p>
+                   </div>
                 </BezelCard>
               ) : (
                 data.returns.map((r: any) => (
