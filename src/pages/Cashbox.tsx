@@ -249,45 +249,48 @@ export default function CashboxPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">المبلغ</Label>
-                          <Input 
-                            type="number" 
-                            value={newTransaction.amount || ""} 
-                            onChange={(e) => setNewTransaction(prev => ({ ...prev, amount: Number(e.target.value) }))} 
-                            placeholder="0.00" 
-                            className="text-right h-12 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" 
-                          />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
+                          <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">المبلغ</Label>
+                          <div className="relative">
+                            <Input 
+                              type="number" 
+                              value={newTransaction.amount || ""} 
+                              onChange={(e) => setNewTransaction(prev => ({ ...prev, amount: Number(e.target.value) }))} 
+                              placeholder="0.00" 
+                              className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30 text-lg font-black" 
+                            />
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground opacity-50">EGP</div>
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">التاريخ</Label>
+                        <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
+                          <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">التاريخ</Label>
                           <Input 
                             type="date" 
                             value={newTransaction.date} 
                             onChange={(e) => setNewTransaction(prev => ({ ...prev, date: e.target.value }))} 
-                            className="text-right h-12 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" 
+                            className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-bold" 
                           />
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">التصنيف</Label>
+                      <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
+                        <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">التصنيف</Label>
                         <Input 
                           value={newTransaction.category} 
                           onChange={(e) => setNewTransaction(prev => ({ ...prev, category: e.target.value }))} 
                           placeholder="مثال: إيراد صيانة، إيجار، سلف..." 
-                          className="text-right h-12 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" 
+                          className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-bold" 
                         />
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">ملاحظات إضافية</Label>
+                      <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
+                        <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">ملاحظات إضافية</Label>
                         <Input 
                           value={newTransaction.notes} 
                           onChange={(e) => setNewTransaction(prev => ({ ...prev, notes: e.target.value }))} 
                           placeholder="اكتب أي تفاصيل أخرى هنا..." 
-                          className="text-right h-12 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" 
+                          className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30" 
                         />
                       </div>
 
