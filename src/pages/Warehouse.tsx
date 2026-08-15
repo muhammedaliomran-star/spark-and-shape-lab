@@ -212,7 +212,7 @@ function WarehousePage() {
         </div>
       </Reveal>
 
-      <AddDialog open={addOpen} onOpenChange={setAddOpen} />
+      <AddWarehouseDialog open={addOpen} onOpenChange={setAddOpen} />
     </div>
   );
 }
