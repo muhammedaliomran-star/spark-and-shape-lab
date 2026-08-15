@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/EmptyState";
 import { Plus, History, TrendingUp, X, Check, Trash2, Receipt, Package, Undo2 } from "lucide-react";
+import { CountUp } from "@/components/CountUp";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePrivacy } from "@/lib/privacy";
 import { toast } from "sonner";
@@ -233,7 +234,7 @@ function MetricCard({ label, value, icon, color, privacy, isCount }: { label: st
     primary: "text-primary",
     warning: "text-warning",
     muted: "text-muted-foreground"
-  }[color as any] || "text-foreground";
+  }[color as "success" | "danger" | "primary" | "warning" | "muted"] || "text-foreground";
 
   return (
     <div className="plate p-4 flex flex-col items-center justify-center text-center bezel-lift">
