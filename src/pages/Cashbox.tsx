@@ -161,19 +161,25 @@ export default function CashboxPage() {
 
         {/* Top Balance Card - Similar to reference image */}
         <div className="mb-8">
-          <BezelCard className="bg-primary/5 border-primary/20 p-8 flex flex-col items-center justify-center text-center relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Wallet className="w-32 h-32" />
-            </div>
-            
-            <span className="text-muted-foreground font-medium mb-2">الرصيد الحالي</span>
-            <div className={cn("text-5xl md:text-6xl font-black tabular-nums tracking-tighter", netBalance >= 0 ? "text-primary" : "text-danger", blurCls)}>
-              <CountUp value={netBalance} format={n => fmt(n)} suffix=" ج.م" />
-            </div>
-            
-            <div className="mt-6 flex items-center gap-2 px-4 py-1.5 rounded-full bg-background/50 ring-1 ring-inset ring-[var(--hairline)] backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
-              <span className="text-xs font-semibold text-muted-foreground">متصل ومحدث</span>
+          <BezelCard className="p-0 overflow-hidden bezel-lift bg-primary/5 border-primary/20 relative group">
+            <div className="p-8 flex flex-col items-center justify-center text-center">
+              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-all duration-700 -rotate-12 group-hover:rotate-0">
+                <Wallet className="w-32 h-32" />
+              </div>
+              
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">الرصيد الحالي المتوفر</span>
+              <div className={cn("text-5xl md:text-7xl font-black tabular-nums tracking-tighter leading-none", netBalance >= 0 ? "text-primary" : "text-danger", blurCls)}>
+                <CountUp value={netBalance} format={n => fmt(n)} />
+                <span className="text-xl md:text-2xl ml-2 font-bold opacity-50">ج.م</span>
+              </div>
+              
+              <div className="mt-8 flex items-center gap-2 px-4 py-1.5 rounded-full bg-background/50 ring-1 ring-inset ring-[var(--hairline)] backdrop-blur-xl shadow-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                </span>
+                <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Live Sync Connected</span>
+              </div>
             </div>
           </BezelCard>
         </div>
@@ -374,7 +380,7 @@ function MetricCard({ label, value, icon, color, privacy }: { label: string, val
         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{label}</span>
       </div>
       <div className={cn("text-lg font-black tabular-nums", colorCls, blurCls)}>
-        <CountUp value={value} format={n => fmt(n)} suffix=" ج.م" />
+        <CountUp value={value} format={n => fmt(n)} /> <span className="text-[10px] font-bold">ج.م</span>
       </div>
     </div>
   );

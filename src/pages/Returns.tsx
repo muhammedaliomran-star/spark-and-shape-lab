@@ -69,29 +69,36 @@ function ReturnsPage() {
         icon={<Undo2 className="w-8 h-8 text-primary" />}
       />
 
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-8">
+        <MetricCard label="إجمالي المرتجعات" value={data.returns.reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Undo2 className="w-4 h-4 text-primary" />} color="primary" privacy={privacy} />
+        <MetricCard label="مرتجعات مبيعات" value={data.returns.filter(r => r.type === "sale").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<TrendingUp className="w-4 h-4 text-warning" />} color="warning" privacy={privacy} />
+        <MetricCard label="مرتجعات موردين" value={data.returns.filter(r => r.type === "supplier").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Package className="w-4 h-4 text-primary" />} color="primary" privacy={privacy} />
+        <MetricCard label="عدد العمليات" value={data.returns.length} icon={<History className="w-4 h-4 text-muted-foreground" />} color="muted" privacy={privacy} isCount />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Registration Form */}
         <div className="lg:col-span-1">
-          <BezelCard className="p-6 bezel-lift">
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-right">
+          <BezelCard className="p-0 overflow-hidden bezel-lift">
+            <div className="p-4 border-b border-[var(--hairline)] flex items-center justify-between">
+              <span className="font-bold text-sm">تسجيل مرتجع جديد</span>
               <Receipt className="w-5 h-5 text-primary" />
-              تسجيل مرتجع جديد
-            </h3>
+            </div>
             
-            <div className="space-y-4 text-right">
+            <div className="p-5 space-y-4 text-right">
               <div className="space-y-2">
                 <Label>نوع المرتجع</Label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 p-1 bg-muted/30 rounded-2xl ring-1 ring-inset ring-[var(--hairline)]">
                   <Button 
-                    variant={returnType === "sale" ? "default" : "outline"} 
-                    className="flex-1"
+                    variant={returnType === "sale" ? "default" : "ghost"} 
+                    className={cn("flex-1 rounded-xl h-9", returnType === "sale" ? "shadow-lg" : "")}
                     onClick={() => setReturnType("sale")}
                   >
                     مرتجع بيع
                   </Button>
                   <Button 
-                    variant={returnType === "supplier" ? "default" : "outline"} 
-                    className="flex-1"
+                    variant={returnType === "supplier" ? "default" : "ghost"} 
+                    className={cn("flex-1 rounded-xl h-9", returnType === "supplier" ? "shadow-lg" : "")}
                     onClick={() => setReturnType("supplier")}
                   >
                     مرتجع مورد
@@ -104,7 +111,7 @@ function ReturnsPage() {
                 <Input value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} placeholder="مثال: #INV-001" className="text-right" />
               </div>
 
-              <div className="space-y-4 border-t pt-4">
+              <div className="space-y-4 border-t border-[var(--hairline)] pt-4">
                 <Label className="font-bold">إضافة أصناف المرتجع</Label>
                 <div className="space-y-2">
                   <Input placeholder="اسم الصنف" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} className="text-right" />
@@ -112,7 +119,7 @@ function ReturnsPage() {
                     <Input type="number" placeholder="السعر" value={newItem.unitPrice || ""} onChange={(e) => setNewItem({ ...newItem, unitPrice: Number(e.target.value) })} className="text-right" />
                     <Input type="number" placeholder="الكمية" value={newItem.quantity || ""} onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })} className="text-right" />
                   </div>
-                  <Button onClick={addItem} className="w-full gap-2" variant="outline">
+                  <Button onClick={addItem} className="w-full gap-2 rounded-xl" variant="outline">
                     <Plus className="w-4 h-4" /> إضافة للمرتجع
                   </Button>
                 </div>
@@ -123,19 +130,19 @@ function ReturnsPage() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="bg-muted/50 rounded-xl p-3 space-y-2"
+                      className="bg-muted/20 rounded-2xl p-4 space-y-2 ring-1 ring-inset ring-[var(--hairline)]"
                     >
                       {items.map((it, idx) => (
-                        <div key={idx} className="flex justify-between items-center text-sm border-b border-white/5 pb-1">
+                        <div key={idx} className="flex justify-between items-center text-sm border-b border-[var(--hairline)] pb-2 last:border-0">
                           <div className="flex items-center gap-2">
-                            <button onClick={() => setItems(items.filter((_, i) => i !== idx))} className="text-danger hover:scale-110 transition-transform"><X className="w-3 h-3" /></button>
-                            <span className="font-bold">{fmt(it.unitPrice * it.quantity)} ج.م</span>
+                            <button onClick={() => setItems(items.filter((_, i) => i !== idx))} className="text-danger hover:scale-110 transition-transform"><X className="w-3.5 h-3.5" /></button>
+                            <span className={cn("font-bold text-numeric", blurCls)}>{fmt(it.unitPrice * it.quantity)} <span className="text-[10px]">ج.م</span></span>
                           </div>
-                          <span>{it.name} ({it.quantity} × {fmt(it.unitPrice)})</span>
+                          <span className="text-muted-foreground">{it.name} ({it.quantity} × {fmt(it.unitPrice)})</span>
                         </div>
                       ))}
-                      <div className="flex justify-between items-center font-bold pt-2 border-t border-white/10">
-                        <span>{fmt(items.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0))} ج.م</span>
+                      <div className="flex justify-between items-center font-bold pt-2 border-t border-[var(--hairline)]">
+                        <span className={cn("text-primary text-numeric", blurCls)}>{fmt(items.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0))} <span className="text-[10px]">ج.م</span></span>
                         <span>الإجمالي</span>
                       </div>
                     </motion.div>
@@ -148,7 +155,7 @@ function ReturnsPage() {
                 <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="مثال: تلف في المنتج..." className="text-right" />
               </div>
 
-              <Button className="w-full gap-2 py-6 text-lg" disabled={items.length === 0} onClick={handleAddReturn}>
+              <Button className="w-full gap-2 py-6 text-lg rounded-2xl shadow-xl shadow-primary/20" disabled={items.length === 0} onClick={handleAddReturn}>
                 <Check className="w-5 h-5" /> تسجيل المرتجع
               </Button>
             </div>
@@ -157,12 +164,16 @@ function ReturnsPage() {
 
         {/* Returns History */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <Badge variant="secondary" className="px-3 py-1 rounded-full">{data.returns.length} عملية</Badge>
-            <h3 className="text-lg font-bold flex items-center gap-2 text-right">
-              <History className="w-5 h-5 text-muted-foreground" />
-              سجل المرتجعات التاريخي
-            </h3>
+          <div className="sticky-search-bar mb-4">
+            <div className="bg-card plate p-4 flex flex-col md:flex-row gap-3 items-center justify-between">
+              <div className="flex items-center gap-2 order-2 md:order-1">
+                <Badge variant="secondary" className="px-3 py-1 rounded-full">{data.returns.length} عملية</Badge>
+              </div>
+              <h3 className="text-sm font-bold flex items-center gap-2 text-right order-1 md:order-2">
+                سجل المرتجعات التاريخي
+                <History className="w-4 h-4 text-muted-foreground" />
+              </h3>
+            </div>
           </div>
 
           <Reveal delay={100}>
@@ -173,15 +184,15 @@ function ReturnsPage() {
                 </BezelCard>
               ) : (
                 data.returns.map((r: any) => (
-                  <BezelCard key={r.id} className="p-4 group bezel-lift border-transparent hover:border-primary/20 transition-all duration-500">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <BezelCard key={r.id} className="p-0 overflow-hidden group bezel-lift border-transparent hover:border-primary/20 transition-all duration-500">
+                    <div className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="flex items-center gap-3 order-2 md:order-1">
-                        <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => db.removeReturn(r.id)}>
-                          <Trash2 className="w-4 h-4" />
+                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground hover:text-danger hover:bg-danger/10 md:opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => db.removeReturn(r.id)}>
+                          <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                         <div className="text-right">
-                          <div className="text-[10px] text-muted-foreground uppercase">القيمة الإجمالية</div>
-                          <div className={cn("text-lg font-bold", blurCls)}>{fmt(r.totalAmount)} ج.م</div>
+                          <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">القيمة الإجمالية</div>
+                          <div className={cn("text-lg font-black text-numeric", blurCls)}>{fmt(r.totalAmount)} <span className="text-[10px] font-bold">ج.م</span></div>
                         </div>
                       </div>
                       
@@ -199,7 +210,7 @@ function ReturnsPage() {
                       </div>
                     </div>
                     {r.reason && (
-                      <div className="mt-3 text-sm text-muted-foreground bg-white/5 p-2 rounded-lg italic text-right">
+                      <div className="mx-4 mb-4 text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-xl border border-[var(--hairline)] italic text-right">
                         {r.reason}
                       </div>
                     )}
@@ -213,3 +224,27 @@ function ReturnsPage() {
     </>
   );
 }
+
+function MetricCard({ label, value, icon, color, privacy, isCount }: { label: string, value: number, icon: React.ReactNode, color: string, privacy: boolean, isCount?: boolean }) {
+  const blurCls = privacy ? "privacy-blur" : "privacy-clear";
+  const colorCls = {
+    success: "text-success",
+    danger: "text-danger",
+    primary: "text-primary",
+    warning: "text-warning",
+    muted: "text-muted-foreground"
+  }[color as any] || "text-foreground";
+
+  return (
+    <div className="plate p-4 flex flex-col items-center justify-center text-center bezel-lift">
+      <div className="flex items-center gap-2 mb-1">
+        {icon}
+        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{label}</span>
+      </div>
+      <div className={cn("text-lg font-black tabular-nums", colorCls, blurCls)}>
+        {isCount ? value : <><CountUp value={value} format={n => fmt(n)} /> <span className="text-[10px] font-bold">ج.م</span></>}
+      </div>
+    </div>
+  );
+}
+
