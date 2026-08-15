@@ -425,7 +425,7 @@ function AppearanceTab({ form, set }: TabProps) {
 }
 
 /* ------------------------------ الحساب ------------------------------ */
-const dateFmt = new Intl.DateTimeFormat("ar-EG", {
+const dateFmt = new Intl.DateTimeFormat("en-US", {
   day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
 });
 const fmtDate = (iso: string | null) => (iso ? dateFmt.format(new Date(iso)) : "غير معروف");
@@ -1100,7 +1100,7 @@ function TeamTab() {
                   <div className="min-w-0">
                     <div className="truncate font-medium">{iv.email}</div>
                     <div className="text-[11px] text-muted-foreground">
-                      بتنتهي {new Date(iv.expiresAt).toLocaleDateString("ar-EG")}
+                      بتنتهي {new Date(iv.expiresAt).toLocaleDateString("en-US")}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">

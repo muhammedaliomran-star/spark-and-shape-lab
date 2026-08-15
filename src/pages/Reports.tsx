@@ -194,7 +194,7 @@ function ReportsPage() {
       { label: "المحل", value: escapeHtml(shopName) },
       ...(settings.phone ? [{ label: "تليفون", value: escapeHtml(settings.phone) }] : []),
       { label: "الفترة", value: `${monthLabel(months[0])} — ${monthLabel(months[months.length - 1])}` },
-      { label: "تاريخ التقرير", value: new Date().toLocaleDateString("ar-EG") },
+      { label: "تاريخ التقرير", value: new Date().toLocaleDateString("en-US") },
     ];
     const body = `
 <h2 class="sec">الملخص الشهري</h2>

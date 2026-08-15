@@ -179,7 +179,7 @@ function InvoicesPage() {
   };
 
   const exportPDF = () => {
-    const today = new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" });
+    const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
     let sumTotal = 0, sumPaid = 0, sumRemaining = 0, lateCount = 0;
     const rowsHtml = list.map((inv) => {
       const c = findCustomer(inv.customerId);

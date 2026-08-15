@@ -139,7 +139,7 @@ function ExpensesPage() {
     setExporting("pdf");
     try {
       await new Promise((r) => setTimeout(r, 400));
-      const today = new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" });
+      const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
       const rowsHtml = filtered.map((e, i) => `<tr><td>${i + 1}</td><td dir="ltr">${escapeHtml(e.expenseDate)}</td><td>${escapeHtml(expenseCategoryLabel(e.category))}</td><td class="num due">${fmt(e.amount)} ج.م</td><td>${escapeHtml(e.notes ?? "—")}</td></tr>`).join("");
       const filterInfo: string[] = [];
       if (filterCat !== "all") filterInfo.push(`التصنيف: ${expenseCategoryLabel(filterCat as ExpenseCategory)}`);

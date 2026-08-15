@@ -177,7 +177,7 @@ ${list.map((it) => {
       title: "تقرير المخزن — جرد فعلي",
       lede: "قائمة الأصناف مع الكميات النظامية وخانات فارغة لتسجيل الجرد الفعلي والفروقات.",
       meta: [
-        { label: "تاريخ التقرير", value: new Date().toLocaleDateString("ar-EG") },
+        { label: "تاريخ التقرير", value: new Date().toLocaleDateString("en-US") },
         { label: "عدد الأصناف", value: String(list.length) },
       ],
       kpis: [
@@ -963,7 +963,7 @@ function HistoryDialog({ item, onClose }: { item: StockItem | null; onClose: () 
                       {e.reason && <span className="text-xs font-normal text-muted-foreground">— {e.reason}</span>}
                     </div>
                     <div className="text-[11px] text-muted-foreground truncate">
-                      {new Date(e.date).toLocaleDateString("ar-EG", { day: "2-digit", month: "long", year: "numeric" })}
+                      {new Date(e.date).toLocaleDateString("en-US", { day: "2-digit", month: "long", year: "numeric" })}
                       {e.notes ? ` • ${e.notes}` : e.ref ? ` • ${e.ref}` : ""}
                     </div>
                   </div>
