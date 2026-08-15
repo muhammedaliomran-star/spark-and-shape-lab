@@ -70,11 +70,11 @@ function ReturnsPage() {
         icon={<Undo2 className="w-8 h-8 text-primary" />}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-8">
-        <MetricCard label="إجمالي المرتجعات" value={data.returns.reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Undo2 className="w-4 h-4 text-primary" />} color="primary" privacy={privacy} />
-        <MetricCard label="مرتجعات مبيعات" value={data.returns.filter(r => r.type === "sale").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<TrendingUp className="w-4 h-4 text-warning" />} color="warning" privacy={privacy} />
-        <MetricCard label="مرتجعات موردين" value={data.returns.filter(r => r.type === "supplier").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Package className="w-4 h-4 text-primary" />} color="primary" privacy={privacy} />
-        <MetricCard label="عدد العمليات" value={data.returns.length} icon={<History className="w-4 h-4 text-muted-foreground" />} color="muted" privacy={privacy} isCount />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <MetricCard label="إجمالي المرتجعات" value={data.returns.reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Undo2 className="w-4 h-4 text-primary" />} color="primary" privacy={privacy} glow />
+        <MetricCard label="مرتجعات مبيعات" value={data.returns.filter(r => r.type === "sale").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<TrendingUp className="w-4 h-4 text-warning" />} color="warning" privacy={privacy} glow />
+        <MetricCard label="مرتجعات موردين" value={data.returns.filter(r => r.type === "supplier").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Package className="w-4 h-4 text-primary" />} color="primary" privacy={privacy} glow />
+        <MetricCard label="عدد العمليات" value={data.returns.length} icon={<History className="w-4 h-4 text-muted-foreground" />} color="muted" privacy={privacy} isCount glow />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -87,19 +87,33 @@ function ReturnsPage() {
             </div>
             
             <div className="p-5 space-y-4 text-right">
-              <div className="space-y-2">
-                <Label>نوع المرتجع</Label>
-                <div className="flex gap-2 p-1 bg-muted/30 rounded-2xl ring-1 ring-inset ring-[var(--hairline)]">
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">نوع المرتجع</Label>
+                <div className="grid grid-cols-2 gap-2 p-1.5 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] relative overflow-hidden">
+                  <motion.div 
+                    layoutId="active-tab"
+                    className={cn(
+                      "absolute inset-y-1 w-[calc(50%-6px)] rounded-xl shadow-lg z-0",
+                      returnType === "sale" ? "bg-primary left-1.5" : "bg-warning right-1.5"
+                    )}
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
                   <Button 
-                    variant={returnType === "sale" ? "default" : "ghost"} 
-                    className={cn("flex-1 rounded-xl h-9", returnType === "sale" ? "shadow-lg" : "")}
+                    variant="ghost"
+                    className={cn(
+                      "relative z-10 rounded-xl h-10 font-bold transition-colors",
+                      returnType === "sale" ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    )}
                     onClick={() => setReturnType("sale")}
                   >
                     مرتجع بيع
                   </Button>
                   <Button 
-                    variant={returnType === "supplier" ? "default" : "ghost"} 
-                    className={cn("flex-1 rounded-xl h-9", returnType === "supplier" ? "shadow-lg" : "")}
+                    variant="ghost"
+                    className={cn(
+                      "relative z-10 rounded-xl h-10 font-bold transition-colors",
+                      returnType === "supplier" ? "text-warning-foreground" : "text-muted-foreground hover:text-foreground"
+                    )}
                     onClick={() => setReturnType("supplier")}
                   >
                     مرتجع مورد
@@ -108,19 +122,19 @@ function ReturnsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>رقم الفاتورة (اختياري)</Label>
-                <Input value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} placeholder="مثال: #INV-001" className="text-right" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">رقم الفاتورة (اختياري)</Label>
+                <Input value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} placeholder="مثال: #INV-001" className="text-right h-11 glass" />
               </div>
 
               <div className="space-y-4 border-t border-[var(--hairline)] pt-4">
-                <Label className="font-bold">إضافة أصناف المرتجع</Label>
-                <div className="space-y-2">
-                  <Input placeholder="اسم الصنف" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} className="text-right" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">إضافة أصناف المرتجع</Label>
+                <div className="space-y-2 p-3 bg-muted/10 rounded-2xl ring-1 ring-inset ring-[var(--hairline)]">
+                  <Input placeholder="اسم الصنف" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} className="text-right h-10 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
                   <div className="grid grid-cols-2 gap-2">
-                    <Input type="number" placeholder="السعر" value={newItem.unitPrice || ""} onChange={(e) => setNewItem({ ...newItem, unitPrice: Number(e.target.value) })} className="text-right" />
-                    <Input type="number" placeholder="الكمية" value={newItem.quantity || ""} onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })} className="text-right" />
+                    <Input type="number" placeholder="السعر" value={newItem.unitPrice || ""} onChange={(e) => setNewItem({ ...newItem, unitPrice: Number(e.target.value) })} className="text-right h-10 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
+                    <Input type="number" placeholder="الكمية" value={newItem.quantity || ""} onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })} className="text-right h-10 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
                   </div>
-                  <Button onClick={addItem} className="w-full gap-2 rounded-xl" variant="outline">
+                  <Button onClick={addItem} className="w-full gap-2 rounded-xl h-10 bg-background/50 hover:bg-background border-[var(--hairline)]" variant="outline">
                     <Plus className="w-4 h-4" /> إضافة للمرتجع
                   </Button>
                 </div>
@@ -134,17 +148,17 @@ function ReturnsPage() {
                       className="bg-muted/20 rounded-2xl p-4 space-y-2 ring-1 ring-inset ring-[var(--hairline)]"
                     >
                       {items.map((it, idx) => (
-                        <div key={idx} className="flex justify-between items-center text-sm border-b border-[var(--hairline)] pb-2 last:border-0">
+                        <div key={idx} className="flex justify-between items-center text-sm border-b border-[var(--hairline)]/50 pb-2 last:border-0">
                           <div className="flex items-center gap-2">
-                            <button onClick={() => setItems(items.filter((_, i) => i !== idx))} className="text-danger hover:scale-110 transition-transform"><X className="w-3.5 h-3.5" /></button>
-                            <span className={cn("font-bold text-numeric", blurCls)}>{fmt(it.unitPrice * it.quantity)} <span className="text-[10px]">ج.م</span></span>
+                            <button onClick={() => setItems(items.filter((_, i) => i !== idx))} className="w-6 h-6 flex items-center justify-center rounded-full bg-danger/10 text-danger hover:scale-110 transition-transform"><X className="w-3.5 h-3.5" /></button>
+                            <span className={cn("font-bold text-numeric text-primary", blurCls)}>{fmt(it.unitPrice * it.quantity)} <span className="text-[10px]">ج.م</span></span>
                           </div>
-                          <span className="text-muted-foreground">{it.name} ({it.quantity} × {fmt(it.unitPrice)})</span>
+                          <span className="text-muted-foreground font-medium">{it.name} <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-md mx-1">{it.quantity} × {fmt(it.unitPrice)}</span></span>
                         </div>
                       ))}
-                      <div className="flex justify-between items-center font-bold pt-2 border-t border-[var(--hairline)]">
-                        <span className={cn("text-primary text-numeric", blurCls)}>{fmt(items.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0))} <span className="text-[10px]">ج.م</span></span>
-                        <span>الإجمالي</span>
+                      <div className="flex justify-between items-center font-black pt-2 border-t border-[var(--hairline)]">
+                        <span className={cn("text-primary text-xl text-numeric", blurCls)}>{fmt(items.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0))} <span className="text-xs">ج.م</span></span>
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">الإجمالي المستحق</span>
                       </div>
                     </motion.div>
                   )}
@@ -152,12 +166,21 @@ function ReturnsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>السبب / ملاحظات</Label>
-                <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="مثال: تلف في المنتج..." className="text-right" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">السبب / ملاحظات</Label>
+                <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="مثال: تلف في المنتج..." className="text-right h-12 glass" />
               </div>
 
-              <Button className="w-full gap-2 py-6 text-lg rounded-2xl shadow-xl shadow-primary/20" disabled={items.length === 0} onClick={handleAddReturn}>
-                <Check className="w-5 h-5" /> تسجيل المرتجع
+              <Button 
+                className={cn(
+                  "w-full gap-2 py-7 text-lg rounded-2xl shadow-2xl transition-all duration-500 font-black",
+                  returnType === 'sale' 
+                    ? "bg-primary text-primary-foreground hover:shadow-primary/30" 
+                    : "bg-warning text-warning-foreground hover:shadow-warning/30"
+                )} 
+                disabled={items.length === 0} 
+                onClick={handleAddReturn}
+              >
+                <Check className="w-6 h-6" /> تسجيل المرتجع
               </Button>
             </div>
           </BezelCard>
@@ -166,13 +189,23 @@ function ReturnsPage() {
         {/* Returns History */}
         <div className="lg:col-span-2 space-y-4">
           <div className="sticky-search-bar mb-4">
-            <div className="bg-card plate p-4 flex flex-col md:flex-row gap-3 items-center justify-between">
-              <div className="flex items-center gap-2 order-2 md:order-1">
-                <Badge variant="secondary" className="px-3 py-1 rounded-full">{data.returns.length} عملية</Badge>
+            <div className="bg-card plate p-4 flex flex-col md:flex-row gap-4 items-center justify-between border-primary/10">
+              <div className="flex items-center gap-3 order-2 md:order-1">
+                <div className="flex -space-x-2 rtl:space-x-reverse">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 ring-2 ring-background flex items-center justify-center">
+                    <TrendingUp className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-warning/20 ring-2 ring-background flex items-center justify-center">
+                    <Package className="w-4 h-4 text-warning" />
+                  </div>
+                </div>
+                <Badge variant="secondary" className="px-3 py-1 rounded-full font-black text-[10px] tracking-widest uppercase bg-muted/50">{data.returns.length} عملية مسجلة</Badge>
               </div>
-              <h3 className="text-sm font-bold flex items-center gap-2 text-right order-1 md:order-2">
+              <h3 className="text-sm font-black flex items-center gap-2 text-right order-1 md:order-2 uppercase tracking-tighter">
                 سجل المرتجعات التاريخي
-                <History className="w-4 h-4 text-muted-foreground" />
+                <div className="p-1.5 rounded-lg bg-muted/20">
+                  <History className="w-4 h-4 text-primary" />
+                </div>
               </h3>
             </div>
           </div>
@@ -180,38 +213,58 @@ function ReturnsPage() {
           <Reveal delay={100}>
             <div className="flex flex-col gap-3">
               {data.returns.length === 0 ? (
-                <BezelCard className="p-20 text-center">
-                  <EmptyState icon={History} title="لا توجد مرتجعات مسجلة بعد." hint="سيتم إدراج أي عمليات مرتجعة هنا للرجوع إليها." />
+                <BezelCard className="p-20 text-center bezel-lift group relative overflow-hidden">
+                   <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                   <div className="relative z-10 flex flex-col items-center">
+                     <div className="w-24 h-24 mb-6 relative">
+                        <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse" />
+                        <div className="relative w-full h-full rounded-3xl bg-card plate flex items-center justify-center ring-1 ring-primary/20">
+                          <History className="w-10 h-10 text-primary animate-float-soft" />
+                        </div>
+                     </div>
+                     <h3 className="text-xl font-black mb-2">لا توجد مرتجعات مسجلة</h3>
+                     <p className="text-muted-foreground text-sm max-w-[280px] leading-relaxed">بانتظار تسجيل أول عملية مرتجع للنظام لبدء الأرشفة والتحليل المالي.</p>
+                   </div>
                 </BezelCard>
               ) : (
                 data.returns.map((r: any) => (
-                  <BezelCard key={r.id} className="p-0 overflow-hidden group bezel-lift border-transparent hover:border-primary/20 transition-all duration-500">
-                    <div className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 order-2 md:order-1">
-                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground hover:text-danger hover:bg-danger/10 md:opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => db.removeReturn(r.id)}>
-                          <Trash2 className="w-3.5 h-3.5" />
+                  <BezelCard key={r.id} className="p-0 overflow-hidden group bezel-lift border-transparent hover:border-primary/20 transition-all duration-500 relative">
+                    <div className={cn(
+                      "absolute top-0 right-0 w-1 h-full",
+                      r.type === "sale" ? "bg-warning/50" : "bg-primary/50"
+                    )} />
+                    <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                      <div className="flex items-center gap-4 order-2 md:order-1">
+                        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl bg-danger/5 text-muted-foreground hover:text-danger hover:bg-danger/10 md:opacity-0 group-hover:opacity-100 transition-all duration-300" onClick={() => db.removeReturn(r.id)}>
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                         <div className="text-right">
-                          <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">القيمة الإجمالية</div>
-                          <div className={cn("text-lg font-black text-numeric", blurCls)}>{fmt(r.totalAmount)} <span className="text-[10px] font-bold">ج.م</span></div>
+                          <div className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em] mb-0.5">القيمة الإجمالية</div>
+                          <div className={cn("text-2xl font-black text-numeric tracking-tighter", r.type === 'sale' ? "text-warning" : "text-primary", blurCls)}>
+                            {fmt(r.totalAmount)} <span className="text-xs font-bold opacity-60">ج.م</span>
+                          </div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-3 order-1 md:order-2 text-right">
-                        <div>
+                      <div className="flex items-center gap-4 order-1 md:order-2 text-right">
+                        <div className="space-y-1">
                           <div className="flex items-center justify-end gap-2">
-                            {r.invoiceId && <Badge variant="secondary" className="text-[10px] font-mono">{r.invoiceId}</Badge>}
-                            <span className="font-bold">{r.type === "sale" ? "مرتجع مبيعات" : "مرتجع موردين"}</span>
+                            {r.invoiceId && <Badge variant="secondary" className="text-[10px] font-mono bg-muted/50 ring-1 ring-inset ring-[var(--hairline)]">{r.invoiceId}</Badge>}
+                            <span className="font-black text-sm tracking-tight">{r.type === "sale" ? "مرتجع مبيعات" : "مرتجع موردين"}</span>
                           </div>
-                          <div className="text-xs text-muted-foreground mt-0.5" dir="ltr">{format(new Date(r.createdAt), "yyyy/MM/dd - hh:mm a")}</div>
+                          <div className="text-[10px] font-medium text-muted-foreground bg-muted/30 px-2 py-0.5 rounded-full inline-block" dir="ltr">{format(new Date(r.createdAt), "yyyy/MM/dd - hh:mm a")}</div>
                         </div>
-                        <div className={cn("p-2 rounded-xl", r.type === "sale" ? "bg-warning/10 text-warning" : "bg-primary/10 text-primary")}>
-                          {r.type === "sale" ? <TrendingUp className="w-5 h-5" /> : <Package className="w-5 h-5" />}
+                        <div className={cn(
+                          "w-12 h-12 rounded-2xl flex items-center justify-center ring-1 ring-inset",
+                          r.type === "sale" ? "bg-warning/10 text-warning ring-warning/20 shadow-[0_0_20px_-5px_hsl(var(--warning)/0.2)]" : "bg-primary/10 text-primary ring-primary/20 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.2)]"
+                        )}>
+                          {r.type === "sale" ? <TrendingUp className="w-6 h-6" /> : <Package className="w-6 h-6" />}
                         </div>
                       </div>
                     </div>
                     {r.reason && (
-                      <div className="mx-4 mb-4 text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-xl border border-[var(--hairline)] italic text-right">
+                      <div className="mx-5 mb-5 text-[11px] text-muted-foreground leading-relaxed bg-muted/10 p-3 rounded-2xl border border-[var(--hairline)]/50 italic text-right relative z-10">
+                        <span className="text-[10px] font-black uppercase tracking-widest block mb-1 opacity-50 not-italic">سبب المرتجع:</span>
                         {r.reason}
                       </div>
                     )}
@@ -226,7 +279,7 @@ function ReturnsPage() {
   );
 }
 
-function MetricCard({ label, value, icon, color, privacy, isCount }: { label: string, value: number, icon: React.ReactNode, color: string, privacy: boolean, isCount?: boolean }) {
+function MetricCard({ label, value, icon, color, privacy, isCount, glow }: { label: string, value: number, icon: React.ReactNode, color: string, privacy: boolean, isCount?: boolean, glow?: boolean }) {
   const blurCls = privacy ? "privacy-blur" : "privacy-clear";
   const colorCls = {
     success: "text-success",
@@ -236,14 +289,30 @@ function MetricCard({ label, value, icon, color, privacy, isCount }: { label: st
     muted: "text-muted-foreground"
   }[color as "success" | "danger" | "primary" | "warning" | "muted"] || "text-foreground";
 
+  const glowCls = glow ? {
+    success: "shadow-[0_0_30px_-10px_hsl(var(--success)/0.3)]",
+    danger: "shadow-[0_0_30px_-10px_hsl(var(--danger)/0.3)]",
+    primary: "shadow-[0_0_30px_-10px_hsl(var(--primary)/0.3)]",
+    warning: "shadow-[0_0_30px_-10px_hsl(var(--warning)/0.3)]",
+    muted: "shadow-none"
+  }[color as "success" | "danger" | "primary" | "warning" | "muted"] : "";
+
   return (
-    <div className="plate p-4 flex flex-col items-center justify-center text-center bezel-lift">
-      <div className="flex items-center gap-2 mb-1">
-        {icon}
-        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{label}</span>
+    <div className={cn("plate p-5 flex flex-col items-center justify-center text-center bezel-lift group relative overflow-hidden", glowCls)}>
+      {glow && (
+        <div className={cn(
+          "absolute -right-4 -top-4 w-12 h-12 blur-2xl opacity-20 transition-opacity group-hover:opacity-40",
+          color === 'primary' ? "bg-primary" : color === 'warning' ? "bg-warning" : "bg-muted"
+        )} />
+      )}
+      <div className="flex items-center gap-2 mb-1.5">
+        <div className="p-1.5 rounded-lg bg-muted/20 ring-1 ring-inset ring-[var(--hairline)]">
+          {icon}
+        </div>
+        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">{label}</span>
       </div>
-      <div className={cn("text-lg font-black tabular-nums", colorCls, blurCls)}>
-        {isCount ? value : <><CountUp value={value} format={(n: number) => fmt(n)} /> <span className="text-[10px] font-bold">ج.م</span></>}
+      <div className={cn("text-2xl font-black tabular-nums tracking-tighter", colorCls, blurCls)}>
+        {isCount ? <CountUp value={value} /> : <><CountUp value={value} format={(n: number) => fmt(n)} /> <span className="text-xs font-bold opacity-60">ج.م</span></>}
       </div>
     </div>
   );
