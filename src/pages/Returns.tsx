@@ -243,7 +243,7 @@ function MetricCard({ label, value, icon, color, privacy, isCount }: { label: st
         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{label}</span>
       </div>
       <div className={cn("text-lg font-black tabular-nums", colorCls, blurCls)}>
-        {isCount ? value : <><CountUp value={value} format={n => fmt(n)} /> <span className="text-[10px] font-bold">ج.م</span></>}
+        {isCount ? value : <><CountUp value={value} format={(n: number) => fmt(n)} /> <span className="text-[10px] font-bold">ج.م</span></>}
       </div>
     </div>
   );
