@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CashboxRouteImport } from './routes/cashbox'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as DailyRouteImport } from './routes/daily'
 import { Route as ExpensesRouteImport } from './routes/expenses'
@@ -48,6 +49,11 @@ const AlertsRoute = AlertsRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CashboxRoute = CashboxRouteImport.update({
+  id: '/cashbox',
+  path: '/cashbox',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CustomersRoute = CustomersRouteImport.update({
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
+  '/cashbox': typeof CashboxRoute
   '/customers': typeof CustomersRoute
   '/daily': typeof DailyRoute
   '/expenses': typeof ExpensesRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
+  '/cashbox': typeof CashboxRoute
   '/customers': typeof CustomersRoute
   '/daily': typeof DailyRoute
   '/expenses': typeof ExpensesRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
+  '/cashbox': typeof CashboxRoute
   '/customers': typeof CustomersRoute
   '/daily': typeof DailyRoute
   '/expenses': typeof ExpensesRoute
@@ -205,6 +214,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/alerts'
     | '/auth'
+    | '/cashbox'
     | '/customers'
     | '/daily'
     | '/expenses'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/alerts'
     | '/auth'
+    | '/cashbox'
     | '/customers'
     | '/daily'
     | '/expenses'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/alerts'
     | '/auth'
+    | '/cashbox'
     | '/customers'
     | '/daily'
     | '/expenses'
@@ -272,6 +284,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AlertsRoute: typeof AlertsRoute
   AuthRoute: typeof AuthRoute
+  CashboxRoute: typeof CashboxRoute
   CustomersRoute: typeof CustomersRoute
   DailyRoute: typeof DailyRoute
   ExpensesRoute: typeof ExpensesRoute
@@ -318,6 +331,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cashbox': {
+      id: '/cashbox'
+      path: '/cashbox'
+      fullPath: '/cashbox'
+      preLoaderRoute: typeof CashboxRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/customers': {
@@ -440,6 +460,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AlertsRoute: AlertsRoute,
   AuthRoute: AuthRoute,
+  CashboxRoute: CashboxRoute,
   CustomersRoute: CustomersRoute,
   DailyRoute: DailyRoute,
   ExpensesRoute: ExpensesRoute,

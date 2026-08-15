@@ -1,7 +1,7 @@
 import logoMark from "@/assets/logo-mark.png";
 import { Link, useNavigate, useLocation } from "@/lib/router-compat";
 import type { ReactNode } from "react";
-import { LogOut, Undo2 } from "lucide-react";
+import { LogOut, Undo2, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { LayoutGrid, Users, FileText, Bell, Receipt, Truck, Package, BarChart3, Settings, CalendarDays, Warehouse } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ const nav = [
   { to: "/inventory", label: "المنتجات", icon: Package },
   { to: "/warehouse", label: "المخزن", icon: Warehouse },
   { to: "/returns", label: "المرتجعات", icon: Undo2 },
+  { to: "/cashbox", label: "الصندوق", icon: Wallet },
   { to: "/expenses", label: "المصروفات", icon: Receipt },
   { to: "/alerts", label: "المنبه", icon: Bell, alertKey: true as const },
   { to: "/reports", label: "التقارير", icon: BarChart3 },
