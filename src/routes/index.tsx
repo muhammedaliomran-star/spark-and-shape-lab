@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { WarningCircle } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { MessageSquareText } from "lucide-react";
+import { MessageSquareText, AlertCircle } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 
 export const Route = createFileRoute("/")({
@@ -25,13 +24,13 @@ function PiratedPage() {
       <Reveal>
         <div className="mb-8 flex justify-center">
           <div className="rounded-full bg-destructive/10 p-6 ring-1 ring-destructive/20">
-            <WarningCircle size={80} weight="duotone" className="text-destructive animate-pulse" />
+            <AlertCircle size={80} className="text-destructive animate-pulse" />
           </div>
         </div>
       </Reveal>
 
       <Reveal delay={0.1}>
-        <h1 className="mb-6 text-4xl font-black tracking-tighter text-foreground sm:text-6xl">
+        <h1 className="mb-6 text-4xl font-black tracking-tighter text-foreground sm:text-6xl uppercase">
           ESTA EXTENSÃO FOI PIRATEADA
         </h1>
       </Reveal>
