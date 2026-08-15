@@ -127,14 +127,14 @@ function ReturnsPage() {
               </div>
 
               <div className="space-y-4 border-t border-[var(--hairline)] pt-4">
-                <Label className="font-bold">إضافة أصناف المرتجع</Label>
-                <div className="space-y-2">
-                  <Input placeholder="اسم الصنف" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} className="text-right" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">إضافة أصناف المرتجع</Label>
+                <div className="space-y-2 p-3 bg-muted/10 rounded-2xl ring-1 ring-inset ring-[var(--hairline)]">
+                  <Input placeholder="اسم الصنف" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} className="text-right h-10 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
                   <div className="grid grid-cols-2 gap-2">
-                    <Input type="number" placeholder="السعر" value={newItem.unitPrice || ""} onChange={(e) => setNewItem({ ...newItem, unitPrice: Number(e.target.value) })} className="text-right" />
-                    <Input type="number" placeholder="الكمية" value={newItem.quantity || ""} onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })} className="text-right" />
+                    <Input type="number" placeholder="السعر" value={newItem.unitPrice || ""} onChange={(e) => setNewItem({ ...newItem, unitPrice: Number(e.target.value) })} className="text-right h-10 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
+                    <Input type="number" placeholder="الكمية" value={newItem.quantity || ""} onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })} className="text-right h-10 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" />
                   </div>
-                  <Button onClick={addItem} className="w-full gap-2 rounded-xl" variant="outline">
+                  <Button onClick={addItem} className="w-full gap-2 rounded-xl h-10 bg-background/50 hover:bg-background border-[var(--hairline)]" variant="outline">
                     <Plus className="w-4 h-4" /> إضافة للمرتجع
                   </Button>
                 </div>
@@ -148,17 +148,17 @@ function ReturnsPage() {
                       className="bg-muted/20 rounded-2xl p-4 space-y-2 ring-1 ring-inset ring-[var(--hairline)]"
                     >
                       {items.map((it, idx) => (
-                        <div key={idx} className="flex justify-between items-center text-sm border-b border-[var(--hairline)] pb-2 last:border-0">
+                        <div key={idx} className="flex justify-between items-center text-sm border-b border-[var(--hairline)]/50 pb-2 last:border-0">
                           <div className="flex items-center gap-2">
-                            <button onClick={() => setItems(items.filter((_, i) => i !== idx))} className="text-danger hover:scale-110 transition-transform"><X className="w-3.5 h-3.5" /></button>
-                            <span className={cn("font-bold text-numeric", blurCls)}>{fmt(it.unitPrice * it.quantity)} <span className="text-[10px]">ج.م</span></span>
+                            <button onClick={() => setItems(items.filter((_, i) => i !== idx))} className="w-6 h-6 flex items-center justify-center rounded-full bg-danger/10 text-danger hover:scale-110 transition-transform"><X className="w-3.5 h-3.5" /></button>
+                            <span className={cn("font-bold text-numeric text-primary", blurCls)}>{fmt(it.unitPrice * it.quantity)} <span className="text-[10px]">ج.م</span></span>
                           </div>
-                          <span className="text-muted-foreground">{it.name} ({it.quantity} × {fmt(it.unitPrice)})</span>
+                          <span className="text-muted-foreground font-medium">{it.name} <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-md mx-1">{it.quantity} × {fmt(it.unitPrice)}</span></span>
                         </div>
                       ))}
-                      <div className="flex justify-between items-center font-bold pt-2 border-t border-[var(--hairline)]">
-                        <span className={cn("text-primary text-numeric", blurCls)}>{fmt(items.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0))} <span className="text-[10px]">ج.م</span></span>
-                        <span>الإجمالي</span>
+                      <div className="flex justify-between items-center font-black pt-2 border-t border-[var(--hairline)]">
+                        <span className={cn("text-primary text-xl text-numeric", blurCls)}>{fmt(items.reduce((acc, it) => acc + (it.unitPrice * it.quantity), 0))} <span className="text-xs">ج.م</span></span>
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">الإجمالي المستحق</span>
                       </div>
                     </motion.div>
                   )}
