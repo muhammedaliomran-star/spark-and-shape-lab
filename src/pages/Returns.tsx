@@ -218,33 +218,43 @@ function ReturnsPage() {
                 </BezelCard>
               ) : (
                 data.returns.map((r: any) => (
-                  <BezelCard key={r.id} className="p-0 overflow-hidden group bezel-lift border-transparent hover:border-primary/20 transition-all duration-500">
-                    <div className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 order-2 md:order-1">
-                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-muted-foreground hover:text-danger hover:bg-danger/10 md:opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => db.removeReturn(r.id)}>
-                          <Trash2 className="w-3.5 h-3.5" />
+                  <BezelCard key={r.id} className="p-0 overflow-hidden group bezel-lift border-transparent hover:border-primary/20 transition-all duration-500 relative">
+                    <div className={cn(
+                      "absolute top-0 right-0 w-1 h-full",
+                      r.type === "sale" ? "bg-warning/50" : "bg-primary/50"
+                    )} />
+                    <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                      <div className="flex items-center gap-4 order-2 md:order-1">
+                        <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl bg-danger/5 text-muted-foreground hover:text-danger hover:bg-danger/10 md:opacity-0 group-hover:opacity-100 transition-all duration-300" onClick={() => db.removeReturn(r.id)}>
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                         <div className="text-right">
-                          <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">القيمة الإجمالية</div>
-                          <div className={cn("text-lg font-black text-numeric", blurCls)}>{fmt(r.totalAmount)} <span className="text-[10px] font-bold">ج.م</span></div>
+                          <div className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em] mb-0.5">القيمة الإجمالية</div>
+                          <div className={cn("text-2xl font-black text-numeric tracking-tighter", r.type === 'sale' ? "text-warning" : "text-primary", blurCls)}>
+                            {fmt(r.totalAmount)} <span className="text-xs font-bold opacity-60">ج.م</span>
+                          </div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-3 order-1 md:order-2 text-right">
-                        <div>
+                      <div className="flex items-center gap-4 order-1 md:order-2 text-right">
+                        <div className="space-y-1">
                           <div className="flex items-center justify-end gap-2">
-                            {r.invoiceId && <Badge variant="secondary" className="text-[10px] font-mono">{r.invoiceId}</Badge>}
-                            <span className="font-bold">{r.type === "sale" ? "مرتجع مبيعات" : "مرتجع موردين"}</span>
+                            {r.invoiceId && <Badge variant="secondary" className="text-[10px] font-mono bg-muted/50 ring-1 ring-inset ring-[var(--hairline)]">{r.invoiceId}</Badge>}
+                            <span className="font-black text-sm tracking-tight">{r.type === "sale" ? "مرتجع مبيعات" : "مرتجع موردين"}</span>
                           </div>
-                          <div className="text-xs text-muted-foreground mt-0.5" dir="ltr">{format(new Date(r.createdAt), "yyyy/MM/dd - hh:mm a")}</div>
+                          <div className="text-[10px] font-medium text-muted-foreground bg-muted/30 px-2 py-0.5 rounded-full inline-block" dir="ltr">{format(new Date(r.createdAt), "yyyy/MM/dd - hh:mm a")}</div>
                         </div>
-                        <div className={cn("p-2 rounded-xl", r.type === "sale" ? "bg-warning/10 text-warning" : "bg-primary/10 text-primary")}>
-                          {r.type === "sale" ? <TrendingUp className="w-5 h-5" /> : <Package className="w-5 h-5" />}
+                        <div className={cn(
+                          "w-12 h-12 rounded-2xl flex items-center justify-center ring-1 ring-inset",
+                          r.type === "sale" ? "bg-warning/10 text-warning ring-warning/20 shadow-[0_0_20px_-5px_hsl(var(--warning)/0.2)]" : "bg-primary/10 text-primary ring-primary/20 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.2)]"
+                        )}>
+                          {r.type === "sale" ? <TrendingUp className="w-6 h-6" /> : <Package className="w-6 h-6" />}
                         </div>
                       </div>
                     </div>
                     {r.reason && (
-                      <div className="mx-4 mb-4 text-xs text-muted-foreground bg-muted/30 p-2.5 rounded-xl border border-[var(--hairline)] italic text-right">
+                      <div className="mx-5 mb-5 text-[11px] text-muted-foreground leading-relaxed bg-muted/10 p-3 rounded-2xl border border-[var(--hairline)]/50 italic text-right relative z-10">
+                        <span className="text-[10px] font-black uppercase tracking-widest block mb-1 opacity-50 not-italic">سبب المرتجع:</span>
                         {r.reason}
                       </div>
                     )}
