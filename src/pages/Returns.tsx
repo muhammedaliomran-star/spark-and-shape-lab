@@ -122,8 +122,8 @@ function ReturnsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>رقم الفاتورة (اختياري)</Label>
-                <Input value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} placeholder="مثال: #INV-001" className="text-right" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">رقم الفاتورة (اختياري)</Label>
+                <Input value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} placeholder="مثال: #INV-001" className="text-right h-11 glass" />
               </div>
 
               <div className="space-y-4 border-t border-[var(--hairline)] pt-4">
@@ -166,12 +166,21 @@ function ReturnsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>السبب / ملاحظات</Label>
-                <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="مثال: تلف في المنتج..." className="text-right" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">السبب / ملاحظات</Label>
+                <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="مثال: تلف في المنتج..." className="text-right h-12 glass" />
               </div>
 
-              <Button className="w-full gap-2 py-6 text-lg rounded-2xl shadow-xl shadow-primary/20" disabled={items.length === 0} onClick={handleAddReturn}>
-                <Check className="w-5 h-5" /> تسجيل المرتجع
+              <Button 
+                className={cn(
+                  "w-full gap-2 py-7 text-lg rounded-2xl shadow-2xl transition-all duration-500 font-black",
+                  returnType === 'sale' 
+                    ? "bg-primary text-primary-foreground hover:shadow-primary/30" 
+                    : "bg-warning text-warning-foreground hover:shadow-warning/30"
+                )} 
+                disabled={items.length === 0} 
+                onClick={handleAddReturn}
+              >
+                <Check className="w-6 h-6" /> تسجيل المرتجع
               </Button>
             </div>
           </BezelCard>
