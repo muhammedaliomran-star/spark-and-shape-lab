@@ -949,7 +949,7 @@ function printReceipt(
   const cur = shop.currency || "ج.م";
   const invNo = invoiceNumber(allInvoices, inv.id, shop.invoicePrefix);
   const remaining = inv.total - inv.paid;
-  const today = new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" });
+  const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const body = `
 <div class="info">
   <div class="box"><b>اسم العميل</b> ${escapeHtml(customerName)}</div>
