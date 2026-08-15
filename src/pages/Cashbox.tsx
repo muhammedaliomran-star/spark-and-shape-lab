@@ -175,11 +175,11 @@ export default function CashboxPage() {
         <PageHeader
           title="الصندوق"
           subtitle="إدارة المعاملات النقدية اليومية والتدفق المالي."
-          icon={<Wallet className="w-7 h-7" />}
+          icon={<Wallet className="w-8 h-8 text-primary" />}
           action={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
                <Select value={daysFilter} onValueChange={setDaysFilter}>
-                <SelectTrigger className="w-[140px] h-9 glass border-none shadow-none">
+                <SelectTrigger className="w-[140px] h-11 glass border-none shadow-none rounded-xl">
                   <Calendar className="w-4 h-4 ml-2 opacity-50" />
                   <SelectValue placeholder="الفترة" />
                 </SelectTrigger>
@@ -190,10 +190,123 @@ export default function CashboxPage() {
                   <SelectItem value="all">كل الأوقات</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm" className="gap-2 text-danger hover:bg-danger/10 border-danger/20">
-                <History className="w-4 h-4" />
-                استعادة المحذوفة
-              </Button>
+              
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2 rounded-2xl h-12 px-6 shadow-xl shadow-primary/20 hover:scale-105 transition-transform">
+                    <Plus className="w-5 h-5" /> تسجيل معاملة جديدة
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl overflow-hidden p-0 border-none bg-card/95 backdrop-blur-2xl">
+                  <DialogHeader className="p-6 pb-2 sticky top-0 bg-card/50 backdrop-blur-xl z-20 border-b border-[var(--hairline)]">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center">
+                          <Wallet className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <DialogTitle className="text-right text-xl font-black">تسجيل معاملة مالية</DialogTitle>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mt-0.5">Register New Cash Transaction</p>
+                        </div>
+                      </div>
+                    </div>
+                  </DialogHeader>
+                  
+                  <ScrollArea className="max-h-[80vh] p-6">
+                    <div className="space-y-6 text-right" dir="rtl">
+                      {/* Type Selection */}
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">نوع المعاملة</Label>
+                        <div className="grid grid-cols-2 gap-2 p-1.5 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] relative overflow-hidden">
+                          <motion.div 
+                            layoutId="cash-active-tab"
+                            className={cn(
+                              "absolute inset-y-1 w-[calc(50%-6px)] rounded-xl shadow-lg z-0",
+                              newTransaction.type === "in" ? "bg-success left-1.5" : "bg-danger right-1.5"
+                            )}
+                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                          />
+                          <Button 
+                            variant="ghost"
+                            className={cn(
+                              "relative z-10 rounded-xl h-11 font-black transition-colors",
+                              newTransaction.type === "in" ? "text-success-foreground" : "text-muted-foreground hover:text-foreground"
+                            )}
+                            onClick={() => setNewTransaction(prev => ({ ...prev, type: "in" }))}
+                          >
+                            وارد (إيراد)
+                          </Button>
+                          <Button 
+                            variant="ghost"
+                            className={cn(
+                              "relative z-10 rounded-xl h-11 font-black transition-colors",
+                              newTransaction.type === "out" ? "text-danger-foreground" : "text-muted-foreground hover:text-foreground"
+                            )}
+                            onClick={() => setNewTransaction(prev => ({ ...prev, type: "out" }))}
+                          >
+                            صادر (مصروف)
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">المبلغ</Label>
+                          <Input 
+                            type="number" 
+                            value={newTransaction.amount || ""} 
+                            onChange={(e) => setNewTransaction(prev => ({ ...prev, amount: Number(e.target.value) }))} 
+                            placeholder="0.00" 
+                            className="text-right h-12 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">التاريخ</Label>
+                          <Input 
+                            type="date" 
+                            value={newTransaction.date} 
+                            onChange={(e) => setNewTransaction(prev => ({ ...prev, date: e.target.value }))} 
+                            className="text-right h-12 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">التصنيف</Label>
+                        <Input 
+                          value={newTransaction.category} 
+                          onChange={(e) => setNewTransaction(prev => ({ ...prev, category: e.target.value }))} 
+                          placeholder="مثال: إيراد صيانة، إيجار، سلف..." 
+                          className="text-right h-12 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" 
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">ملاحظات إضافية</Label>
+                        <Input 
+                          value={newTransaction.notes} 
+                          onChange={(e) => setNewTransaction(prev => ({ ...prev, notes: e.target.value }))} 
+                          placeholder="اكتب أي تفاصيل أخرى هنا..." 
+                          className="text-right h-12 glass border-none focus-visible:ring-1 focus-visible:ring-primary/30" 
+                        />
+                      </div>
+
+                      <Button 
+                        className={cn(
+                          "w-full gap-2 py-8 text-xl rounded-2xl shadow-2xl transition-all duration-500 font-black relative overflow-hidden group",
+                          newTransaction.type === 'in' 
+                            ? "bg-success text-success-foreground hover:shadow-success/30" 
+                            : "bg-danger text-danger-foreground hover:shadow-danger/30"
+                        )} 
+                        onClick={handleAddTransaction}
+                      >
+                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                        <Check className="w-6 h-6 relative z-10" /> <span className="relative z-10">تأكيد المعاملة</span>
+                      </Button>
+                    </div>
+                  </ScrollArea>
+                </DialogContent>
+              </Dialog>
             </div>
           }
         />
