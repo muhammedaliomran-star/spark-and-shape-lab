@@ -214,7 +214,11 @@ export default function CashboxPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Charts/Summary Placeholder Area (Left in RTL, Right in LTR) */}
           <div className="lg:col-span-1 flex flex-col gap-6">
-             <BezelCard title="توزيع المصروفات" icon={<ArrowDownRight className="w-4 h-4 text-danger" />}>
+             <BezelCard className="p-0 overflow-hidden">
+                <div className="p-4 border-b border-[var(--hairline)] flex items-center justify-between">
+                  <span className="font-bold text-sm">توزيع المصروفات</span>
+                  <ArrowDownRight className="w-4 h-4 text-danger" />
+                </div>
                 <div className="py-12 flex flex-col items-center justify-center text-muted-foreground/50">
                    <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-3">
                       <ArrowDownRight className="w-8 h-8" />
@@ -223,7 +227,11 @@ export default function CashboxPage() {
                 </div>
              </BezelCard>
              
-             <BezelCard title="توزيع الإيرادات" icon={<ArrowUpRight className="w-4 h-4 text-success" />}>
+             <BezelCard className="p-0 overflow-hidden">
+                <div className="p-4 border-b border-[var(--hairline)] flex items-center justify-between">
+                  <span className="font-bold text-sm">توزيع الإيرادات</span>
+                  <ArrowUpRight className="w-4 h-4 text-success" />
+                </div>
                 <div className="py-12 flex flex-col items-center justify-center text-muted-foreground/50">
                    <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-3">
                       <ArrowUpRight className="w-8 h-8" />
@@ -232,8 +240,12 @@ export default function CashboxPage() {
                 </div>
              </BezelCard>
 
-             <BezelCard title="الإحصائيات" icon={<TrendingUp className="w-4 h-4 text-primary" />}>
-                <div className="space-y-4">
+             <BezelCard className="p-0 overflow-hidden">
+                <div className="p-4 border-b border-[var(--hairline)] flex items-center justify-between">
+                  <span className="font-bold text-sm">الإحصائيات</span>
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                </div>
+                <div className="p-4 space-y-4">
                    <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">إجمالي المعاملات</span>
                       <span className="font-bold">{filtered.length}</span>
@@ -353,7 +365,7 @@ function MetricCard({ label, value, icon, color, privacy }: { label: string, val
     danger: "text-danger",
     primary: "text-primary",
     muted: "text-muted-foreground"
-  }[color as any] || "text-foreground";
+  }[color as "success" | "danger" | "primary" | "muted"] || "text-foreground";
 
   return (
     <div className="plate p-4 flex flex-col items-center justify-center text-center bezel-lift">
