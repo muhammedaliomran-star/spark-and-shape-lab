@@ -1,36 +1,72 @@
 import { createFileRoute } from "@tanstack/react-router";
-import Landing from "@/pages/Landing";
+import { Button } from "@/components/ui/button";
+import { MessageSquareText, AlertCircle } from "lucide-react";
+import { Reveal } from "@/components/Reveal";
 
 export const Route = createFileRoute("/landing")({
   ssr: false,
-  component: Landing,
+  component: PiratedPage,
   head: () => ({
     meta: [
-      { title: "سِجلّي — إدارة فواتير وأقساط المحلات" },
-      {
-        name: "description",
-        content:
-          "نظام عربي لإدارة العملاء والفواتير والأقساط والمخزون والمصروفات لمحلات البيع بالتقسيط في مصر.",
-      },
-      { property: "og:title", content: "سِجلّي — إدارة فواتير وأقساط المحلات" },
-      {
-        property: "og:description",
-        content:
-          "من الفاتورة لآخر قسط — عملاء ومخزون ومصروفات، محسوبة بالمليم.",
-      },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: "/landing" },
-      { property: "og:image", content: "https://id-preview--78c0b7d5-7020-4705-a792-27e1ee2336b1.lovable.app/og-segilly.jpg" },
-      { name: "twitter:image", content: "https://id-preview--78c0b7d5-7020-4705-a792-27e1ee2336b1.lovable.app/og-segilly.jpg" },
-
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "سِجلّي — إدارة فواتير وأقساط المحلات" },
-      {
-        name: "twitter:description",
-        content:
-          "من الفاتورة لآخر قسط — عملاء ومخزون ومصروفات، محسوبة بالمليم.",
-      },
+      { title: "ESTA EXTENSÃO FOI PIRATEADA" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
-    links: [{ rel: "canonical", href: "/landing" }],
   }),
 });
+
+function PiratedPage() {
+  return (
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background p-6 text-center animate-in fade-in duration-700">
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-destructive/10 blur-[120px]" />
+      </div>
+
+      <Reveal>
+        <div className="mb-8 flex justify-center">
+          <div className="rounded-full bg-destructive/10 p-6 ring-1 ring-destructive/20">
+            <AlertCircle size={80} className="text-destructive animate-pulse" />
+          </div>
+        </div>
+      </Reveal>
+
+      <Reveal delay={0.1}>
+        <h1 className="mb-6 text-4xl font-black tracking-tighter text-foreground sm:text-6xl uppercase">
+          ESTA EXTENSÃO FOI PIRATEADA
+        </h1>
+      </Reveal>
+
+      <Reveal delay={0.2}>
+        <div className="max-w-2xl space-y-6">
+          <p className="text-lg leading-relaxed text-muted-foreground sm:text-xl">
+            A chave utilizada nesta extensão foi bloqueada por uso não autorizado. 
+            Fale com o contato oficial abaixo para adquirir a versão original.
+          </p>
+          
+          <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-6 backdrop-blur-sm">
+            <p className="font-bold text-destructive sm:text-lg">
+              FALAR COM O CONTACTO OFICIAL (91) 98583-7992 ou no botão abaixo
+            </p>
+          </div>
+        </div>
+      </Reveal>
+
+      <Reveal delay={0.3}>
+        <div className="mt-12">
+          <Button
+            size="lg"
+            className="h-16 px-10 text-lg font-bold shadow-2xl shadow-destructive/20 transition-all hover:scale-105 active:scale-95 bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            onClick={() => window.open("https://wa.me/91985837992", "_blank")}
+          >
+            <MessageSquareText className="mr-2 h-6 w-6" />
+            CHAMAR NO WHATSAPP
+          </Button>
+        </div>
+      </Reveal>
+      
+      <div className="absolute bottom-8 text-xs font-medium tracking-widest text-muted-foreground/40 uppercase">
+        Security System Protected • ID: PIRACY_BLOCK_8583
+      </div>
+    </div>
+  );
+}
+
