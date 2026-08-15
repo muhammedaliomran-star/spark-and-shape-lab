@@ -461,55 +461,76 @@ export default function CashboxPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filtered.length === 0 ? (
-                 <div className="plate p-12 text-center text-muted-foreground">
-                    لا توجد معاملات تطابق البحث
-                 </div>
+                <div className="col-span-full">
+                  <BezelCard className="p-24 text-center bezel-lift group relative overflow-hidden">
+                     <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                     <div className="relative z-10 flex flex-col items-center">
+                       <div className="w-28 h-28 mb-8 relative">
+                          <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full animate-pulse" />
+                          <div className="relative w-full h-full rounded-[2rem] bg-card plate flex items-center justify-center ring-1 ring-primary/20 shadow-2xl">
+                            <History className="w-12 h-12 text-primary animate-float-soft" />
+                          </div>
+                       </div>
+                       <h3 className="text-2xl font-black mb-3">لا توجد سجلات مطابقة</h3>
+                       <p className="text-muted-foreground text-sm max-w-[320px] leading-relaxed">لم نتمكن من العثور على أي عمليات مسجلة تطابق معايير البحث الحالية.</p>
+                     </div>
+                  </BezelCard>
+                </div>
               ) : (
                 filtered.map((t, idx) => (
-                  <Reveal key={t.id} delay={idx * 30}>
-                    <div className="group plate p-4 bezel-lift flex items-center gap-4 transition-all">
+                  <Reveal key={t.id} delay={idx * 50}>
+                    <BezelCard className="p-0 overflow-hidden group bezel-lift border-transparent hover:border-primary/20 transition-all duration-500 relative h-full">
                       <div className={cn(
-                        "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ring-1",
-                        t.type === 'in' 
-                          ? "bg-success/12 text-success ring-success/20" 
-                          : "bg-danger/12 text-danger ring-danger/20"
-                      )}>
-                        {t.type === 'in' ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownRight className="w-5 h-5" />}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-bold truncate">{t.notes}</span>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-bold uppercase">
-                            {t.category}
-                          </span>
+                        "absolute top-0 right-0 w-1.5 h-full z-20",
+                        t.type === "in" ? "bg-success" : "bg-danger"
+                      )} />
+                      <div className="p-6 flex flex-col justify-between h-full gap-6 relative z-10">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex flex-col gap-2">
+                             <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl bg-danger/5 text-muted-foreground hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="text-right space-y-2">
+                            <div className="flex items-center justify-end gap-2">
+                              <Badge variant="secondary" className="text-[10px] font-mono bg-muted/50 ring-1 ring-inset ring-[var(--hairline)]">
+                                {t.category}
+                              </Badge>
+                              <span className={cn(
+                                "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md",
+                                t.type === 'in' ? "bg-success/10 text-success" : "bg-danger/10 text-danger"
+                              )}>
+                                {t.type === "in" ? "وارد" : "صادر"}
+                              </span>
+                            </div>
+                            <div className="text-[10px] font-medium text-muted-foreground" dir="ltr">{t.date}</div>
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground flex items-center gap-1.5" dir="ltr">
-                          {t.date}
-                        </div>
-                      </div>
 
-                      <div className="text-left shrink-0">
-                        <div className={cn(
-                          "text-lg font-black tabular-nums",
-                          t.type === 'in' ? "text-success" : "text-danger",
-                          blurCls
-                        )}>
-                          {t.type === 'in' ? '+' : '-'}{fmt(t.amount)} <span className="text-[10px] font-bold">ج.م</span>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 ring-1 ring-inset ring-[var(--hairline)]">
+                             <div className={cn("text-2xl font-black text-numeric tracking-tighter", t.type === 'in' ? "text-success" : "text-danger", blurCls)}>
+                              {t.type === 'in' ? '+' : '-'}{fmt(t.amount)} <span className="text-xs font-bold opacity-60">ج.م</span>
+                            </div>
+                            <div className={cn(
+                              "w-12 h-12 rounded-2xl flex items-center justify-center ring-1 ring-inset",
+                              t.type === "in" ? "bg-success/10 text-success ring-success/20 shadow-[0_0_20px_-5px_hsl(var(--success)/0.2)]" : "bg-danger/10 text-danger ring-danger/20 shadow-[0_0_20px_-5px_hsl(var(--danger)/0.2)]"
+                            )}>
+                              {t.type === "in" ? <ArrowUpRight className="w-6 h-6" /> : <ArrowDownRight className="w-6 h-6" />}
+                            </div>
+                          </div>
+
+                          {t.notes && (
+                            <div className="text-[11px] text-muted-foreground leading-relaxed bg-muted/5 p-3 rounded-xl border border-[var(--hairline)]/50 italic text-right">
+                              <span className="text-[9px] font-black uppercase tracking-widest block mb-1 opacity-50 not-italic">ملاحظات المعاملة:</span>
+                              {t.notes}
+                            </div>
+                          )}
                         </div>
                       </div>
-
-                      <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-primary">
-                            <Pencil className="w-3.5 h-3.5" />
-                         </Button>
-                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-danger hover:bg-danger/10">
-                            <Trash2 className="w-3.5 h-3.5" />
-                         </Button>
-                      </div>
-                    </div>
+                    </BezelCard>
                   </Reveal>
                 ))
               )}
@@ -518,6 +539,20 @@ export default function CashboxPage() {
         </div>
       </PageTransition>
     </AppShell>
+  );
+}
+
+function Badge({ children, className, variant = "default" }: { children: React.ReactNode, className?: string, variant?: "default" | "secondary" | "outline" | "danger" }) {
+  const variants = {
+    default: "bg-primary text-primary-foreground",
+    secondary: "bg-secondary text-secondary-foreground",
+    outline: "text-foreground border border-input bg-background",
+    danger: "bg-danger text-danger-foreground",
+  };
+  return (
+    <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2", variants[variant], className)}>
+      {children}
+    </span>
   );
 }
 
