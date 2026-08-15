@@ -1318,21 +1318,23 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
           </DialogDescription>
         </DialogHeader>
         <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-6 py-8 pb-10 text-right custom-scrollbar">
-          {/* Header Stats Rows */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-[1.5rem] border border-white/5 bg-white/[0.03] p-4 text-right">
-              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1 block">كود الفاتورة</Label>
-              <div className="text-xl font-mono font-bold tracking-wider">#0002</div>
+          <div className="space-y-4">
+            {/* Header Stats Rows */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-[1.5rem] border border-white/5 bg-white/[0.03] p-4 text-right">
+                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1 block">كود الفاتورة</Label>
+                <div className="text-xl font-mono font-bold tracking-wider">#0002</div>
+              </div>
+              <div className="rounded-[1.5rem] border border-white/5 bg-white/[0.03] p-4 text-right">
+                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1 block">حالة الفاتورة</Label>
+                <div className="text-xl font-bold text-warning">غير مكتملة</div>
+              </div>
             </div>
-            <div className="rounded-[1.5rem] border border-white/5 bg-white/[0.03] p-4 text-right">
-              <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1 block">حالة الفاتورة</Label>
-              <div className="text-xl font-bold text-warning">غير مكتملة</div>
-            </div>
-          </div>
 
-          <div className="rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
-           <div className="space-y-2 rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
-            <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">العميل</Label>
+            <div className="rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
+              <div className="space-y-2 rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+                <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">العميل</Label>
+
             <Select
               value={customerId}
               onValueChange={(v) => {
@@ -1377,8 +1379,10 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
             </div>
           )}
 
-           </div>
+              </div>
+            </div>
           </div>
+
 
           {blocked && (
             <div className="rounded-2xl border-2 border-danger/40 bg-danger/10 p-3 text-sm text-danger flex items-start gap-2 animate-[scale-in_0.2s_ease-out]">
