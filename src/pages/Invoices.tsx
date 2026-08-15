@@ -1751,6 +1751,13 @@ function NewInvoiceDialog({ trigger }: { trigger: React.ReactNode }) {
               </div>
               {!customerId && <span className="text-[10px] text-warning font-bold mt-1">اختر العميل أولاً</span>}
             </div>
+            <div className="flex flex-col items-start">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">إجمالي الفاتورة</span>
+              <div className="flex items-baseline gap-1">
+                <span className={cn("text-xl font-bold leading-none text-foreground", blurCls)}>{fmt(totalPrice)}</span>
+                <span className="text-[10px] font-bold text-muted-foreground">ج.م</span>
+              </div>
+            </div>
           </div>
 
           {blockReason && (
