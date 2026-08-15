@@ -70,11 +70,11 @@ function ReturnsPage() {
         icon={<Undo2 className="w-8 h-8 text-primary" />}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-8">
-        <MetricCard label="إجمالي المرتجعات" value={data.returns.reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Undo2 className="w-4 h-4 text-primary" />} color="primary" privacy={privacy} />
-        <MetricCard label="مرتجعات مبيعات" value={data.returns.filter(r => r.type === "sale").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<TrendingUp className="w-4 h-4 text-warning" />} color="warning" privacy={privacy} />
-        <MetricCard label="مرتجعات موردين" value={data.returns.filter(r => r.type === "supplier").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Package className="w-4 h-4 text-primary" />} color="primary" privacy={privacy} />
-        <MetricCard label="عدد العمليات" value={data.returns.length} icon={<History className="w-4 h-4 text-muted-foreground" />} color="muted" privacy={privacy} isCount />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <MetricCard label="إجمالي المرتجعات" value={data.returns.reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Undo2 className="w-4 h-4 text-primary" />} color="primary" privacy={privacy} glow />
+        <MetricCard label="مرتجعات مبيعات" value={data.returns.filter(r => r.type === "sale").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<TrendingUp className="w-4 h-4 text-warning" />} color="warning" privacy={privacy} glow />
+        <MetricCard label="مرتجعات موردين" value={data.returns.filter(r => r.type === "supplier").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Package className="w-4 h-4 text-primary" />} color="primary" privacy={privacy} glow />
+        <MetricCard label="عدد العمليات" value={data.returns.length} icon={<History className="w-4 h-4 text-muted-foreground" />} color="muted" privacy={privacy} isCount glow />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -226,7 +226,7 @@ function ReturnsPage() {
   );
 }
 
-function MetricCard({ label, value, icon, color, privacy, isCount }: { label: string, value: number, icon: React.ReactNode, color: string, privacy: boolean, isCount?: boolean }) {
+function MetricCard({ label, value, icon, color, privacy, isCount, glow }: { label: string, value: number, icon: React.ReactNode, color: string, privacy: boolean, isCount?: boolean, glow?: boolean }) {
   const blurCls = privacy ? "privacy-blur" : "privacy-clear";
   const colorCls = {
     success: "text-success",
@@ -236,14 +236,30 @@ function MetricCard({ label, value, icon, color, privacy, isCount }: { label: st
     muted: "text-muted-foreground"
   }[color as "success" | "danger" | "primary" | "warning" | "muted"] || "text-foreground";
 
+  const glowCls = glow ? {
+    success: "shadow-[0_0_30px_-10px_hsl(var(--success)/0.3)]",
+    danger: "shadow-[0_0_30px_-10px_hsl(var(--danger)/0.3)]",
+    primary: "shadow-[0_0_30px_-10px_hsl(var(--primary)/0.3)]",
+    warning: "shadow-[0_0_30px_-10px_hsl(var(--warning)/0.3)]",
+    muted: "shadow-none"
+  }[color as "success" | "danger" | "primary" | "warning" | "muted"] : "";
+
   return (
-    <div className="plate p-4 flex flex-col items-center justify-center text-center bezel-lift">
-      <div className="flex items-center gap-2 mb-1">
-        {icon}
-        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{label}</span>
+    <div className={cn("plate p-5 flex flex-col items-center justify-center text-center bezel-lift group relative overflow-hidden", glowCls)}>
+      {glow && (
+        <div className={cn(
+          "absolute -right-4 -top-4 w-12 h-12 blur-2xl opacity-20 transition-opacity group-hover:opacity-40",
+          color === 'primary' ? "bg-primary" : color === 'warning' ? "bg-warning" : "bg-muted"
+        )} />
+      )}
+      <div className="flex items-center gap-2 mb-1.5">
+        <div className="p-1.5 rounded-lg bg-muted/20 ring-1 ring-inset ring-[var(--hairline)]">
+          {icon}
+        </div>
+        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.15em]">{label}</span>
       </div>
-      <div className={cn("text-lg font-black tabular-nums", colorCls, blurCls)}>
-        {isCount ? value : <><CountUp value={value} format={(n: number) => fmt(n)} /> <span className="text-[10px] font-bold">ج.م</span></>}
+      <div className={cn("text-2xl font-black tabular-nums tracking-tighter", colorCls, blurCls)}>
+        {isCount ? <CountUp value={value} /> : <><CountUp value={value} format={(n: number) => fmt(n)} /> <span className="text-xs font-bold opacity-60">ج.م</span></>}
       </div>
     </div>
   );
