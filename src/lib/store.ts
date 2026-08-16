@@ -202,6 +202,11 @@ interface DBState {
   branches: Branch[];
   paymentVouchers: PaymentVoucher[];
   loading: boolean;
+  addBranch: (b: Omit<Branch, "id" | "createdAt">) => Promise<void>;
+  updateBranch: (id: string, patch: Partial<Branch>) => Promise<void>;
+  removeBranch: (id: string) => Promise<void>;
+  addPaymentVoucher: (v: Omit<PaymentVoucher, "id" | "createdAt">) => Promise<void>;
+  removePaymentVoucher: (id: string) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -352,7 +357,16 @@ export function useDB(): DBState {
     if (!loaded) fetchAll();
     return () => { listeners.delete(l); };
   }, []);
-  return { ...cache, loading, refresh };
+  return { 
+    ...cache, 
+    loading, 
+    refresh,
+    addBranch: db.addBranch,
+    updateBranch: db.updateBranch,
+    removeBranch: db.removeBranch,
+    addPaymentVoucher: db.addPaymentVoucher,
+    removePaymentVoucher: db.removePaymentVoucher
+  };
 }
 
 async function uid() {

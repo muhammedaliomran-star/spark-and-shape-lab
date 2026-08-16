@@ -54,7 +54,7 @@ export default function BranchesPage() {
             title="الفروع" 
             icon={<GitBranch className="h-7 w-7" />} 
             subtitle="إدارة فروع المحل وتوزيع المهام" 
-          >
+            action={
             <Button 
               onClick={() => {
                 setEditingBranch(null);
@@ -65,7 +65,7 @@ export default function BranchesPage() {
               <Plus className="ml-2 h-4 w-4" />
               إضافة فرع جديد
             </Button>
-          </PageHeader>
+          } />
 
           {/* Quick Stats */}
           <Reveal className="grid grid-cols-1 md:grid-cols-3 gap-6">
