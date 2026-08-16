@@ -21,6 +21,11 @@ export default function PaymentsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | "receipt" | "payment">("all");
+  const [dateFilter, setDateFilter] = useState<{ from: string; to: string }>({
+    from: format(startOfMonth(new Date()), "yyyy-MM-dd"),
+    to: format(endOfMonth(new Date()), "yyyy-MM-dd")
+  });
+
 
   const filteredVouchers = useMemo(() => {
     return paymentVouchers.filter(v => {
