@@ -87,32 +87,12 @@ export default function BranchesPage() {
             </div>
           </Reveal>
 
-          {/* Main Branch */}
-          {mainBranch && (
-            <div className="flex flex-col gap-4">
-              <h2 className="text-lg font-bold flex items-center gap-2 px-1">
-                <Star className="h-5 w-5 text-warning fill-warning" />
-                الفرع الرئيسي
-              </h2>
-              <Reveal>
-                <BranchCard 
-                  branch={mainBranch} 
-                  onEdit={(b) => {
-                    setEditingBranch(b);
-                    setIsDialogOpen(true);
-                  }}
-                  onDelete={removeBranch}
-                />
-              </Reveal>
-            </div>
-          )}
-
-          {/* Other Branches */}
+          {/* Branches List */}
           <div className="flex flex-col gap-4">
-            <h2 className="text-lg font-bold px-1">باقي الفروع</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {otherBranches.map((branch, idx) => (
-                <Reveal key={branch.id} delay={idx * 0.1}>
+            <h2 className="text-lg font-bold px-1">قائمة الفروع</h2>
+            <div className="flex flex-col gap-3">
+              {branches.map((branch, idx) => (
+                <Reveal key={branch.id} delay={idx * 0.05}>
                   <BranchCard 
                     branch={branch} 
                     onEdit={(b) => {
@@ -123,13 +103,14 @@ export default function BranchesPage() {
                   />
                 </Reveal>
               ))}
-              {otherBranches.length === 0 && !mainBranch && !loading && (
-                <div className="col-span-full py-20 text-center text-muted-foreground plate italic">
+              {branches.length === 0 && !loading && (
+                <div className="py-20 text-center text-muted-foreground plate italic">
                   لا توجد فروع مسجلة حالياً
                 </div>
               )}
             </div>
           </div>
+
         </div>
       </PageTransition>
 
