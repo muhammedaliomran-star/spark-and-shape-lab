@@ -745,7 +745,26 @@ function NewInvoicePage() {
         </aside>
       </div>
 
+      {/* شريط الإجراءات السفلي — للشاشات الصغيرة */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-foreground/10 bg-background/80 px-4 py-3 backdrop-blur-xl lg:hidden">
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => (step < 3 ? setStep(step + 1) : submit(false))}
+            disabled={step === 3 && !!blockReason}
+            className="h-12 flex-1 rounded-2xl font-black"
+          >
+            {step < 3 ? "التالي" : "حفظ الفاتورة"}
+          </Button>
+          <div className="text-right">
+            <span className="block text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">الإجمالي</span>
+            <span className={cn("text-lg font-black leading-none text-primary", blurCls)}>{fmt(totalPrice)}</span>
+          </div>
+        </div>
+      </div>
+      <div className="h-20 lg:hidden" />
+
       <BarcodeScanner
+
         open={scanOpen}
         onClose={() => setScanOpen(false)}
         onDetected={handleScan}
