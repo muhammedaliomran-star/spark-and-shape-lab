@@ -4,6 +4,28 @@ import { supabase } from "@/integrations/supabase/client";
 export type CustomerStatus = "committed" | "neutral" | "defaulter";
 export type CustomerType = "installment" | "cash";
 
+export interface Branch {
+  id: string;
+  name: string;
+  location: string | null;
+  phone: string | null;
+  managerName: string | null;
+  isMain: boolean;
+  createdAt: string;
+}
+
+export interface PaymentVoucher {
+  id: string;
+  customerId: string | null;
+  supplierId: string | null;
+  amount: number;
+  type: "receipt" | "payment";
+  paymentMethod: string;
+  description: string | null;
+  voucherDate: string;
+  createdAt: string;
+}
+
 export interface Customer {
   id: string;
   name: string;
@@ -177,6 +199,8 @@ interface DBState {
   warehouseItems: WarehouseItem[];
   returns: ReturnRecord[];
   returnItems: ReturnItem[];
+  branches: Branch[];
+  paymentVouchers: PaymentVoucher[];
   loading: boolean;
   refresh: () => Promise<void>;
 }
@@ -189,10 +213,13 @@ let cache: {
   warehouseItems: WarehouseItem[];
   returns: ReturnRecord[];
   returnItems: ReturnItem[];
+  branches: Branch[];
+  paymentVouchers: PaymentVoucher[];
 } = {
   customers: [], invoices: [], payments: [], expenses: [], invoiceItems: [],
   suppliers: [], purchases: [], purchaseItems: [], supplierPayments: [], stockItems: [], warehouseItems: [],
   returns: [], returnItems: [],
+  branches: [], paymentVouchers: [],
 };
 let loading = true;
 let loaded = false;
@@ -204,12 +231,12 @@ async function fetchAll() {
   notify();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    cache = { customers: [], invoices: [], payments: [], expenses: [], invoiceItems: [], suppliers: [], purchases: [], purchaseItems: [], supplierPayments: [], stockItems: [], warehouseItems: [], returns: [], returnItems: [] };
+    cache = { customers: [], invoices: [], payments: [], expenses: [], invoiceItems: [], suppliers: [], purchases: [], purchaseItems: [], supplierPayments: [], stockItems: [], warehouseItems: [], returns: [], returnItems: [], branches: [], paymentVouchers: [] };
     loading = false;
     notify();
     return;
   }
-  const [c, i, p, e, ii, s, pu, pi, sp, st, wh, rr, ri] = await Promise.all([
+  const [c, i, p, e, ii, s, pu, pi, sp, st, wh, rr, ri, br, pv] = await Promise.all([
     supabase.from("customers").select("*").order("name"),
     supabase.from("invoices").select("*").order("created_at", { ascending: false }),
     supabase.from("payments").select("*"),
@@ -223,6 +250,8 @@ async function fetchAll() {
     supabase.from("warehouse_items").select("*").order("name"),
     supabase.from("return_records").select("*").order("created_at", { ascending: false }),
     supabase.from("return_items").select("*").order("created_at"),
+    supabase.from("branches").select("*").order("name"),
+    supabase.from("payment_vouchers").select("*").order("voucher_date", { ascending: false }),
   ]);
   cache = {
     customers: (c.data ?? []).map((r: any) => ({
@@ -297,6 +326,16 @@ async function fetchAll() {
     returnItems: (ri.data ?? []).map((r: any) => ({
       id: r.id, returnId: r.return_id, name: r.name,
       unitPrice: Number(r.unit_price), quantity: Number(r.quantity), createdAt: r.created_at,
+    })),
+    branches: (br.data ?? []).map((r: any) => ({
+      id: r.id, name: r.name, location: r.location, phone: r.phone,
+      managerName: r.manager_name, isMain: r.is_main, createdAt: r.created_at,
+    })),
+    paymentVouchers: (pv.data ?? []).map((r: any) => ({
+      id: r.id, customerId: r.customer_id, supplierId: r.supplier_id,
+      amount: Number(r.amount), type: r.type as "receipt" | "payment",
+      paymentMethod: r.payment_method, description: r.description,
+      voucherDate: r.voucher_date, createdAt: r.created_at,
     })),
   };
   loading = false;
@@ -472,6 +511,50 @@ export const db = {
   },
   async removeInvoiceItem(id: string) {
     const { error } = await supabase.from("invoice_items").delete().eq("id", id);
+    if (error) throw error;
+    await fetchAll();
+  },
+
+  // Branches
+  async addBranch(b: Omit<Branch, "id" | "createdAt">) {
+    const user_id = await uid();
+    const { error } = await supabase.from("branches").insert({
+      user_id, name: b.name, location: b.location, phone: b.phone,
+      manager_name: b.managerName, is_main: b.isMain
+    });
+    if (error) throw error;
+    await fetchAll();
+  },
+  async updateBranch(id: string, patch: Partial<Branch>) {
+    const upd: any = {};
+    if (patch.name !== undefined) upd.name = patch.name;
+    if (patch.location !== undefined) upd.location = patch.location;
+    if (patch.phone !== undefined) upd.phone = patch.phone;
+    if (patch.managerName !== undefined) upd.manager_name = patch.managerName;
+    if (patch.isMain !== undefined) upd.is_main = patch.isMain;
+    const { error } = await supabase.from("branches").update(upd).eq("id", id);
+    if (error) throw error;
+    await fetchAll();
+  },
+  async removeBranch(id: string) {
+    const { error } = await supabase.from("branches").delete().eq("id", id);
+    if (error) throw error;
+    await fetchAll();
+  },
+
+  // Payment Vouchers
+  async addPaymentVoucher(v: Omit<PaymentVoucher, "id" | "createdAt">) {
+    const user_id = await uid();
+    const { error } = await supabase.from("payment_vouchers").insert({
+      user_id, customer_id: v.customerId, supplier_id: v.supplierId,
+      amount: v.amount, type: v.type, payment_method: v.paymentMethod,
+      description: v.description, voucher_date: v.voucherDate
+    });
+    if (error) throw error;
+    await fetchAll();
+  },
+  async removePaymentVoucher(id: string) {
+    const { error } = await supabase.from("payment_vouchers").delete().eq("id", id);
     if (error) throw error;
     await fetchAll();
   },
