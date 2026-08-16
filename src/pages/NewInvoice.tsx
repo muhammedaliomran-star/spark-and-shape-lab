@@ -794,6 +794,30 @@ function NewInvoicePage() {
             </div>
           </div>
 
+          {/* حالة الفاتورة */}
+          <div className="plate rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-5">
+            <Label className="mb-3 block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">حالة الفاتورة</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { v: "paid", label: "مدفوعة", cls: "bg-success text-black", ring: "hover:text-success" },
+                { v: "pending", label: "معلقة", cls: "bg-warning text-black", ring: "hover:text-warning" },
+                { v: "cancelled", label: "ملغية", cls: "bg-danger text-white", ring: "hover:text-danger" },
+              ] as const).map((o) => (
+                <button
+                  key={o.v}
+                  type="button"
+                  onClick={() => setStatus(o.v)}
+                  className={cn(
+                    "rounded-2xl py-3 text-xs font-black transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95",
+                    status === o.v ? o.cls : cn("bg-white/[0.05] text-muted-foreground hover:bg-white/[0.08]", o.ring),
+                  )}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* ملاحظات */}
           <div className="plate rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-5">
             <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2 block">ملاحظات إضافية</Label>
