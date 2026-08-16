@@ -499,7 +499,7 @@ function NewInvoicePage() {
                         </div>
                         <div>
                           {idx === 0 && <Label className="mb-1 block text-[10px] text-muted-foreground">سعر البيع</Label>}
-                          <Input type="number" value={p.price} onChange={(e) => updateProduct(p.id, { price: e.target.value })} className={cn(blurCls, "h-9 bg-white/5 border-white/10 text-center")} />
+                          <Input type="number" value={p.price} onChange={(e) => updateProduct(p.id, { price: e.target.value })} className="h-9 bg-white/5 border-white/10 text-center" />
                         </div>
                         <div className="flex justify-end">
                           <Button
