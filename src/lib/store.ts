@@ -231,6 +231,9 @@ async function fetchAll() {
       id: r.id, customerId: r.customer_id, total: Number(r.total),
       downPayment: Number(r.down_payment), monthlyInstallment: Number(r.monthly_installment),
       firstDueDate: r.first_due_date, paid: Number(r.paid), notes: r.notes, createdAt: r.created_at,
+      discountPct: Number(r.discount_pct ?? 0), discountAmount: Number(r.discount_amount ?? 0),
+      taxPct: Number(r.tax_pct ?? 0), taxAmount: Number(r.tax_amount ?? 0),
+      status: (r.status ?? "pending") as InvoiceStatus,
     })),
     payments: (p.data ?? []).map((r: any) => ({
       id: r.id, invoiceId: r.invoice_id, amount: Number(r.amount), paidAt: r.paid_at,
