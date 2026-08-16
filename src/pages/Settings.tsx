@@ -891,11 +891,13 @@ function DataTab() {
 /* ------------------------------ helpers ------------------------------ */
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div dir="rtl" className="grid grid-cols-[8rem_minmax(0,1fr)] items-start gap-3 text-right">
-      <Label className="mt-2 text-right">{label}</Label>
-      <div className="min-w-0 grid gap-1 text-right">
+    <div dir="rtl" className="grid grid-cols-[8.5rem_minmax(0,1fr)] items-start gap-4 text-right group">
+      <div className="mt-2 text-right">
+        <Label className="text-xs font-black tracking-tight group-hover:text-primary transition-colors">{label}</Label>
+        {hint && <p className="mt-1 text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed opacity-60">{hint}</p>}
+      </div>
+      <div className="min-w-0 grid gap-2 text-right">
         {children}
-        {hint ? <span className="text-[11px] text-muted-foreground">{hint}</span> : null}
       </div>
     </div>
   );
@@ -931,14 +933,14 @@ const ALL_ROLES: AppRole[] = ["owner", "manager", "seller"];
 
 function RoleBadge({ role, big = false }: { role: AppRole; big?: boolean }) {
   const tone: Record<AppRole, string> = {
-    owner: "bg-primary/12 text-primary ring-primary/20",
-    manager: "bg-info/12 text-info ring-info/20",
-    seller: "bg-muted text-muted-foreground ring-border",
+    owner: "bg-primary/10 text-primary border-primary/20",
+    manager: "bg-info/10 text-info border-info/20",
+    seller: "bg-foreground/5 text-muted-foreground border-foreground/10",
   };
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full ring-1 font-medium ${tone[role]} ${
-        big ? "px-4 py-1.5 text-sm" : "px-3 py-1 text-[11px]"
+      className={`inline-flex items-center gap-2 rounded-xl border font-black uppercase tracking-widest ${tone[role]} ${
+        big ? "px-5 py-2 text-xs" : "px-3 py-1.5 text-[9px]"
       }`}
     >
       <ShieldCheck className={big ? "w-4 h-4" : "w-3 h-3"} />
