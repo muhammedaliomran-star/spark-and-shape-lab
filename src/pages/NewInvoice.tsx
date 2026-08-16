@@ -675,7 +675,7 @@ function NewInvoicePage() {
         </div>
 
         {/* ===== العمود الجانبي ===== */}
-        <aside className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pb-4 no-scrollbar">
+        <aside className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
           {/* ملخص الفاتورة */}
           <div className="plate rounded-[2rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
             <div className="space-y-4 rounded-[calc(2rem-0.375rem)] bg-background/60 p-5 text-right shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
