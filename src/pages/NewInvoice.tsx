@@ -906,6 +906,9 @@ function NewInvoicePage() {
 
               <div className="space-y-2 text-sm">
                 <Row label="عدد المنتجات" value={String(products.filter((p) => p.name.trim()).length)} />
+                <Row label="الإجمالي قبل الخصم" value={`${fmt(subtotal)} ج.م`} valueClass={blurCls} />
+                {discountValue > 0 && <Row label="الخصم" value={`− ${fmt(discountValue)} ج.م`} valueClass={blurCls} />}
+                {taxValue > 0 && <Row label={`الضريبة (${Number(taxPct || 0)}%)`} value={`${fmt(taxValue)} ج.م`} valueClass={blurCls} />}
                 <Row label="إجمالي الفاتورة" value={`${fmt(totalPrice)} ج.م`} valueClass={blurCls} />
                 <Row label={isCashMode ? "المدفوع الآن" : "المقدم"} value={`${fmt(isCashMode ? totalPrice : downNum)} ج.م`} valueClass={blurCls} />
                 {!isCashMode && <Row label="المتبقي للتقسيط" value={`${fmt(remaining)} ج.م`} valueClass={blurCls} />}
