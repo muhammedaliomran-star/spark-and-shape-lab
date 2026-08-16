@@ -250,8 +250,8 @@ async function fetchAll() {
     supabase.from("warehouse_items").select("*").order("name"),
     supabase.from("return_records").select("*").order("created_at", { ascending: false }),
     supabase.from("return_items").select("*").order("created_at"),
-    supabase.from("branches").select("*").order("name"),
-    supabase.from("payment_vouchers").select("*").order("voucher_date", { ascending: false }),
+    (supabase.from as any)("branches").select("*").order("name"),
+    (supabase.from as any)("payment_vouchers").select("*").order("voucher_date", { ascending: false }),
   ]);
   cache = {
     customers: (c.data ?? []).map((r: any) => ({
@@ -518,7 +518,7 @@ export const db = {
   // Branches
   async addBranch(b: Omit<Branch, "id" | "createdAt">) {
     const user_id = await uid();
-    const { error } = await supabase.from("branches").insert({
+    const { error } = await (supabase.from as any)("branches").insert({
       user_id, name: b.name, location: b.location, phone: b.phone,
       manager_name: b.managerName, is_main: b.isMain
     });
@@ -532,12 +532,12 @@ export const db = {
     if (patch.phone !== undefined) upd.phone = patch.phone;
     if (patch.managerName !== undefined) upd.manager_name = patch.managerName;
     if (patch.isMain !== undefined) upd.is_main = patch.isMain;
-    const { error } = await supabase.from("branches").update(upd).eq("id", id);
+    const { error } = await (supabase.from as any)("branches").update(upd).eq("id", id);
     if (error) throw error;
     await fetchAll();
   },
   async removeBranch(id: string) {
-    const { error } = await supabase.from("branches").delete().eq("id", id);
+    const { error } = await (supabase.from as any)("branches").delete().eq("id", id);
     if (error) throw error;
     await fetchAll();
   },
@@ -545,7 +545,7 @@ export const db = {
   // Payment Vouchers
   async addPaymentVoucher(v: Omit<PaymentVoucher, "id" | "createdAt">) {
     const user_id = await uid();
-    const { error } = await supabase.from("payment_vouchers").insert({
+    const { error } = await (supabase.from as any)("payment_vouchers").insert({
       user_id, customer_id: v.customerId, supplier_id: v.supplierId,
       amount: v.amount, type: v.type, payment_method: v.paymentMethod,
       description: v.description, voucher_date: v.voucherDate
@@ -554,7 +554,7 @@ export const db = {
     await fetchAll();
   },
   async removePaymentVoucher(id: string) {
-    const { error } = await supabase.from("payment_vouchers").delete().eq("id", id);
+    const { error } = await (supabase.from as any)("payment_vouchers").delete().eq("id", id);
     if (error) throw error;
     await fetchAll();
   },
