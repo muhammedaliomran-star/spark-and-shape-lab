@@ -440,19 +440,19 @@ const THEMES: Array<{ value: ThemeMode; label: string; desc: string }> = [
 
 function AppearanceTab({ form, set }: TabProps) {
   return (
-    <Section icon={<Palette className="w-5 h-5" />} title="مظهر التطبيق" hint="التغيير بيظهر فوراً، واضغط حفظ علشان يفضل على كل الأجهزة.">
+    <Section icon={<Palette className="w-5 h-5" />} title="سمة التطبيق" hint="تخصيص تجربة المستخدم البصرية">
       <div className="grid sm:grid-cols-3 gap-3">
         {THEMES.map((t) => (
           <button
             key={t.value}
             type="button"
             onClick={() => set("theme", t.value)}
-            className={`text-right rounded-xl border p-4 transition ${
-              form.theme === t.value ? "border-primary bg-primary/10" : "border-border hover:bg-foreground/[0.05]"
+            className={`text-right rounded-[1.75rem] border-2 p-5 transition-all duration-500 hover:scale-[1.02] active:scale-[0.98] ${
+              form.theme === t.value ? "border-primary bg-primary/10 shadow-lg shadow-primary/10" : "border-foreground/5 bg-foreground/[0.02] hover:bg-foreground/[0.05]"
             }`}
           >
-            <div className="text-sm font-bold mb-1">{t.label}</div>
-            <div className="text-xs text-muted-foreground">{t.desc}</div>
+            <div className="text-sm font-black mb-1">{t.label}</div>
+            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">{t.desc}</div>
           </button>
         ))}
       </div>
@@ -474,20 +474,14 @@ function AccountTab({ onSignOut }: { onSignOut: () => void }) {
       <div className="grid gap-6">
         <Section
           icon={<KeyRound className="w-5 h-5" />}
-          title={hasPassword ? "كلمة السر" : "إضافة كلمة سر"}
-          hint={
-            !authReady
-              ? undefined
-              : hasPassword
-                ? "غيّر كلمة السر بشكل دوري للحفاظ على أمان حسابك."
-                : "أنت داخل بحساب جوجل، ومفيش كلمة سر للحساب. تقدر تضيف واحدة وتدخل بالبريد كذلك."
-          }
+          title={hasPassword ? "كلمة المرور" : "إضافة كلمة مرور"}
+          hint="حماية الخصوصية والأمان"
         >
           {authReady ? <ChangePassword mode={hasPassword ? "change" : "add"} /> : <LineSkeleton rows={3} />}
         </Section>
 
         {user?.provider === "google" ? null : (
-          <Section icon={<Mail className="w-5 h-5" />} title="تغيير البريد الإلكتروني">
+          <Section icon={<Mail className="w-5 h-5" />} title="البريد الإلكتروني" hint="تحديث وسيلة التواصل الأساسية">
             <ChangeEmail />
           </Section>
         )}
@@ -604,20 +598,20 @@ function IdentityCard({ onSignOut }: { onSignOut: () => void }) {
                 <div dir="ltr" className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
                   {user.email ?? "—"}
                 </div>
-                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <div className="mt-3 flex flex-wrap items-center gap-2">
                   {(user.providers.length ? user.providers : ["unknown"]).map((p: string) => (
-                    <Badge key={p} variant="secondary" className="rounded-full px-3 py-0.5 text-[10px] uppercase tracking-[0.14em]">
+                    <Badge key={p} variant="secondary" className="rounded-xl px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] bg-foreground/10 border-none">
                       {providerLabel(p)}
                     </Badge>
                   ))}
                   <Badge
                     variant="outline"
-                    className={`rounded-full px-3 py-0.5 text-[10px] ${user.emailConfirmed ? "text-success" : "text-warning"}`}
+                    className={cn("rounded-xl px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] border-none", user.emailConfirmed ? "bg-success/10 text-success" : "bg-warning/10 text-warning")}
                   >
                     {user.emailConfirmed ? (
-                      <><ShieldCheck className="mr-1 h-3 w-3" /> بريد مؤكد</>
+                      <><ShieldCheck className="mr-1 h-3 w-3" /> مؤكد</>
                     ) : (
-                      <><ShieldAlert className="mr-1 h-3 w-3" /> بريد غير مؤكد</>
+                      <><ShieldAlert className="mr-1 h-3 w-3" /> غير مؤكد</>
                     )}
                   </Badge>
                 </div>
