@@ -272,92 +272,94 @@ function ReturnsPage() {
         </div>
 
         <Reveal delay={100}>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="flex flex-col gap-3">
             {filteredReturns.length === 0 ? (
-              <div className="col-span-full">
-                <BezelCard className="p-24 text-center bezel-lift group relative overflow-hidden">
-                   <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                   <div className="relative z-10 flex flex-col items-center">
-                     <div className="w-28 h-28 mb-8 relative">
-                        <div className="absolute inset-0 bg-primary/20 blur-[50px] rounded-full animate-pulse" />
-                        <div className="relative w-full h-full rounded-[2rem] bg-card plate flex items-center justify-center ring-1 ring-primary/20 shadow-2xl">
-                          <History className="w-12 h-12 text-primary animate-float-soft" />
-                        </div>
-                     </div>
-                     <h3 className="text-2xl font-black mb-3">لا توجد سجلات مطابقة</h3>
-                     <p className="text-muted-foreground text-sm max-w-[320px] leading-relaxed">لم نتمكن من العثور على أي عمليات مرتجعة مسجلة تطابق معايير البحث الحالية.</p>
-                   </div>
-                </BezelCard>
+              <div className="bezel-shell">
+                <div className="bezel-core px-6 py-10">
+                  <EmptyState
+                    icon={History}
+                    title="لا توجد سجلات مطابقة"
+                    hint="لم نتمكن من العثور على أي عمليات مرتجعة مسجلة تطابق معايير البحث الحالية."
+                  />
+                </div>
               </div>
             ) : (
               filteredReturns.map((r: any, idx) => (
-                <Reveal key={r.id} delay={idx * 50}>
-                  <BezelCard className="p-0 overflow-hidden group bezel-lift border-transparent hover:border-primary/20 transition-all duration-500 relative h-full">
-                    <div className={cn(
-                      "absolute top-0 right-0 w-1.5 h-full z-20",
-                      r.type === "sale" ? "bg-warning" : "bg-primary"
-                    )} />
-                    <div className="p-6 flex flex-col justify-between h-full gap-6 relative z-10">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex flex-col gap-2">
-                           <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl bg-danger/5 text-muted-foreground hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-all duration-300" onClick={() => db.removeReturn(r.id)}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <div className="text-right space-y-2">
-                          <div className="flex items-center justify-end gap-2">
-                            {r.invoiceId && <Badge variant="secondary" className="text-[10px] font-mono bg-muted/50 ring-1 ring-inset ring-[var(--hairline)]">{r.invoiceId}</Badge>}
-                            <span className={cn(
-                              "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md",
-                              r.type === 'sale' ? "bg-warning/10 text-warning" : "bg-primary/10 text-primary"
-                            )}>
-                              {r.type === "sale" ? "مرتجع مبيعات" : "مرتجع موردين"}
-                            </span>
-                          </div>
-                          <div className="text-[10px] font-medium text-muted-foreground" dir="ltr">{format(new Date(r.createdAt), "yyyy/MM/dd - hh:mm a")}</div>
-                        </div>
+                <div
+                  key={r.id}
+                  className="group bezel-shell bezel-lift animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)] both"
+                  style={{ animationDelay: `${Math.min(idx, 12) * 45}ms` }}
+                >
+                  <div className="bezel-core grid grid-cols-1 items-center gap-5 p-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] md:gap-6">
+                    {/* الهوية */}
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className={cn(
+                        "grid h-11 w-11 shrink-0 place-items-center rounded-2xl ring-1",
+                        r.type === "sale" ? "bg-warning/12 text-warning ring-warning/25" : "bg-primary/12 text-primary ring-primary/25"
+                      )}>
+                        {r.type === "sale" ? <TrendingUp className="h-5 w-5" /> : <Package className="h-5 w-5" />}
                       </div>
-
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 ring-1 ring-inset ring-[var(--hairline)]">
-                           <div className={cn("text-2xl font-black text-numeric tracking-tighter", r.type === 'sale' ? "text-warning" : "text-primary", blurCls)}>
-                            {fmt(r.totalAmount)} <span className="text-xs font-bold opacity-60">ج.م</span>
-                          </div>
-                          <div className={cn(
-                            "w-12 h-12 rounded-2xl flex items-center justify-center ring-1 ring-inset",
-                            r.type === "sale" ? "bg-warning/10 text-warning ring-warning/20 shadow-[0_0_20px_-5px_hsl(var(--warning)/0.2)]" : "bg-primary/10 text-primary ring-primary/20 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.2)]"
-                          )}>
-                            {r.type === "sale" ? <TrendingUp className="w-6 h-6" /> : <Package className="w-6 h-6" />}
-                          </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold">{r.type === "sale" ? "مرتجع مبيعات" : "مرتجع موردين"}</span>
+                          {r.invoiceId && (
+                            <Badge variant="secondary" className="text-[10px] font-mono bg-muted/50 ring-1 ring-inset ring-[var(--hairline)]">{r.invoiceId}</Badge>
+                          )}
                         </div>
-
-                        {r.reason && (
-                          <div className="text-[11px] text-muted-foreground leading-relaxed bg-muted/5 p-3 rounded-xl border border-[var(--hairline)]/50 italic text-right">
-                            <span className="text-[9px] font-black uppercase tracking-widest block mb-1 opacity-50 not-italic">ملاحظات العملية:</span>
-                            {r.reason}
-                          </div>
-                        )}
-                        
-                        {r.items && r.items.length > 0 && (
-                          <div className="space-y-1">
-                             <span className="text-[9px] font-black uppercase tracking-widest block mb-1.5 opacity-50 text-right">الأصناف المرتجعة ({r.items.length}):</span>
-                             <div className="flex flex-wrap gap-1.5 justify-end">
-                               {r.items.map((item: any, i: number) => (
-                                 <Badge key={i} variant="outline" className="text-[9px] py-0 px-2 bg-muted/20 border-none font-bold">
-                                   {item.name} ({item.quantity})
-                                 </Badge>
-                               ))}
-                             </div>
-                          </div>
-                        )}
+                        <div className="text-numeric mt-0.5 text-xs text-muted-foreground" dir="ltr">
+                          {format(new Date(r.createdAt), "yyyy/MM/dd - hh:mm a")}
+                        </div>
                       </div>
                     </div>
-                  </BezelCard>
-                </Reveal>
+
+                    {/* القيمة والتفاصيل */}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-4">
+                        <div className="flex flex-col">
+                          <div className="text-[10px] text-muted-foreground mb-0.5">قيمة المرتجع</div>
+                          <div className={cn("text-numeric text-xl font-extrabold", r.type === "sale" ? "text-warning" : "text-primary", blurCls)}>
+                            {fmt(r.totalAmount)} <span className="text-xs font-bold text-muted-foreground">ج.م</span>
+                          </div>
+                        </div>
+                        {r.items && r.items.length > 0 && (
+                          <div className="flex flex-col">
+                            <div className="text-[10px] text-muted-foreground mb-0.5">الأصناف</div>
+                            <div className="mt-0.5 flex flex-wrap gap-1.5">
+                              {r.items.slice(0, 3).map((item: any, i: number) => (
+                                <Badge key={i} variant="outline" className="text-[9px] py-0 px-2 bg-muted/20 border-none font-bold">
+                                  {item.name} ({item.quantity})
+                                </Badge>
+                              ))}
+                              {r.items.length > 3 && (
+                                <Badge variant="outline" className="text-[9px] py-0 px-2 bg-muted/20 border-none font-bold">
+                                  +{r.items.length - 3}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      {r.reason && <div className="mt-2 max-w-[300px] truncate text-xs text-muted-foreground">{r.reason}</div>}
+                    </div>
+
+                    {/* الإجراءات */}
+                    <div className="flex items-center justify-end gap-1.5 md:opacity-70 md:transition-opacity md:group-hover:opacity-100">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="action-btn rounded-full text-muted-foreground hover:text-danger hover:bg-danger/10"
+                        onClick={() => db.removeReturn(r.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               ))
             )}
           </div>
         </Reveal>
+
       </div>
     </>
   );
