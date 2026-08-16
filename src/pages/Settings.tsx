@@ -811,18 +811,18 @@ function DataTab() {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2 animate-[fade-in_0.3s_ease-out]">
       <Section icon={<Database className="w-5 h-5" />} title="ملخص بياناتك" hint="عدد السجلات المخزّنة على حسابك.">
         <div className="grid grid-cols-2 gap-2">
           {Object.entries(TABLE_LABELS).map(([key, label]) => (
-            <div key={key} className="rounded-2xl bg-foreground/[0.04] p-3 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">{label}</span>
-              <span className="text-sm font-bold tabular-nums">{counts ? fmt(counts[key] ?? 0) : "…"}</span>
+            <div key={key} className="rounded-2xl bg-foreground/[0.03] border border-foreground/5 p-4 flex items-center justify-between transition-all hover:bg-foreground/[0.05]">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{label}</span>
+              <span className="text-sm font-black tabular-nums text-primary">{counts ? fmt(counts[key] ?? 0) : "…"}</span>
             </div>
           ))}
         </div>
-        <Button variant="ghost" size="sm" className="mt-3 gap-1.5" onClick={load}>
-          <RotateCcw className="w-4 h-4" /> تحديث
+        <Button variant="ghost" size="sm" className="mt-4 gap-2 rounded-xl text-[10px] font-black uppercase tracking-widest opacity-60 hover:opacity-100" onClick={load}>
+          <RotateCcw className="w-3.5 h-3.5" /> تحديث الإحصائيات
         </Button>
       </Section>
 
@@ -830,16 +830,16 @@ function DataTab() {
         <Section icon={<FileJson className="w-5 h-5" />} title="نسخة احتياطية" hint="نزّل كل بياناتك على جهازك في ملف واحد.">
           <div className="flex flex-wrap gap-2">
             <Button
-              variant="secondary" className="gap-1.5" disabled={busy !== null}
+              variant="secondary" className="h-12 gap-2 rounded-2xl bg-foreground/5 hover:bg-foreground/10 border-none transition-all px-6 font-bold flex-1" disabled={busy !== null}
               onClick={() => run("json", downloadJsonBackup, "تم تنزيل النسخة الاحتياطية (JSON)")}
             >
-              <FileJson className="w-4 h-4" /> تنزيل JSON
+              <FileJson className="w-4 h-4 opacity-60" /> تنزيل JSON
             </Button>
             <Button
-              variant="secondary" className="gap-1.5" disabled={busy !== null}
+              variant="secondary" className="h-12 gap-2 rounded-2xl bg-foreground/5 hover:bg-foreground/10 border-none transition-all px-6 font-bold flex-1" disabled={busy !== null}
               onClick={() => run("xlsx", downloadExcelBackup, "تم تنزيل ملف Excel")}
             >
-              <FileSpreadsheet className="w-4 h-4" /> تنزيل Excel
+              <FileSpreadsheet className="w-4 h-4 opacity-60" /> تنزيل Excel
             </Button>
           </div>
         </Section>
@@ -847,29 +847,30 @@ function DataTab() {
         <Section icon={<ShieldAlert className="w-5 h-5" />} title="منطقة الخطر" hint="حذف كل العملاء والفواتير والمخزن والمصروفات نهائياً. بيانات المحل بتفضل زي ما هي.">
           <Button
             variant="outline"
-            className="gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+            className="h-12 w-full gap-2 rounded-2xl text-danger border-danger/20 bg-danger/[0.02] hover:bg-danger/10 hover:border-danger/40 transition-all font-black"
             onClick={() => { setConfirmText(""); setConfirmOpen(true); }}
           >
-            <Trash2 className="w-4 h-4" /> حذف كل البيانات
+            <Trash2 className="w-4 h-4" /> مسح كافة البيانات نهائياً
           </Button>
         </Section>
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="rounded-[2.5rem] border-danger/10 bg-card/95 backdrop-blur-2xl p-8 max-w-lg shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-right">متأكد إنك عايز تمسح كل البيانات؟</AlertDialogTitle>
-            <AlertDialogDescription className="text-right">
-              الإجراء ده نهائي ومش هينفع تتراجع عنه. اكتب كلمة <strong>حذف</strong> للتأكيد.
-              يُفضّل تنزيل نسخة احتياطية الأول.
+            <AlertDialogTitle className="text-right text-2xl font-black tracking-tight text-danger">حذف كل البيانات؟</AlertDialogTitle>
+            <AlertDialogDescription className="text-right text-sm leading-relaxed">
+              هذا الإجراء سيقوم بمسح كافة الفواتير، العملاء، الموردين، والمخزون بشكل نهائي. لا يمكن التراجع عن هذه الخطوة.
+              <br /><br />
+              لتأكيد الحذف، يرجى كتابة كلمة <strong className="text-foreground">حذف</strong> في الحقل أدناه.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <Input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} placeholder="حذف" />
-          <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          <Input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} placeholder="اكتب حذف هنا" className="h-12 rounded-2xl bg-foreground/[0.03] border-danger/20 focus:border-danger transition-all text-center font-bold" />
+          <AlertDialogFooter className="mt-6 gap-3 sm:justify-end">
+            <AlertDialogCancel className="rounded-2xl border-none hover:bg-foreground/5 h-12 px-6 font-bold">إلغاء</AlertDialogCancel>
             <AlertDialogAction
               disabled={confirmText.trim() !== "حذف" || busy !== null}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="rounded-2xl bg-danger h-12 px-8 font-black text-white transition-all hover:bg-danger/90 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-danger/20"
               onClick={async () => {
                 await run("wipe", wipeAllData, "تم حذف كل البيانات");
                 setConfirmOpen(false);
