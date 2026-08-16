@@ -495,7 +495,7 @@ function NewInvoicePage() {
                         </div>
                         <div>
                           {idx === 0 && <Label className="mb-1 block text-[10px] text-muted-foreground">التكلفة</Label>}
-                          <Input type="number" value={p.cost} onChange={(e) => updateProduct(p.id, { cost: e.target.value })} className={cn(blurCls, "h-9 bg-white/5 border-white/10 text-center")} />
+                          <Input type="number" value={p.cost} onChange={(e) => updateProduct(p.id, { cost: e.target.value })} className={cn(privacy && "privacy-blur", "h-9 bg-white/5 border-white/10 text-center")} />
                         </div>
                         <div>
                           {idx === 0 && <Label className="mb-1 block text-[10px] text-muted-foreground">سعر البيع</Label>}
@@ -563,7 +563,7 @@ function NewInvoicePage() {
                         const amt = Math.max(0, Number(v || 0));
                         setDiscountPct(v === "" || subtotal <= 0 ? "" : ((amt / subtotal) * 100).toFixed(1));
                       }}
-                      className={cn("h-11 rounded-2xl border-white/10 bg-white/[0.04] text-center", blurCls)}
+                      className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-center"
                     />
                   </div>
                 </div>
@@ -611,15 +611,15 @@ function NewInvoicePage() {
                   </div>
                   <div className="flex flex-col justify-end gap-2 text-[11px]">
                     <div className="flex items-center justify-between">
-                      <span className={cn("font-bold", blurCls)}>{fmt(subtotal)} ج.م</span>
+                      <span className="font-bold">{fmt(subtotal)} ج.م</span>
                       <span className="text-muted-foreground">الإجمالي قبل الخصم</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className={cn("font-bold", blurCls)}>{fmt(taxValue)} ج.م</span>
+                      <span className="font-bold">{fmt(taxValue)} ج.م</span>
                       <span className="text-muted-foreground">قيمة الضريبة</span>
                     </div>
                     <div className="flex items-center justify-between border-t border-white/5 pt-2">
-                      <span className={cn("text-base font-black text-primary", blurCls)}>{fmt(totalPrice)} ج.م</span>
+                      <span className="text-base font-black text-primary">{fmt(totalPrice)} ج.م</span>
                       <span className="text-muted-foreground">الإجمالي النهائي</span>
                     </div>
                   </div>
@@ -654,13 +654,13 @@ function NewInvoicePage() {
                     </div>
 
                     <div className="flex items-baseline justify-between gap-3 rounded-2xl bg-primary/[0.06] px-4 py-3">
-                      <span className={cn("text-[clamp(1.25rem,4vw,1.75rem)] font-extrabold leading-none tracking-tight text-primary", blurCls)}>{fmt(totalPrice)} ج.م</span>
+                      <span className="text-[clamp(1.25rem,4vw,1.75rem)] font-extrabold leading-none tracking-tight text-primary">{fmt(totalPrice)} ج.م</span>
                       <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">المطلوب دفعه الآن</span>
                     </div>
 
                     <div className="space-y-2">
                       <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">المبلغ المستلم من العميل (ج.م)</Label>
-                      <Input type="number" value={cashPaid} onChange={(e) => setCashPaid(e.target.value)} placeholder={`${totalPrice || 0}`} className={blurCls} />
+                      <Input type="number" value={cashPaid} onChange={(e) => setCashPaid(e.target.value)} placeholder={`${totalPrice || 0}`} />
                       <div className="flex flex-wrap gap-1.5">
                         {[totalPrice, 50, 100, 200, 500].filter((v, i, a) => v > 0 && a.indexOf(v) === i).map((v, i) => (
                           <button
@@ -680,7 +680,7 @@ function NewInvoicePage() {
                         "flex items-baseline justify-between gap-3 rounded-2xl px-4 py-3",
                         cashShort > 0 ? "bg-warning/10" : "bg-success/10",
                       )}>
-                        <span className={cn("text-[clamp(1.1rem,3.5vw,1.5rem)] font-extrabold leading-none tracking-tight", cashShort > 0 ? "text-warning" : "text-success", blurCls)}>
+                        <span className={cn("text-[clamp(1.1rem,3.5vw,1.5rem)] font-extrabold leading-none tracking-tight", cashShort > 0 ? "text-warning" : "text-success")}>
                           {fmt(cashShort > 0 ? cashShort : change)} ج.م
                         </span>
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
@@ -700,7 +700,7 @@ function NewInvoicePage() {
                   >
                     <div className="space-y-2">
                       <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">المقدم (ج.م)</Label>
-                      <Input type="number" value={down} onChange={(e) => setDown(e.target.value)} className={blurCls} />
+                      <Input type="number" value={down} onChange={(e) => setDown(e.target.value)} />
                       <div className="flex flex-wrap gap-2 mt-2">
                         {([
                           { pct: 0, label: "بدون مقدم" },
@@ -721,7 +721,7 @@ function NewInvoicePage() {
                     </div>
 
                     <div className="flex items-baseline justify-between gap-3 rounded-2xl bg-primary/[0.06] px-4 py-3">
-                      <span className={cn("text-[clamp(1.25rem,4vw,1.75rem)] font-extrabold leading-none tracking-tight text-primary", blurCls)}>{fmt(remaining)} ج.م</span>
+                      <span className="text-[clamp(1.25rem,4vw,1.75rem)] font-extrabold leading-none tracking-tight text-primary">{fmt(remaining)} ج.م</span>
                       <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">المتبقي للتقسيط</span>
                     </div>
 
@@ -749,7 +749,7 @@ function NewInvoicePage() {
                       </div>
                       <div>
                         <Label className="text-xs">القسط الشهري (ج.م)</Label>
-                        <Input type="number" value={monthly} onChange={(e) => setMonthly(e.target.value)} className={cn(countNum > 0 && "border-success/40 bg-success/5", blurCls)} />
+                        <Input type="number" value={monthly} onChange={(e) => setMonthly(e.target.value)} className={cn(countNum > 0 && "border-success/40 bg-success/5")} />
                       </div>
                       <div>
                         <Label className="text-xs">تاريخ أول قسط</Label>
@@ -787,14 +787,14 @@ function NewInvoicePage() {
                       <div className="space-y-2 rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-3">
                         <div className="flex items-center justify-between">
                           <span className="text-[11px] font-bold text-muted-foreground">
-                            إجمالي المستحق: <span className={cn("text-foreground", blurCls)}>{fmt(totalDue)} ج.م</span>
+                            إجمالي المستحق: <span className="text-foreground">{fmt(totalDue)} ج.م</span>
                           </span>
                           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">معاينة جدول الأقساط</span>
                         </div>
                         <div className="max-h-52 space-y-1 overflow-y-auto pl-1 custom-scrollbar">
                           {schedule.map((row) => (
                             <div key={row.n} className="flex items-center justify-between rounded-xl bg-background/60 px-3 py-1.5 text-xs">
-                              <span className={cn("font-extrabold text-foreground", blurCls)}>{fmt(row.amount)} ج.م</span>
+                              <span className="font-extrabold text-foreground">{fmt(row.amount)} ج.م</span>
                               <span className="text-muted-foreground">
                                 قسط {row.n} — <span dir="ltr">{format(row.due, "dd/MM/yyyy")}</span>
                               </span>
