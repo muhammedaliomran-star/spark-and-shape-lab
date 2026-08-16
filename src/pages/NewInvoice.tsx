@@ -38,7 +38,7 @@ export default function Page() {
 function NewInvoicePage() {
   const data = useDB();
   const { settings: shop } = useShopSettings();
-  const { privacy } = usePrivacy();
+  const { privacy, toggle } = usePrivacy();
   const navigate = useNavigate();
   const blurCls = privacy ? "privacy-blur" : "privacy-clear";
 
@@ -278,6 +278,18 @@ function NewInvoicePage() {
         icon={<Receipt className="h-7 w-7" />}
         action={
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggle}
+              className={cn(
+                "h-10 w-10 rounded-full transition-colors",
+                privacy ? "bg-warning/10 text-warning hover:bg-warning/20" : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10"
+              )}
+              title={privacy ? "إظهار الأرباح (Ctrl+H)" : "إخفاء الأرباح (Ctrl+H)"}
+            >
+              {privacy ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </Button>
             <span className="rounded-full border border-primary/30 bg-primary/10 px-4 py-2 font-mono text-sm font-bold tracking-wider text-primary">
               {invoiceCode}
             </span>
