@@ -513,7 +513,7 @@ function NewInvoicePage() {
                         </div>
                       </div>
                       <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
-                        <span className={cn("font-bold text-muted-foreground", blurCls)}>
+                        <span className="font-bold text-muted-foreground">
                           الإجمالي: {fmt(lineTotal)} ج.م
                         </span>
                         {s && (
@@ -532,7 +532,7 @@ function NewInvoicePage() {
             <div className="plate rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-1.5">
               <div className="space-y-3 rounded-[calc(1.75rem-0.375rem)] bg-background/50 p-4">
                 <div className="flex items-center justify-between">
-                  <span className={cn("text-xs font-bold", discountValue > 0 ? "text-primary" : "text-muted-foreground/50", blurCls)}>
+                  <span className={cn("text-xs font-bold", discountValue > 0 ? "text-primary" : "text-muted-foreground/50")}>
                     − {fmt(discountValue)} ج.م
                   </span>
                   <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">الخصم</Label>
@@ -923,12 +923,12 @@ function NewInvoicePage() {
 
               <div className="space-y-2 text-sm">
                 <Row label="عدد المنتجات" value={String(products.filter((p) => p.name.trim()).length)} />
-                <Row label="الإجمالي قبل الخصم" value={`${fmt(subtotal)} ج.م`} valueClass={blurCls} />
-                {discountValue > 0 && <Row label="الخصم" value={`− ${fmt(discountValue)} ج.م`} valueClass={blurCls} />}
-                {taxValue > 0 && <Row label={`الضريبة (${Number(taxPct || 0)}%)`} value={`${fmt(taxValue)} ج.م`} valueClass={blurCls} />}
-                <Row label="إجمالي الفاتورة" value={`${fmt(totalPrice)} ج.م`} valueClass={blurCls} />
-                <Row label={isCashMode ? "المدفوع الآن" : "المقدم"} value={`${fmt(isCashMode ? totalPrice : downNum)} ج.م`} valueClass={blurCls} />
-                {!isCashMode && <Row label="المتبقي للتقسيط" value={`${fmt(remaining)} ج.م`} valueClass={blurCls} />}
+                <Row label="الإجمالي قبل الخصم" value={`${fmt(subtotal)} ج.م`} />
+                {discountValue > 0 && <Row label="الخصم" value={`− ${fmt(discountValue)} ج.م`} />}
+                {taxValue > 0 && <Row label={`الضريبة (${Number(taxPct || 0)}%)`} value={`${fmt(taxValue)} ج.م`} />}
+                <Row label="إجمالي الفاتورة" value={`${fmt(totalPrice)} ج.م`} />
+                <Row label={isCashMode ? "المدفوع الآن" : "المقدم"} value={`${fmt(isCashMode ? totalPrice : downNum)} ج.م`} />
+                {!isCashMode && <Row label="المتبقي للتقسيط" value={`${fmt(remaining)} ج.م`} />}
                 {!isCashMode && countNum > 0 && <Row label="عدد الأقساط" value={String(countNum)} />}
               </div>
 
@@ -937,7 +937,7 @@ function NewInvoicePage() {
                   {isCashMode ? "إجمالي الفاتورة" : "المقدم الآن"}
                 </span>
                 <div className="flex items-baseline gap-1">
-                  <span className={cn("text-4xl font-black leading-none tracking-tighter text-primary", blurCls)}>
+                  <span className="text-4xl font-black leading-none tracking-tighter text-primary">
                     {fmt(isCashMode ? totalPrice : downNum)}
                   </span>
                   <span className="text-xs font-bold text-primary">ج.م</span>
@@ -994,7 +994,7 @@ function NewInvoicePage() {
           </Button>
           <div className="text-right">
             <span className="block text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">الإجمالي</span>
-            <span className={cn("text-lg font-black leading-none text-primary", blurCls)}>{fmt(totalPrice)}</span>
+            <span className="text-lg font-black leading-none text-primary">{fmt(totalPrice)}</span>
           </div>
         </div>
       </div>
