@@ -143,36 +143,51 @@ export type Database = {
         Row: {
           created_at: string
           customer_id: string
+          discount_amount: number
+          discount_pct: number
           down_payment: number
           first_due_date: string
           id: string
           monthly_installment: number
           notes: string | null
           paid: number
+          status: string
+          tax_amount: number
+          tax_pct: number
           total: number
           user_id: string
         }
         Insert: {
           created_at?: string
           customer_id: string
+          discount_amount?: number
+          discount_pct?: number
           down_payment?: number
           first_due_date: string
           id?: string
           monthly_installment: number
           notes?: string | null
           paid?: number
+          status?: string
+          tax_amount?: number
+          tax_pct?: number
           total: number
           user_id: string
         }
         Update: {
           created_at?: string
           customer_id?: string
+          discount_amount?: number
+          discount_pct?: number
           down_payment?: number
           first_due_date?: string
           id?: string
           monthly_installment?: number
           notes?: string | null
           paid?: number
+          status?: string
+          tax_amount?: number
+          tax_pct?: number
           total?: number
           user_id?: string
         }

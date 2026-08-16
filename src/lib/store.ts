@@ -21,6 +21,8 @@ export interface Customer {
   createdAt: string;
 }
 
+export type InvoiceStatus = "paid" | "pending" | "cancelled";
+
 export interface Invoice {
   id: string;
   customerId: string;
@@ -31,6 +33,11 @@ export interface Invoice {
   paid: number;
   notes: string | null;
   createdAt: string;
+  discountPct?: number;
+  discountAmount?: number;
+  taxPct?: number;
+  taxAmount?: number;
+  status?: InvoiceStatus;
 }
 
 export interface Payment {
@@ -231,6 +238,9 @@ async function fetchAll() {
       id: r.id, customerId: r.customer_id, total: Number(r.total),
       downPayment: Number(r.down_payment), monthlyInstallment: Number(r.monthly_installment),
       firstDueDate: r.first_due_date, paid: Number(r.paid), notes: r.notes, createdAt: r.created_at,
+      discountPct: Number(r.discount_pct ?? 0), discountAmount: Number(r.discount_amount ?? 0),
+      taxPct: Number(r.tax_pct ?? 0), taxAmount: Number(r.tax_amount ?? 0),
+      status: (r.status ?? "pending") as InvoiceStatus,
     })),
     payments: (p.data ?? []).map((r: any) => ({
       id: r.id, invoiceId: r.invoice_id, amount: Number(r.amount), paidAt: r.paid_at,
@@ -429,6 +439,9 @@ export const db = {
       user_id, customer_id: inv.customerId, total: inv.total, down_payment: inv.downPayment,
       monthly_installment: inv.monthlyInstallment, first_due_date: inv.firstDueDate,
       paid: inv.paid ?? inv.downPayment, notes: inv.notes,
+      discount_pct: inv.discountPct ?? 0, discount_amount: inv.discountAmount ?? 0,
+      tax_pct: inv.taxPct ?? 0, tax_amount: inv.taxAmount ?? 0,
+      status: inv.status ?? "pending",
     }).select("id").single();
     if (error) throw error;
     if (inv.items && inv.items.length > 0 && data?.id) {

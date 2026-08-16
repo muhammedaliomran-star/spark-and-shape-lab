@@ -55,6 +55,10 @@ function NewInvoicePage() {
   const [saleType, setSaleType] = useState<"cash" | "installments">("installments");
   const [cashPaid, setCashPaid] = useState("");
   const [step, setStep] = useState(1);
+  const [discountPct, setDiscountPct] = useState("");
+  const [discountAmt, setDiscountAmt] = useState("");
+  const [taxPct, setTaxPct] = useState("");
+  const [status, setStatus] = useState<"paid" | "pending" | "cancelled">("pending");
 
 
   const defaultFirstDue = () => {
@@ -119,9 +123,13 @@ function NewInvoicePage() {
   const blocked = customer && (customer.frozen || customer.status === "defaulter");
 
   const totalCost = products.reduce((s, p) => s + Number(p.cost || 0) * Number(p.quantity || 1), 0);
-  const totalPrice = products.reduce((s, p) => s + Number(p.price || 0) * Number(p.quantity || 1), 0);
+  const subtotal = products.reduce((s, p) => s + Number(p.price || 0) * Number(p.quantity || 1), 0);
+  const discountValue = Math.min(subtotal, Math.max(0, Number(discountAmt || 0)));
+  const afterDiscount = Math.max(0, subtotal - discountValue);
+  const taxValue = Math.max(0, (afterDiscount * Number(taxPct || 0)) / 100);
+  const totalPrice = afterDiscount + taxValue;
   const remaining = Math.max(0, totalPrice - Number(down || 0));
-  const profit = totalPrice - totalCost;
+  const profit = afterDiscount - totalCost;
   const profitPct = totalCost > 0 ? (profit / totalCost) * 100 : 0;
 
   const downNum = Number(down || 0);
@@ -185,6 +193,7 @@ function NewInvoicePage() {
     setNotes("");
     setSaleType("installments");
     setCashPaid("");
+    setDiscountPct(""); setDiscountAmt(""); setTaxPct(""); setStatus("pending");
   };
 
   const submit = async (stay = false) => {
@@ -218,6 +227,9 @@ function NewInvoicePage() {
       await db.addInvoice({
         customerId, total: t, downPayment: isCash ? t : d, monthlyInstallment: m,
         firstDueDate: iso, notes: productNotes, paid: isCash ? t : d,
+        discountPct: Number(discountPct || 0), discountAmount: discountValue,
+        taxPct: Number(taxPct || 0), taxAmount: taxValue,
+        status: isCash ? "paid" : status,
         items: validProducts.flatMap((p) => {
           const qty = Math.max(1, Number(p.quantity || 1));
           return Array.from({ length: qty }, () => ({
@@ -499,6 +511,105 @@ function NewInvoicePage() {
               </AnimatePresence>
             </div>
 
+            {/* الخصم والضريبة */}
+            <div className="plate rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-1.5">
+              <div className="space-y-3 rounded-[calc(1.75rem-0.375rem)] bg-background/50 p-4">
+                <div className="flex items-center justify-between">
+                  <span className={cn("text-xs font-bold", discountValue > 0 ? "text-primary" : "text-muted-foreground/50", blurCls)}>
+                    − {fmt(discountValue)} ج.م
+                  </span>
+                  <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">الخصم</Label>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] text-muted-foreground">بالنسبة %</Label>
+                    <Input
+                      type="number" min="0" max="100" placeholder="0"
+                      value={discountPct}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setDiscountPct(v);
+                        const pct = Math.min(100, Math.max(0, Number(v || 0)));
+                        setDiscountAmt(v === "" ? "" : String(Math.round((subtotal * pct) / 100)));
+                      }}
+                      className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-center"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] text-muted-foreground">بالمبلغ (ج.م)</Label>
+                    <Input
+                      type="number" min="0" placeholder="0"
+                      value={discountAmt}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setDiscountAmt(v);
+                        const amt = Math.max(0, Number(v || 0));
+                        setDiscountPct(v === "" || subtotal <= 0 ? "" : ((amt / subtotal) * 100).toFixed(1));
+                      }}
+                      className={cn("h-11 rounded-2xl border-white/10 bg-white/[0.04] text-center", blurCls)}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[5, 10, 15].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => { setDiscountPct(String(n)); setDiscountAmt(String(Math.round((subtotal * n) / 100))); }}
+                      className="rounded-xl bg-white/[0.05] px-4 py-2 text-[10px] font-black tracking-widest text-muted-foreground/80 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/10 hover:text-primary active:scale-95"
+                    >
+                      {n}%
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => { setDiscountPct(""); setDiscountAmt(""); }}
+                    className="rounded-xl bg-white/[0.05] px-4 py-2 text-[10px] font-black tracking-widest text-muted-foreground/80 transition-all hover:bg-danger/10 hover:text-danger active:scale-95"
+                  >
+                    مسح
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 border-t border-white/5 pt-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] text-muted-foreground">معدل الضريبة %</Label>
+                    <Input
+                      type="number" min="0" placeholder="0"
+                      value={taxPct}
+                      onChange={(e) => setTaxPct(e.target.value)}
+                      className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-center"
+                    />
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {[0, 14].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setTaxPct(n === 0 ? "" : String(n))}
+                          className="rounded-xl bg-white/[0.05] px-3 py-1.5 text-[10px] font-black text-muted-foreground/80 transition-all hover:bg-primary/10 hover:text-primary active:scale-95"
+                        >
+                          {n === 0 ? "بدون ضريبة" : `${n}%`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-col justify-end gap-2 text-[11px]">
+                    <div className="flex items-center justify-between">
+                      <span className={cn("font-bold", blurCls)}>{fmt(subtotal)} ج.م</span>
+                      <span className="text-muted-foreground">الإجمالي قبل الخصم</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className={cn("font-bold", blurCls)}>{fmt(taxValue)} ج.م</span>
+                      <span className="text-muted-foreground">قيمة الضريبة</span>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-white/5 pt-2">
+                      <span className={cn("text-base font-black text-primary", blurCls)}>{fmt(totalPrice)} ج.م</span>
+                      <span className="text-muted-foreground">الإجمالي النهائي</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
           )}
 
@@ -687,6 +798,30 @@ function NewInvoicePage() {
             </div>
           </div>
 
+          {/* حالة الفاتورة */}
+          <div className="plate rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-5">
+            <Label className="mb-3 block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">حالة الفاتورة</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { v: "paid", label: "مدفوعة", cls: "bg-success text-black", ring: "hover:text-success" },
+                { v: "pending", label: "معلقة", cls: "bg-warning text-black", ring: "hover:text-warning" },
+                { v: "cancelled", label: "ملغية", cls: "bg-danger text-white", ring: "hover:text-danger" },
+              ] as const).map((o) => (
+                <button
+                  key={o.v}
+                  type="button"
+                  onClick={() => setStatus(o.v)}
+                  className={cn(
+                    "rounded-2xl py-3 text-xs font-black transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95",
+                    status === o.v ? o.cls : cn("bg-white/[0.05] text-muted-foreground hover:bg-white/[0.08]", o.ring),
+                  )}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* ملاحظات */}
           <div className="plate rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-5">
             <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2 block">ملاحظات إضافية</Label>
@@ -771,6 +906,9 @@ function NewInvoicePage() {
 
               <div className="space-y-2 text-sm">
                 <Row label="عدد المنتجات" value={String(products.filter((p) => p.name.trim()).length)} />
+                <Row label="الإجمالي قبل الخصم" value={`${fmt(subtotal)} ج.م`} valueClass={blurCls} />
+                {discountValue > 0 && <Row label="الخصم" value={`− ${fmt(discountValue)} ج.م`} valueClass={blurCls} />}
+                {taxValue > 0 && <Row label={`الضريبة (${Number(taxPct || 0)}%)`} value={`${fmt(taxValue)} ج.م`} valueClass={blurCls} />}
                 <Row label="إجمالي الفاتورة" value={`${fmt(totalPrice)} ج.م`} valueClass={blurCls} />
                 <Row label={isCashMode ? "المدفوع الآن" : "المقدم"} value={`${fmt(isCashMode ? totalPrice : downNum)} ج.م`} valueClass={blurCls} />
                 {!isCashMode && <Row label="المتبقي للتقسيط" value={`${fmt(remaining)} ج.م`} valueClass={blurCls} />}
