@@ -260,10 +260,38 @@ function NewInvoicePage() {
         }
       />
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         {/* ===== العمود الرئيسي ===== */}
-        <div className="order-2 space-y-8 text-right lg:order-1">
+        <div className="order-2 space-y-4 text-right lg:order-1">
+          {/* الخطوات */}
+          <div className="plate flex items-center gap-1.5 rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-1.5">
+            {[
+              { n: 1, label: "العميل والنوع" },
+              { n: 2, label: `المنتجات (${products.length})` },
+              { n: 3, label: "الدفع والأقساط" },
+            ].map((s) => (
+              <button
+                key={s.n}
+                type="button"
+                onClick={() => setStep(s.n)}
+                className={cn(
+                  "flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                  step === s.n ? "bg-primary/15 text-primary ring-1 ring-primary/40" : "text-muted-foreground hover:bg-foreground/[0.05]",
+                )}
+              >
+                <span className={cn(
+                  "grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] font-black",
+                  step === s.n ? "bg-primary text-black" : "bg-foreground/10",
+                )}>{s.n}</span>
+                <span className="truncate">{s.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {step === 1 && (
+          <div className="space-y-4">
           {/* العميل */}
+
           <div className="plate rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
             <div className="space-y-2 rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">العميل</Label>
