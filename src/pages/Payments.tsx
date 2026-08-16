@@ -36,9 +36,17 @@ export default function PaymentsPage() {
         supplier.toLowerCase().includes(search.toLowerCase()) ||
         v.description?.toLowerCase().includes(search.toLowerCase());
       const matchesType = typeFilter === "all" || v.type === typeFilter;
-      return matchesSearch && matchesType;
+      
+      const vDate = new Date(v.voucherDate);
+      const matchesDate = isWithinInterval(vDate, {
+        start: new Date(dateFilter.from),
+        end: new Date(dateFilter.to)
+      });
+
+      return matchesSearch && matchesType && matchesDate;
     });
-  }, [paymentVouchers, search, typeFilter, customers, suppliers]);
+  }, [paymentVouchers, search, typeFilter, dateFilter, customers, suppliers]);
+
 
   const stats = useMemo(() => {
     const receipts = paymentVouchers.filter(v => v.type === "receipt").reduce((s, v) => s + v.amount, 0);
