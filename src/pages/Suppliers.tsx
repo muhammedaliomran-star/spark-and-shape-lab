@@ -34,6 +34,7 @@ import {
 import {
   Plus, Search, Truck, Eye, EyeOff, Pencil, Trash2, Wallet, Banknote,
   History, Phone, Receipt, X, ShoppingCart, ScanLine, Info, CreditCard,
+  CalendarDays,
 } from "lucide-react";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { motion, AnimatePresence } from "framer-motion";
