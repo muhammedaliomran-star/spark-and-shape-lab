@@ -220,7 +220,7 @@ function ShopTab({ form, set }: TabProps) {
     if (!file.type.startsWith("image/")) { toast.error("اختار صورة من فضلك"); return; }
     if (file.size > 3 * 1024 * 1024) { toast.error("حجم الصورة أكبر من 3 ميجا"); return; }
     try {
-      const dataUrl = await resizeImage(file, 256);
+      const dataUrl = await shrinkImage(file, 256);
       set("logoUrl", dataUrl);
       toast.success("تم تحميل اللوجو — اضغط حفظ");
     } catch {
@@ -232,22 +232,22 @@ function ShopTab({ form, set }: TabProps) {
     <div className="grid gap-6 lg:grid-cols-2 animate-[fade-in_0.3s_ease-out]">
       <Section icon={<Store className="w-5 h-5" />} title="هوية المحل" hint="بيانات النشاط التجاري للمطبوعات">
         <div className="grid gap-3">
-          <Field label="اسم المحل">
-            <Input value={form.shopName} onChange={(e) => set("shopName", e.target.value)} placeholder="محل النور للأجهزة" maxLength={80} />
+          <Field label="اسم النشاط التجاري">
+            <Input value={form.shopName} onChange={(e) => set("shopName", e.target.value)} placeholder="مثال: شركة النور للتجارة" maxLength={80} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
           </Field>
           <div className="grid sm:grid-cols-2 gap-3">
             <Field label="رقم التليفون">
-              <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="01xxxxxxxxx" dir="ltr" maxLength={30} />
+              <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="01xxxxxxxxx" dir="ltr" maxLength={30} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
             </Field>
             <Field label="رقم الواتساب" hint="بيستخدم في أزرار إرسال التذكيرات">
-              <Input value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="201xxxxxxxxx" dir="ltr" maxLength={30} />
+              <Input value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="201xxxxxxxxx" dir="ltr" maxLength={30} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
             </Field>
           </div>
           <Field label="العنوان">
-            <Input value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="شارع الجمهورية — طنطا" maxLength={200} />
+            <Input value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="مثال: القاهرة، حي المعادي" maxLength={200} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
           </Field>
           <Field label="الرقم الضريبي (اختياري)">
-            <Input value={form.taxNumber} onChange={(e) => set("taxNumber", e.target.value)} placeholder="000-000-000" dir="ltr" maxLength={40} />
+            <Input value={form.taxNumber} onChange={(e) => set("taxNumber", e.target.value)} placeholder="000-000-000" dir="ltr" maxLength={40} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
           </Field>
           <Field label="ملاحظة أسفل الفاتورة (اختياري)">
             <Textarea
