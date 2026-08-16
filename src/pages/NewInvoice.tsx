@@ -731,7 +731,7 @@ function NewInvoicePage() {
           </div>
         </div>
 
-        </div>
+
 
         {/* ===== العمود الجانبي ===== */}
         <aside className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
