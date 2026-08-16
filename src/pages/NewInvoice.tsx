@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   Plus, AlertTriangle, ShieldAlert, Trash2, CalendarIcon, Package, ScanLine,
-  Receipt, Banknote, ArrowRight,
+  Receipt, Banknote, ArrowRight, Eye, EyeOff
 } from "lucide-react";
 
 export default function Page() {
@@ -257,6 +257,11 @@ function NewInvoicePage() {
       if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "س")) {
         e.preventDefault();
         if (!blockReason) submit(false);
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === "h" || e.key === "ا")) {
+        e.preventDefault();
+        toggle();
+        toast.info(privacy ? "تم إظهار بيانات الربح" : "تم إخفاء بيانات الربح (وضع الخصوصية)");
       }
     };
     window.addEventListener("keydown", onKey);
