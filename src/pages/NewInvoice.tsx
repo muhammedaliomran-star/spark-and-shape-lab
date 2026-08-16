@@ -861,7 +861,7 @@ function NewInvoicePage() {
                 <div className="space-y-1">
                   <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">إجمالي سعر البيع</span>
                   <div className="flex items-baseline gap-1">
-                    <span className={cn("text-xl font-bold tracking-tight", blurCls)}>{fmt(totalPrice)}</span>
+                    <span className="text-xl font-bold tracking-tight">{fmt(totalPrice)}</span>
                     <span className="text-[10px] font-bold text-muted-foreground/40">ج.م</span>
                   </div>
                 </div>
