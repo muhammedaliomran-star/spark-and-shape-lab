@@ -54,6 +54,8 @@ function NewInvoicePage() {
   const [scanOpen, setScanOpen] = useState(false);
   const [saleType, setSaleType] = useState<"cash" | "installments">("installments");
   const [cashPaid, setCashPaid] = useState("");
+  const [step, setStep] = useState(1);
+
 
   const defaultFirstDue = () => {
     const day = Math.min(28, Math.max(1, shop.defaultDueDay || 1));
@@ -236,7 +238,21 @@ function NewInvoicePage() {
     if (!stay) navigate({ to: "/invoices" });
   };
 
+  // اختصارات الكيبورد: Alt+N منتج جديد، Ctrl+S حفظ
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.altKey && (e.key === "n" || e.key === "ن")) { e.preventDefault(); setStep(2); addProduct(); }
+      if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "س")) {
+        e.preventDefault();
+        if (!blockReason) submit(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   return (
+
     <>
       <PageHeader
         eyebrow="الفواتير"
@@ -258,10 +274,38 @@ function NewInvoicePage() {
         }
       />
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         {/* ===== العمود الرئيسي ===== */}
-        <div className="order-2 space-y-8 text-right lg:order-1">
+        <div className="order-2 space-y-4 text-right lg:order-1">
+          {/* الخطوات */}
+          <div className="plate flex items-center gap-1.5 rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-1.5">
+            {[
+              { n: 1, label: "العميل والنوع" },
+              { n: 2, label: `المنتجات (${products.length})` },
+              { n: 3, label: "الدفع والأقساط" },
+            ].map((s) => (
+              <button
+                key={s.n}
+                type="button"
+                onClick={() => setStep(s.n)}
+                className={cn(
+                  "flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                  step === s.n ? "bg-primary/15 text-primary ring-1 ring-primary/40" : "text-muted-foreground hover:bg-foreground/[0.05]",
+                )}
+              >
+                <span className={cn(
+                  "grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] font-black",
+                  step === s.n ? "bg-primary text-black" : "bg-foreground/10",
+                )}>{s.n}</span>
+                <span className="truncate">{s.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {step === 1 && (
+          <div className="space-y-4">
           {/* العميل */}
+
           <div className="plate rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
             <div className="space-y-2 rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">العميل</Label>
@@ -365,11 +409,14 @@ function NewInvoicePage() {
                     : "تم ضبط النوع تلقائيًا حسب تسجيل العميل «قسط» — تقدر تحوّله لبيع فوري لو سدّد كامل المبلغ."}
                 </p>
               )}
-            </div>
           </div>
+          </div>
+          </div>
+          )}
 
-          {/* المنتجات */}
+          {step === 2 && (
           <div className="space-y-3">
+
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Button type="button" size="sm" variant="outline" onClick={addProduct} className="gap-1.5 rounded-full border-primary/40 px-4 text-primary transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/10 active:scale-[0.98]">
@@ -381,75 +428,85 @@ function NewInvoicePage() {
               </div>
               <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">المنتجات ({products.length})</Label>
             </div>
-            <AnimatePresence initial={false}>
-              {products.map((p, idx) => (
-                <motion.div
-                  key={p.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="relative"
-                >
-                  <div className="plate mb-4 rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-5 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-primary/20">
-                    <div className="flex items-center justify-between mb-4">
-                      <Button
-                        type="button" size="icon" variant="ghost"
-                        onClick={() => removeProduct(p.id)}
-                        disabled={products.length === 1}
-                        className="h-8 w-8 rounded-xl text-muted-foreground hover:text-danger hover:bg-danger/10"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">منتج #{idx + 1}</span>
-                    </div>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      <div className="sm:col-span-2 lg:col-span-4">
-                        <Label className="text-xs">اسم المنتج</Label>
-                        <StockProductPicker
-                          value={p.stockId}
-                          name={p.name}
-                          stockItems={data.stockItems}
-                          onPick={(item) => updateProduct(p.id, {
-                            stockId: item.id,
-                            name: item.name,
-                            cost: String(item.lastUnitCost || 0),
-                            price: p.price || (item.salePrice ? String(item.salePrice) : ""),
-                          })}
-                          onClear={() => updateProduct(p.id, { stockId: undefined, name: "" })}
-                        />
-                        {p.stockId && (() => {
-                          const s = data.stockItems.find((x) => x.id === p.stockId);
-                          const qty = Number(p.quantity || 0);
-                          if (!s) return null;
-                          const ok = s.quantity >= qty && qty > 0;
-                          return (
-                            <div className={cn("text-xs mt-1 flex items-center gap-1", ok ? "text-success" : "text-danger")}>
-                              <Package className="w-3 h-3" /> المتوفر في المخزون: {s.quantity}
-                            </div>
-                          );
-                        })()}
+            <div className="plate max-h-[52vh] space-y-2 overflow-y-auto rounded-[1.5rem] border border-white/5 bg-white/[0.02] p-2 custom-scrollbar">
+              <AnimatePresence initial={false}>
+                {products.map((p, idx) => {
+                  const s = p.stockId ? data.stockItems.find((x) => x.id === p.stockId) : undefined;
+                  const qty = Number(p.quantity || 0);
+                  const lineTotal = Number(p.price || 0) * Number(p.quantity || 1);
+                  return (
+                    <motion.div
+                      key={p.id}
+                      layout
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+                      className="rounded-2xl border border-white/5 bg-background/50 px-3 py-2.5 transition-colors hover:border-primary/20"
+                    >
+                      <div className="grid grid-cols-1 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_76px_96px_96px_32px]">
+                        <div className="min-w-0">
+                          {idx === 0 && <Label className="mb-1 block text-[10px] text-muted-foreground">اسم المنتج</Label>}
+                          <StockProductPicker
+                            value={p.stockId}
+                            name={p.name}
+                            stockItems={data.stockItems}
+                            onPick={(item) => updateProduct(p.id, {
+                              stockId: item.id,
+                              name: item.name,
+                              cost: String(item.lastUnitCost || 0),
+                              price: p.price || (item.salePrice ? String(item.salePrice) : ""),
+                            })}
+                            onClear={() => updateProduct(p.id, { stockId: undefined, name: "" })}
+                          />
+                        </div>
+                        <div>
+                          {idx === 0 && <Label className="mb-1 block text-[10px] text-muted-foreground">الكمية</Label>}
+                          <Input type="number" min="1" value={p.quantity} onChange={(e) => updateProduct(p.id, { quantity: e.target.value })} className="h-9 bg-white/5 border-white/10 text-center" />
+                        </div>
+                        <div>
+                          {idx === 0 && <Label className="mb-1 block text-[10px] text-muted-foreground">التكلفة</Label>}
+                          <Input type="number" value={p.cost} onChange={(e) => updateProduct(p.id, { cost: e.target.value })} className={cn(blurCls, "h-9 bg-white/5 border-white/10 text-center")} />
+                        </div>
+                        <div>
+                          {idx === 0 && <Label className="mb-1 block text-[10px] text-muted-foreground">سعر البيع</Label>}
+                          <Input type="number" value={p.price} onChange={(e) => updateProduct(p.id, { price: e.target.value })} className={cn(blurCls, "h-9 bg-white/5 border-white/10 text-center")} />
+                        </div>
+                        <div className="flex justify-end">
+                          <Button
+                            type="button" size="icon" variant="ghost"
+                            onClick={() => removeProduct(p.id)}
+                            disabled={products.length === 1}
+                            className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-danger/10 hover:text-danger"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <div>
-                        <Label className="text-xs">الكمية</Label>
-                        <Input type="number" min="1" value={p.quantity} onChange={(e) => updateProduct(p.id, { quantity: e.target.value })} className="bg-white/5 border-white/10" />
+                      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                        <span className={cn("font-bold text-muted-foreground", blurCls)}>
+                          الإجمالي: {fmt(lineTotal)} ج.م
+                        </span>
+                        {s && (
+                          <span className={cn("flex items-center gap-1", s.quantity >= qty && qty > 0 ? "text-success" : "text-danger")}>
+                            <Package className="h-3 w-3" /> المتوفر: {s.quantity}
+                          </span>
+                        )}
                       </div>
-                      <div>
-                        <Label className="text-xs">تكلفة الوحدة (ج.م)</Label>
-                        <Input type="number" value={p.cost} onChange={(e) => updateProduct(p.id, { cost: e.target.value })} className={cn(blurCls, "bg-white/5 border-white/10")} />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <Label className="text-xs">سعر البيع للوحدة (ج.م)</Label>
-                        <Input type="number" value={p.price} onChange={(e) => updateProduct(p.id, { price: e.target.value })} className={cn(blurCls, "bg-white/5 border-white/10")} />
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
 
+          </div>
+          )}
+
+          {step === 3 && (
+          <div className="space-y-4">
           {/* لوح الدفع */}
           <div className="plate rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
+
             <div className="rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <AnimatePresence mode="wait" initial={false}>
                 {isCashMode ? (
@@ -668,12 +725,39 @@ function NewInvoicePage() {
                   <span className={cn("block text-3xl font-black tracking-tighter", blurCls, profit > 0 ? "text-success" : profit < 0 ? "text-danger" : "text-muted-foreground")}>{profitPct.toFixed(1)}%</span>
                 </div>
               </div>
-            </div>
+          </div>
+          </div>
+          </div>
+          )}
+
+
+          {/* تنقل الخطوات */}
+          <div className="hidden items-center justify-between gap-3 lg:flex">
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-full px-6"
+              disabled={step === 3}
+              onClick={() => setStep((s) => Math.min(3, s + 1))}
+            >
+              الخطوة التالية
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="rounded-full px-6 text-muted-foreground"
+              disabled={step === 1}
+              onClick={() => setStep((s) => Math.max(1, s - 1))}
+            >
+              الخطوة السابقة
+            </Button>
           </div>
         </div>
 
+
+
         {/* ===== العمود الجانبي ===== */}
-        <aside className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pb-4 no-scrollbar">
+        <aside className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
           {/* ملخص الفاتورة */}
           <div className="plate rounded-[2rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
             <div className="space-y-4 rounded-[calc(2rem-0.375rem)] bg-background/60 p-5 text-right shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
@@ -743,7 +827,26 @@ function NewInvoicePage() {
         </aside>
       </div>
 
+      {/* شريط الإجراءات السفلي — للشاشات الصغيرة */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-foreground/10 bg-background/80 px-4 py-3 backdrop-blur-xl lg:hidden">
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => (step < 3 ? setStep(step + 1) : submit(false))}
+            disabled={step === 3 && !!blockReason}
+            className="h-12 flex-1 rounded-2xl font-black"
+          >
+            {step < 3 ? "التالي" : "حفظ الفاتورة"}
+          </Button>
+          <div className="text-right">
+            <span className="block text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">الإجمالي</span>
+            <span className={cn("text-lg font-black leading-none text-primary", blurCls)}>{fmt(totalPrice)}</span>
+          </div>
+        </div>
+      </div>
+      <div className="h-20 lg:hidden" />
+
       <BarcodeScanner
+
         open={scanOpen}
         onClose={() => setScanOpen(false)}
         onDetected={handleScan}
