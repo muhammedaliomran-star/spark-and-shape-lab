@@ -1164,26 +1164,26 @@ function TeamTab() {
         <AlertDialogContent dir="rtl" className="rounded-[2.5rem] border-foreground/10 bg-card/95 backdrop-blur-2xl p-8 max-w-lg shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-right text-2xl font-black tracking-tight">دعوة عضو جديد</AlertDialogTitle>
-            <AlertDialogDescription className="text-right">
-              هيوصله بريد بدعوة، وأول ما يسجّل هياخد الصلاحية دي تلقائياً.
+            <AlertDialogDescription className="text-right text-[11px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed opacity-60">
+              سيتم إرسال دعوة رسمية عبر البريد الإلكتروني لتفعيل حساب العضو الجديد.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-3 text-right">
-            <div className="space-y-1.5">
-              <Label>البريد الإلكتروني</Label>
-              <Input dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" />
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60">البريد الإلكتروني</Label>
+              <Input dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
             </div>
-            <div className="space-y-1.5">
-              <Label>الصلاحية</Label>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60">الصلاحية</Label>
               <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as AppRole)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all font-bold"><SelectValue /></SelectTrigger>
                 <SelectContent dir="rtl">
                   {ALL_ROLES.map((r) => (
-                    <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>
+                    <SelectItem key={r} value={r} className="font-bold text-xs">{ROLE_LABEL[r]}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-[11px] text-muted-foreground">{ROLE_HINT[inviteRole]}</p>
+              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed italic px-1 opacity-60">{ROLE_HINT[inviteRole]}</p>
             </div>
           </div>
           <AlertDialogFooter className="mt-8 gap-3 sm:justify-end">
@@ -1196,23 +1196,23 @@ function TeamTab() {
       </AlertDialog>
 
       <AlertDialog open={!!removing} onOpenChange={(v) => !v && setRemoving(null)}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="rounded-[2.5rem] border-danger/10 bg-card/95 backdrop-blur-2xl p-8 max-w-lg shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-right">إزالة العضو؟</AlertDialogTitle>
-            <AlertDialogDescription className="text-right">
-              هيفقد صلاحيته على المحل. تقدر تضيفه تاني في أي وقت.
+            <AlertDialogTitle className="text-right text-2xl font-black tracking-tight text-danger">إزالة العضو؟</AlertDialogTitle>
+            <AlertDialogDescription className="text-right text-[11px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed opacity-60">
+              سيتم سحب جميع الصلاحيات الممنوحة لهذا العضو فوراً، ولن يتمكن من الوصول إلى النظام مجدداً.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          <AlertDialogFooter className="mt-8 gap-3 sm:justify-end">
+            <AlertDialogCancel className="rounded-2xl border-none hover:bg-foreground/5 h-12 px-6 font-bold text-xs uppercase tracking-widest">إلغاء</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-danger text-danger-foreground hover:bg-danger/90"
+              className="rounded-2xl bg-danger h-12 px-8 font-black text-white transition-all hover:bg-danger/90 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-danger/20 text-xs uppercase tracking-widest"
               onClick={async () => {
                 try { await removeMember(removing!); toast.success("تمت الإزالة"); }
                 catch (e: any) { toast.error(e.message || "خطأ"); }
                 setRemoving(null);
               }}
-            >إزالة</AlertDialogAction>
+            >تأكيد الإزالة</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
