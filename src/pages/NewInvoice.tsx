@@ -706,7 +706,9 @@ function NewInvoicePage() {
               </div>
           </div>
           </div>
+          </div>
           )}
+
 
           {/* تنقل الخطوات */}
           <div className="hidden items-center justify-between gap-3 lg:flex">
