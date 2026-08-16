@@ -229,7 +229,7 @@ function ShopTab({ form, set }: TabProps) {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2 animate-[fade-in_0.3s_ease-out]">
       <Section icon={<Store className="w-5 h-5" />} title="هوية المحل" hint="بيانات النشاط التجاري للمطبوعات">
         <div className="grid gap-3">
           <Field label="اسم المحل">
@@ -265,19 +265,19 @@ function ShopTab({ form, set }: TabProps) {
       <div className="grid gap-6 h-fit">
         <Section icon={<Upload className="w-5 h-5" />} title="شعار المحل" hint="أبعاد مربعة أفضل للطباعة">
           <div className="flex items-start gap-4">
-            <div className="h-20 w-20 rounded-[1.25rem] hairline bg-foreground/[0.035] grid place-items-center overflow-hidden shrink-0">
+            <div className="h-24 w-24 rounded-[2rem] border-2 border-dashed border-foreground/10 bg-foreground/[0.02] grid place-items-center overflow-hidden shrink-0 transition-all hover:border-primary/40 hover:bg-primary/5">
               {form.logoUrl
-                ? <img src={form.logoUrl} alt="لوجو المحل" className="h-full w-full object-contain" />
-                : <Store className="w-7 h-7 text-muted-foreground" />}
+                ? <img src={form.logoUrl} alt="لوجو المحل" className="h-full w-full object-contain p-2" />
+                : <Store className="w-8 h-8 text-muted-foreground/40" />}
             </div>
             <div className="grid gap-2 flex-1">
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => onLogo(e.target.files?.[0])} />
-              <div className="flex gap-2">
-                <Button type="button" variant="secondary" size="sm" className="gap-1.5" onClick={() => fileRef.current?.click()}>
+              <div className="flex gap-2 mb-2">
+                <Button type="button" variant="secondary" size="sm" className="h-10 gap-2 rounded-2xl bg-foreground/5 hover:bg-foreground/10 border-none transition-all px-4" onClick={() => fileRef.current?.click()}>
                   <Upload className="w-4 h-4" /> رفع صورة
                 </Button>
                 {form.logoUrl ? (
-                  <Button type="button" variant="ghost" size="sm" className="gap-1.5 text-destructive" onClick={() => set("logoUrl", null)}>
+                  <Button type="button" variant="ghost" size="sm" className="h-10 gap-2 rounded-2xl text-danger hover:bg-danger/10 transition-all px-4" onClick={() => set("logoUrl", null)}>
                     <Trash2 className="w-4 h-4" /> حذف
                   </Button>
                 ) : null}
@@ -321,7 +321,7 @@ function ShopTab({ form, set }: TabProps) {
 /* ------------------------- الفواتير والطباعة ------------------------- */
 function BillingTab({ form, set }: TabProps) {
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2 animate-[fade-in_0.3s_ease-out]">
       <Section icon={<Receipt className="w-5 h-5" />} title="الفواتير والأقساط" hint="القيم دي بتتحط تلقائياً وانت بتعمل فاتورة جديدة.">
         <div className="grid gap-3">
           <div className="grid sm:grid-cols-2 gap-3">
@@ -382,7 +382,7 @@ function BillingTab({ form, set }: TabProps) {
 /* ----------------------------- التنبيهات ----------------------------- */
 function AlertsTab({ form, set }: TabProps) {
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2 animate-[fade-in_0.3s_ease-out]">
       <Section icon={<Bell className="w-5 h-5" />} title="تنبيهات الأقساط" hint="بتتحكم في شارة التنبيهات وصفحة التنبيهات.">
         <div className="grid gap-5">
           <div className="flex items-center justify-between gap-4">
@@ -463,7 +463,7 @@ const fmtDate = (iso: string | null) => (iso ? dateFmt.format(new Date(iso)) : "
 function AccountTab({ onSignOut }: { onSignOut: () => void }) {
   const { user, authReady, hasPassword } = useAccount();
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2 animate-[fade-in_0.3s_ease-out]">
       <IdentityCard onSignOut={onSignOut} />
       <div className="grid gap-6">
         <Section
@@ -590,8 +590,8 @@ function IdentityCard({ onSignOut }: { onSignOut: () => void }) {
       ) : (
         <div className="grid gap-5">
           {/* Double-bezel identity plate */}
-          <div className="rounded-[2rem] bg-foreground/[0.04] p-2 ring-1 ring-[var(--hairline)]">
-            <div className="flex items-center gap-4 rounded-[calc(2rem-0.5rem)] bg-card p-4 shadow-[inset_0_1px_1px_hsl(0_0%_100%/0.12)]">
+          <div className="rounded-[2.5rem] bg-foreground/[0.02] p-2 border border-foreground/5 shadow-inner">
+            <div className="flex items-center gap-5 rounded-[calc(2.5rem-0.5rem)] bg-card/60 p-6 backdrop-blur-md shadow-xl border border-white/5">
               <UserAvatar size={58} />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-lg font-bold leading-tight">{label || "بدون اسم"}</div>
