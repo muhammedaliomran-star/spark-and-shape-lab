@@ -670,8 +670,33 @@ function NewInvoicePage() {
                   <span className={cn("block text-3xl font-black tracking-tighter", blurCls, profit > 0 ? "text-success" : profit < 0 ? "text-danger" : "text-muted-foreground")}>{profitPct.toFixed(1)}%</span>
                 </div>
               </div>
-            </div>
           </div>
+          </div>
+          )}
+
+          {/* تنقل الخطوات */}
+          <div className="hidden items-center justify-between gap-3 lg:flex">
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-full px-6"
+              disabled={step === 3}
+              onClick={() => setStep((s) => Math.min(3, s + 1))}
+            >
+              الخطوة التالية
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="rounded-full px-6 text-muted-foreground"
+              disabled={step === 1}
+              onClick={() => setStep((s) => Math.max(1, s - 1))}
+            >
+              الخطوة السابقة
+            </Button>
+          </div>
+        </div>
+
         </div>
 
         {/* ===== العمود الجانبي ===== */}
