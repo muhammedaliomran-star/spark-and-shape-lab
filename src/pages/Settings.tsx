@@ -25,6 +25,7 @@ import {
 } from "@/lib/store";
 import { applyTheme } from "@/lib/theme";
 import { downloadExcelBackup, downloadJsonBackup, dataCounts, wipeAllData } from "@/lib/backup";
+import { cn } from "@/lib/utils";
 import {
   Settings as SettingsIcon, Store, KeyRound, Save, LogOut, Receipt, Bell,
   Palette, Database, Upload, Trash2, FileJson, FileSpreadsheet, RotateCcw, ShieldAlert, Mail,
