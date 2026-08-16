@@ -126,32 +126,53 @@ export default function PaymentsPage() {
                 className="h-12 pr-11 rounded-2xl bg-background/50 border-none shadow-none focus-visible:ring-1 focus-visible:ring-primary/20"
               />
             </div>
-            <div className="flex gap-2">
-              <Button 
-                variant={typeFilter === "all" ? "default" : "outline"} 
-                onClick={() => setTypeFilter("all")}
-                className="rounded-xl px-6 h-12"
-              >
-                الكل
-              </Button>
-              <Button 
-                variant={typeFilter === "receipt" ? "default" : "outline"} 
-                onClick={() => setTypeFilter("receipt")}
-                className="rounded-xl px-6 h-12 gap-2"
-              >
-                <ArrowDownLeft className="h-4 w-4 text-success" />
-                قبض
-              </Button>
-              <Button 
-                variant={typeFilter === "payment" ? "default" : "outline"} 
-                onClick={() => setTypeFilter("payment")}
-                className="rounded-xl px-6 h-12 gap-2"
-              >
-                <ArrowUpRight className="h-4 w-4 text-danger" />
-                صرف
-              </Button>
+            <div className="flex gap-2 items-center plate p-1.5 rounded-2xl border-none shadow-none bg-background/50">
+              <div className="flex items-center gap-2 px-3 border-l border-[var(--hairline)]">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center gap-1">
+                  <Input 
+                    type="date" 
+                    value={dateFilter.from} 
+                    onChange={(e) => setDateFilter(prev => ({ ...prev, from: e.target.value }))}
+                    className="h-8 w-32 border-none bg-transparent p-0 text-xs font-bold"
+                  />
+                  <span className="text-[10px] font-bold text-muted-foreground">إلى</span>
+                  <Input 
+                    type="date" 
+                    value={dateFilter.to} 
+                    onChange={(e) => setDateFilter(prev => ({ ...prev, to: e.target.value }))}
+                    className="h-8 w-32 border-none bg-transparent p-0 text-xs font-bold"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-1">
+                <Button 
+                  variant={typeFilter === "all" ? "default" : "ghost"} 
+                  onClick={() => setTypeFilter("all")}
+                  className="rounded-xl px-4 h-9 text-xs font-bold"
+                >
+                  الكل
+                </Button>
+                <Button 
+                  variant={typeFilter === "receipt" ? "default" : "ghost"} 
+                  onClick={() => setTypeFilter("receipt")}
+                  className="rounded-xl px-4 h-9 gap-2 text-xs font-bold"
+                >
+                  <ArrowDownLeft className="h-3 w-3 text-success" />
+                  قبض
+                </Button>
+                <Button 
+                  variant={typeFilter === "payment" ? "default" : "ghost"} 
+                  onClick={() => setTypeFilter("payment")}
+                  className="rounded-xl px-4 h-9 gap-2 text-xs font-bold"
+                >
+                  <ArrowUpRight className="h-3 w-3 text-danger" />
+                  صرف
+                </Button>
+              </div>
             </div>
           </div>
+
 
           {/* Vouchers List */}
           <div className="flex flex-col gap-3">
