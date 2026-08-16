@@ -1,6 +1,7 @@
 import { PageTransition } from "@/components/PageTransition";
 import { Reveal } from "@/components/Reveal";
 import { BezelCard } from "@/components/BezelCard";
+import { EmptyState } from "@/components/EmptyState";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
