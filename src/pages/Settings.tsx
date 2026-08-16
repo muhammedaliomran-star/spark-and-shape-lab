@@ -297,23 +297,25 @@ function ShopTab({ form, set }: TabProps) {
         </Section>
 
         <Section icon={<Receipt className="w-5 h-5" />} title="معاينة رأس الفاتورة" hint="شكل الهيدر في الورق">
-          <div className="rounded-xl bg-background hairline p-4">
-            <div className="flex items-start justify-between gap-3 border-b-2 border-primary pb-3">
-              <div className="flex items-center gap-2">
-                {form.logoUrl ? <img src={form.logoUrl} alt="" className="h-10 w-10 object-contain rounded" /> : null}
-                <div>
-                  <div className="text-lg font-extrabold">{form.shopName || "اسم المحل"}</div>
-                  <div className="text-[11px] text-muted-foreground">{form.address || "عنوان المحل"}</div>
+          <div className="rounded-[2.5rem] bg-foreground/[0.02] p-2 border border-foreground/5 shadow-inner">
+            <div className="rounded-[calc(2.5rem-0.5rem)] bg-background/60 p-6 backdrop-blur-md shadow-xl border border-white/5">
+              <div className="flex items-start justify-between gap-3 border-b-2 border-primary/20 pb-4">
+                <div className="flex items-center gap-4">
+                  {form.logoUrl ? <img src={form.logoUrl} alt="" className="h-12 w-12 object-contain rounded-xl bg-white p-1" /> : null}
+                  <div className="text-right">
+                    <div className="text-xl font-black tracking-tight">{form.shopName || "اسم المحل"}</div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{form.address || "عنوان المحل"}</div>
+                  </div>
+                </div>
+                <div className="text-[9px] font-black text-muted-foreground text-left leading-5 uppercase tracking-[0.16em]">
+                  <div dir="ltr">{form.phone || "01xxxxxxxxx"}</div>
+                  {form.taxNumber ? <div dir="ltr">T.R: {form.taxNumber}</div> : null}
+                  <Badge variant="secondary" className="mt-2 rounded-lg bg-primary/10 text-primary border-none text-[9px] font-black">{form.invoicePrefix || "INV"}-0001</Badge>
                 </div>
               </div>
-              <div className="text-[11px] text-muted-foreground text-left leading-6">
-                <div dir="ltr">{form.phone || "01xxxxxxxxx"}</div>
-                {form.taxNumber ? <div dir="ltr">ض.ر: {form.taxNumber}</div> : null}
-                <Badge variant="secondary">{form.invoicePrefix || "INV"}-0001</Badge>
+              <div className="pt-4 text-[10px] font-bold text-muted-foreground/60 leading-relaxed italic">
+                {form.footerNote || "ملاحظة أسفل الفاتورة"}
               </div>
-            </div>
-            <div className="pt-3 text-[11px] text-muted-foreground">
-              {form.footerNote || "ملاحظة أسفل الفاتورة"}
             </div>
           </div>
         </Section>
