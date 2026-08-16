@@ -213,6 +213,8 @@ let cache: {
   warehouseItems: WarehouseItem[];
   returns: ReturnRecord[];
   returnItems: ReturnItem[];
+  branches: Branch[];
+  paymentVouchers: PaymentVoucher[];
 } = {
   customers: [], invoices: [], payments: [], expenses: [], invoiceItems: [],
   suppliers: [], purchases: [], purchaseItems: [], supplierPayments: [], stockItems: [], warehouseItems: [],
@@ -507,7 +509,7 @@ export const db = {
     if (error) throw error;
     await fetchAll();
   },
-  removeInvoiceItem(id: string) {
+  async removeInvoiceItem(id: string) {
     const { error } = await supabase.from("invoice_items").delete().eq("id", id);
     if (error) throw error;
     await fetchAll();
