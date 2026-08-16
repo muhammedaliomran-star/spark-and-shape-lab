@@ -120,26 +120,29 @@ function SettingsPage() {
       />
 
       <Tabs defaultValue="shop" dir="rtl" className="w-full text-right">
-        <TabsList dir="rtl" className="h-auto w-full bg-transparent justify-start gap-2 mb-8 border-b border-foreground/5 p-0 rounded-none overflow-x-auto custom-scrollbar no-scrollbar">
-          {[
-            { value: "shop", label: "المحل", icon: Store },
-            { value: "billing", label: "الفواتير والطباعة", icon: Receipt },
-            { value: "alerts", label: "التنبيهات", icon: Bell },
-            { value: "appearance", label: "المظهر", icon: Palette },
-            { value: "team", label: "الفريق والصلاحيات", icon: Users },
-            { value: "account", label: "الحساب", icon: KeyRound },
-            { value: "data", label: "البيانات", icon: Database },
-          ].map((tab) => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className="relative h-11 px-6 gap-2 rounded-none border-b-2 border-transparent bg-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary transition-all duration-300 font-bold opacity-70 data-[state=active]:opacity-100 hover:opacity-100"
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        {/* شريط البحث الملتصق بتأثير بلوري */}
+        <div className="sticky top-0 z-30 -mx-4 px-4 py-2 bg-background/60 backdrop-blur-xl border-b border-foreground/5 mb-8">
+          <TabsList dir="rtl" className="h-auto w-full bg-transparent justify-start gap-2 border-none p-0 rounded-none overflow-x-auto custom-scrollbar no-scrollbar">
+            {[
+              { value: "shop", label: "المحل", icon: Store },
+              { value: "billing", label: "الفواتير والطباعة", icon: Receipt },
+              { value: "alerts", label: "التنبيهات", icon: Bell },
+              { value: "appearance", label: "المظهر", icon: Palette },
+              { value: "team", label: "الفريق والصلاحيات", icon: Users },
+              { value: "account", label: "الحساب", icon: KeyRound },
+              { value: "data", label: "البيانات", icon: Database },
+            ].map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="relative h-11 px-6 gap-2 rounded-none border-b-2 border-transparent bg-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary transition-all duration-300 font-bold opacity-70 data-[state=active]:opacity-100 hover:opacity-100"
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
         <TabsContent value="shop"><ShopTab form={form} set={set} /></TabsContent>
         <TabsContent value="billing"><BillingTab form={form} set={set} /></TabsContent>
@@ -1123,7 +1126,7 @@ function TeamTab() {
                     )}
                     <div className="min-w-0">
                       <div className="font-black text-sm tracking-tight truncate">
-                        {m.displayName}{m.isMe ? " (أنا)" : ""}
+                        {m.displayName}{m.isMe ? " (أنت)" : ""}
                       </div>
                       <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">آخر ظهور: {relativeTime(m.lastSeenAt)}</div>
                     </div>
