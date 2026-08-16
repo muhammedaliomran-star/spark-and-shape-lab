@@ -633,9 +633,10 @@ function IdentityCard({ onSignOut }: { onSignOut: () => void }) {
                 onChange={(e) => { setName(e.target.value); setEditing(true); }}
                 placeholder={user.metaName ?? "اكتب اسمك"}
                 maxLength={60}
+                className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all"
               />
-              <Button onClick={submit} disabled={busy || !editing} variant="secondary" className="shrink-0 gap-1.5">
-                <Save className="h-4 w-4" /> حفظ
+              <Button onClick={submit} disabled={busy || !editing} variant="secondary" className="h-11 shrink-0 gap-2 rounded-2xl bg-foreground/5 hover:bg-foreground/10 border-none transition-all px-6 font-bold">
+                <Save className="h-4 w-4 opacity-60" /> حفظ
               </Button>
             </div>
           </div>
@@ -658,9 +659,9 @@ function IdentityCard({ onSignOut }: { onSignOut: () => void }) {
                 variant="secondary"
                 disabled={uploading}
                 onClick={() => fileRef.current?.click()}
-                className="gap-1.5"
+                className="h-11 gap-2 rounded-2xl bg-foreground/5 hover:bg-foreground/10 border-none transition-all px-6 font-bold"
               >
-                <UserRound className="h-4 w-4" /> {uploading ? "جاري الرفع..." : avatar ? "تغيير الصورة" : "رفع صورة"}
+                <UserRound className="h-4 w-4 opacity-60" /> {uploading ? "جاري الرفع..." : avatar ? "تغيير الصورة" : "رفع صورة"}
               </Button>
               {profile.avatarUrl ? (
                 <Button type="button" variant="ghost" disabled={uploading} onClick={removeAvatar} className="text-destructive">
@@ -719,13 +720,13 @@ function ChangeEmail() {
   return (
     <form onSubmit={submit} className="grid gap-2">
       <Label>البريد الجديد</Label>
-      <Input value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" placeholder="new@email.com" type="email" />
+      <Input value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" placeholder="new@email.com" type="email" className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
       <p className="rounded-2xl bg-warning/10 p-3 text-[11px] leading-relaxed text-muted-foreground">
         البريد <span className="font-semibold text-foreground">مش بيتغير فوراً</span>: هنبعت رسالة تأكيد على البريد الجديد،
         ولازم تفتح اللينك اللي جواها. لحد ما تأكّد، تسجيل الدخول يفضل بالبريد القديم.
       </p>
-      <Button type="submit" variant="secondary" disabled={busy} className="gap-1.5">
-        <Mail className="w-4 h-4" /> {busy ? "جاري الإرسال..." : "إرسال تأكيد التغيير"}
+      <Button type="submit" variant="secondary" disabled={busy} className="h-11 gap-2 rounded-2xl bg-foreground/5 hover:bg-foreground/10 border-none transition-all px-6 font-bold">
+        <Mail className="w-4 h-4 opacity-60" /> {busy ? "جاري الإرسال..." : "تأكيد تغيير البريد"}
       </Button>
     </form>
   );
@@ -757,7 +758,7 @@ function ChangePassword({ mode = "change" }: { mode?: "change" | "add" }) {
   return (
     <form onSubmit={submit} className="grid gap-3">
       <Field label="كلمة السر الجديدة">
-        <Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} dir="ltr" placeholder="••••••••" maxLength={72} />
+        <Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} dir="ltr" placeholder="••••••••" maxLength={72} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
       </Field>
       {pw ? (
         <div className="flex items-center gap-2">
@@ -771,10 +772,10 @@ function ChangePassword({ mode = "change" }: { mode?: "change" | "add" }) {
         </div>
       ) : null}
       <Field label="تأكيد كلمة السر">
-        <Input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} dir="ltr" placeholder="••••••••" maxLength={72} />
+        <Input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} dir="ltr" placeholder="••••••••" maxLength={72} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
       </Field>
-      <Button type="submit" variant="secondary" disabled={busy} className="gap-1.5">
-        <KeyRound className="w-4 h-4" /> {busy ? "جاري الحفظ..." : mode === "add" ? "إضافة كلمة السر" : "تغيير كلمة السر"}
+      <Button type="submit" variant="secondary" disabled={busy} className="h-11 gap-2 rounded-2xl bg-foreground/5 hover:bg-foreground/10 border-none transition-all px-6 font-bold">
+        <KeyRound className="w-4 h-4 opacity-60" /> {busy ? "جاري الحفظ..." : mode === "add" ? "إضافة كلمة مرور" : "تحديث كلمة المرور"}
       </Button>
     </form>
   );
