@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BranchesRouteImport } from './routes/branches'
 import { Route as CashboxRouteImport } from './routes/cashbox'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as DailyRouteImport } from './routes/daily'
@@ -20,6 +21,7 @@ import { Route as ExpensesRouteImport } from './routes/expenses'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as InvoicesRouteImport } from './routes/invoices'
 import { Route as LandingRouteImport } from './routes/landing'
+import { Route as PaymentsRouteImport } from './routes/payments'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -50,6 +52,11 @@ const AlertsRoute = AlertsRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BranchesRoute = BranchesRouteImport.update({
+  id: '/branches',
+  path: '/branches',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CashboxRoute = CashboxRouteImport.update({
@@ -85,6 +92,11 @@ const InvoicesRoute = InvoicesRouteImport.update({
 const LandingRoute = LandingRouteImport.update({
   id: '/landing',
   path: '/landing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsRoute = PaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -148,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
+  '/branches': typeof BranchesRoute
   '/cashbox': typeof CashboxRoute
   '/customers': typeof CustomersRoute
   '/daily': typeof DailyRoute
@@ -155,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/inventory': typeof InventoryRoute
   '/invoices': typeof InvoicesRoute
   '/landing': typeof LandingRoute
+  '/payments': typeof PaymentsRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -172,6 +186,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
+  '/branches': typeof BranchesRoute
   '/cashbox': typeof CashboxRoute
   '/customers': typeof CustomersRoute
   '/daily': typeof DailyRoute
@@ -179,6 +194,7 @@ export interface FileRoutesByTo {
   '/inventory': typeof InventoryRoute
   '/invoices': typeof InvoicesRoute
   '/landing': typeof LandingRoute
+  '/payments': typeof PaymentsRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -197,6 +213,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/alerts': typeof AlertsRoute
   '/auth': typeof AuthRoute
+  '/branches': typeof BranchesRoute
   '/cashbox': typeof CashboxRoute
   '/customers': typeof CustomersRoute
   '/daily': typeof DailyRoute
@@ -204,6 +221,7 @@ export interface FileRoutesById {
   '/inventory': typeof InventoryRoute
   '/invoices': typeof InvoicesRoute
   '/landing': typeof LandingRoute
+  '/payments': typeof PaymentsRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -223,6 +241,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/alerts'
     | '/auth'
+    | '/branches'
     | '/cashbox'
     | '/customers'
     | '/daily'
@@ -230,6 +249,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/invoices'
     | '/landing'
+    | '/payments'
     | '/privacy'
     | '/reports'
     | '/reset-password'
@@ -247,6 +267,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/alerts'
     | '/auth'
+    | '/branches'
     | '/cashbox'
     | '/customers'
     | '/daily'
@@ -254,6 +275,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/invoices'
     | '/landing'
+    | '/payments'
     | '/privacy'
     | '/reports'
     | '/reset-password'
@@ -271,6 +293,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/alerts'
     | '/auth'
+    | '/branches'
     | '/cashbox'
     | '/customers'
     | '/daily'
@@ -278,6 +301,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/invoices'
     | '/landing'
+    | '/payments'
     | '/privacy'
     | '/reports'
     | '/reset-password'
@@ -296,6 +320,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AlertsRoute: typeof AlertsRoute
   AuthRoute: typeof AuthRoute
+  BranchesRoute: typeof BranchesRoute
   CashboxRoute: typeof CashboxRoute
   CustomersRoute: typeof CustomersRoute
   DailyRoute: typeof DailyRoute
@@ -303,6 +328,7 @@ export interface RootRouteChildren {
   InventoryRoute: typeof InventoryRoute
   InvoicesRoute: typeof InvoicesRoute
   LandingRoute: typeof LandingRoute
+  PaymentsRoute: typeof PaymentsRoute
   PrivacyRoute: typeof PrivacyRoute
   ReportsRoute: typeof ReportsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -344,6 +370,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/branches': {
+      id: '/branches'
+      path: '/branches'
+      fullPath: '/branches'
+      preLoaderRoute: typeof BranchesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cashbox': {
@@ -393,6 +426,13 @@ declare module '@tanstack/react-router' {
       path: '/landing'
       fullPath: '/landing'
       preLoaderRoute: typeof LandingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments': {
+      id: '/payments'
+      path: '/payments'
+      fullPath: '/payments'
+      preLoaderRoute: typeof PaymentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -480,6 +520,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AlertsRoute: AlertsRoute,
   AuthRoute: AuthRoute,
+  BranchesRoute: BranchesRoute,
   CashboxRoute: CashboxRoute,
   CustomersRoute: CustomersRoute,
   DailyRoute: DailyRoute,
@@ -487,6 +528,7 @@ const rootRouteChildren: RootRouteChildren = {
   InventoryRoute: InventoryRoute,
   InvoicesRoute: InvoicesRoute,
   LandingRoute: LandingRoute,
+  PaymentsRoute: PaymentsRoute,
   PrivacyRoute: PrivacyRoute,
   ReportsRoute: ReportsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
