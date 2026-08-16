@@ -439,6 +439,9 @@ export const db = {
       user_id, customer_id: inv.customerId, total: inv.total, down_payment: inv.downPayment,
       monthly_installment: inv.monthlyInstallment, first_due_date: inv.firstDueDate,
       paid: inv.paid ?? inv.downPayment, notes: inv.notes,
+      discount_pct: inv.discountPct ?? 0, discount_amount: inv.discountAmount ?? 0,
+      tax_pct: inv.taxPct ?? 0, tax_amount: inv.taxAmount ?? 0,
+      status: inv.status ?? "pending",
     }).select("id").single();
     if (error) throw error;
     if (inv.items && inv.items.length > 0 && data?.id) {
