@@ -367,11 +367,13 @@ function NewInvoicePage() {
                     : "تم ضبط النوع تلقائيًا حسب تسجيل العميل «قسط» — تقدر تحوّله لبيع فوري لو سدّد كامل المبلغ."}
                 </p>
               )}
-            </div>
           </div>
+          </div>
+          )}
 
-          {/* المنتجات */}
+          {step === 2 && (
           <div className="space-y-3">
+
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Button type="button" size="sm" variant="outline" onClick={addProduct} className="gap-1.5 rounded-full border-primary/40 px-4 text-primary transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/10 active:scale-[0.98]">
