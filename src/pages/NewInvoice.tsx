@@ -369,10 +369,10 @@ function NewInvoicePage() {
                   <Badge variant="outline" className={cn("gap-1 font-bold",
                     customerInfo.balance > 0 ? "bg-danger/10 text-danger border-danger/40" : "bg-success/10 text-success border-success/40"
                   )}>
-                    مديونية حالية: <span className={blurCls}>{fmt(customerInfo.balance)} ج.م</span>
+                    مديونية حالية: {fmt(customerInfo.balance)} ج.م
                   </Badge>
                   <Badge variant="outline" className="bg-primary/10 text-primary border-primary/40 font-bold">
-                    سقف الائتمان: <span className={blurCls}>{customerInfo.limit > 0 ? `${fmt(customerInfo.limit)} ج.م` : "بدون حد"}</span>
+                    سقف الائتمان: {customerInfo.limit > 0 ? `${fmt(customerInfo.limit)} ج.م` : "بدون حد"}
                   </Badge>
                   {customerInfo.wouldExceed && (
                     <Badge variant="outline" className="bg-warning/15 text-warning border-warning/40 gap-1">
