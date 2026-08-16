@@ -416,8 +416,8 @@ function AlertsTab({ form, set }: TabProps) {
       <Section icon={<ShieldAlert className="w-5 h-5" />} title="تنبيهات المخزون" hint="إشعارات قرب نفاد المنتجات">
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
-            <Label>حد المخزون المنخفض</Label>
-            <Badge variant="secondary">{form.lowStockThreshold} وحدة</Badge>
+            <Label className="text-xs font-bold">حد المخزون المنخفض</Label>
+            <Badge variant="secondary" className="rounded-xl px-3 py-1 bg-primary/10 text-primary border-none font-black">{form.lowStockThreshold} قطعة</Badge>
           </div>
           <Slider
             value={[form.lowStockThreshold]} min={0} max={50} step={1}
