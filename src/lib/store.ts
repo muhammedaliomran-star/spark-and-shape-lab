@@ -21,6 +21,8 @@ export interface Customer {
   createdAt: string;
 }
 
+export type InvoiceStatus = "paid" | "pending" | "cancelled";
+
 export interface Invoice {
   id: string;
   customerId: string;
@@ -31,6 +33,11 @@ export interface Invoice {
   paid: number;
   notes: string | null;
   createdAt: string;
+  discountPct?: number;
+  discountAmount?: number;
+  taxPct?: number;
+  taxAmount?: number;
+  status?: InvoiceStatus;
 }
 
 export interface Payment {
