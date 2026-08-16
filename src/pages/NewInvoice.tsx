@@ -507,6 +507,105 @@ function NewInvoicePage() {
               </AnimatePresence>
             </div>
 
+            {/* الخصم والضريبة */}
+            <div className="plate rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-1.5">
+              <div className="space-y-3 rounded-[calc(1.75rem-0.375rem)] bg-background/50 p-4">
+                <div className="flex items-center justify-between">
+                  <span className={cn("text-xs font-bold", discountValue > 0 ? "text-primary" : "text-muted-foreground/50", blurCls)}>
+                    − {fmt(discountValue)} ج.م
+                  </span>
+                  <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">الخصم</Label>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] text-muted-foreground">بالنسبة %</Label>
+                    <Input
+                      type="number" min="0" max="100" placeholder="0"
+                      value={discountPct}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setDiscountPct(v);
+                        const pct = Math.min(100, Math.max(0, Number(v || 0)));
+                        setDiscountAmt(v === "" ? "" : String(Math.round((subtotal * pct) / 100)));
+                      }}
+                      className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-center"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] text-muted-foreground">بالمبلغ (ج.م)</Label>
+                    <Input
+                      type="number" min="0" placeholder="0"
+                      value={discountAmt}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setDiscountAmt(v);
+                        const amt = Math.max(0, Number(v || 0));
+                        setDiscountPct(v === "" || subtotal <= 0 ? "" : ((amt / subtotal) * 100).toFixed(1));
+                      }}
+                      className={cn("h-11 rounded-2xl border-white/10 bg-white/[0.04] text-center", blurCls)}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[5, 10, 15].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => { setDiscountPct(String(n)); setDiscountAmt(String(Math.round((subtotal * n) / 100))); }}
+                      className="rounded-xl bg-white/[0.05] px-4 py-2 text-[10px] font-black tracking-widest text-muted-foreground/80 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/10 hover:text-primary active:scale-95"
+                    >
+                      {n}%
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => { setDiscountPct(""); setDiscountAmt(""); }}
+                    className="rounded-xl bg-white/[0.05] px-4 py-2 text-[10px] font-black tracking-widest text-muted-foreground/80 transition-all hover:bg-danger/10 hover:text-danger active:scale-95"
+                  >
+                    مسح
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 border-t border-white/5 pt-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] text-muted-foreground">معدل الضريبة %</Label>
+                    <Input
+                      type="number" min="0" placeholder="0"
+                      value={taxPct}
+                      onChange={(e) => setTaxPct(e.target.value)}
+                      className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-center"
+                    />
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {[0, 14].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setTaxPct(n === 0 ? "" : String(n))}
+                          className="rounded-xl bg-white/[0.05] px-3 py-1.5 text-[10px] font-black text-muted-foreground/80 transition-all hover:bg-primary/10 hover:text-primary active:scale-95"
+                        >
+                          {n === 0 ? "بدون ضريبة" : `${n}%`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-col justify-end gap-2 text-[11px]">
+                    <div className="flex items-center justify-between">
+                      <span className={cn("font-bold", blurCls)}>{fmt(subtotal)} ج.م</span>
+                      <span className="text-muted-foreground">الإجمالي قبل الخصم</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className={cn("font-bold", blurCls)}>{fmt(taxValue)} ج.م</span>
+                      <span className="text-muted-foreground">قيمة الضريبة</span>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-white/5 pt-2">
+                      <span className={cn("text-base font-black text-primary", blurCls)}>{fmt(totalPrice)} ج.م</span>
+                      <span className="text-muted-foreground">الإجمالي النهائي</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
           )}
 
