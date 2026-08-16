@@ -387,32 +387,33 @@ function BillingTab({ form, set }: TabProps) {
 function AlertsTab({ form, set }: TabProps) {
   return (
     <div className="grid gap-6 lg:grid-cols-2 animate-[fade-in_0.3s_ease-out]">
-      <Section icon={<Bell className="w-5 h-5" />} title="تنبيهات الأقساط" hint="بتتحكم في شارة التنبيهات وصفحة التنبيهات.">
+      <Section icon={<Bell className="w-5 h-5" />} title="تنبيهات المديونية" hint="إعدادات إشعارات مواعيد الأقساط">
         <div className="grid gap-5">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <div className="text-sm font-bold">تشغيل التنبيهات</div>
-              <p className="text-xs text-muted-foreground">لو قفلتها مش هتشوف عدّاد التنبيهات في القائمة.</p>
+              <div className="text-sm font-black">تفعيل نظام التنبيهات</div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-60">تفعيل الإشعارات في شريط التنقل</p>
             </div>
             <Switch checked={form.alertsEnabled} onCheckedChange={(v) => set("alertsEnabled", v)} />
           </div>
           <Separator />
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
-              <Label>تذكير قبل الاستحقاق بـ</Label>
-              <Badge variant="secondary">{form.reminderDaysBefore} يوم</Badge>
+              <Label className="text-xs font-bold">تذكير قبل الاستحقاق بـ</Label>
+              <Badge variant="secondary" className="rounded-xl px-3 py-1 bg-primary/10 text-primary border-none font-black">{form.reminderDaysBefore} يوم</Badge>
             </div>
             <Slider
               value={[form.reminderDaysBefore]} min={0} max={30} step={1}
               onValueChange={([v]) => set("reminderDaysBefore", v)}
               disabled={!form.alertsEnabled}
+              className="py-4"
             />
             <p className="text-xs text-muted-foreground">صفر = التنبيه يوم الاستحقاق نفسه.</p>
           </div>
         </div>
       </Section>
 
-      <Section icon={<ShieldAlert className="w-5 h-5" />} title="تنبيه المخزون" hint="الصنف اللي كميته أقل من الحد ده هيظهر في التنبيهات.">
+      <Section icon={<ShieldAlert className="w-5 h-5" />} title="تنبيهات المخزون" hint="إشعارات قرب نفاد المنتجات">
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
             <Label>حد المخزون المنخفض</Label>
@@ -421,6 +422,7 @@ function AlertsTab({ form, set }: TabProps) {
           <Slider
             value={[form.lowStockThreshold]} min={0} max={50} step={1}
             onValueChange={([v]) => set("lowStockThreshold", v)}
+            className="py-4"
           />
           <p className="text-xs text-muted-foreground">القيمة الافتراضية 5 وحدات.</p>
         </div>
