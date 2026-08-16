@@ -54,6 +54,8 @@ function NewInvoicePage() {
   const [scanOpen, setScanOpen] = useState(false);
   const [saleType, setSaleType] = useState<"cash" | "installments">("installments");
   const [cashPaid, setCashPaid] = useState("");
+  const [step, setStep] = useState(1);
+
 
   const defaultFirstDue = () => {
     const day = Math.min(28, Math.max(1, shop.defaultDueDay || 1));
