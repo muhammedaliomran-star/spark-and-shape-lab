@@ -1000,8 +1000,8 @@ function TeamTab() {
               </span>
             </div>
 
-            <div className="rounded-[1.75rem] bg-muted/40 p-1.5 ring-1 ring-border/60">
-              <div className="overflow-x-auto rounded-[calc(1.75rem-0.375rem)] bg-card">
+            <div className="rounded-[2.5rem] bg-foreground/[0.02] p-2 border border-foreground/5 shadow-inner">
+              <div className="overflow-x-auto rounded-[calc(2.5rem-0.5rem)] bg-card border border-white/5 shadow-xl">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border/70 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
@@ -1055,8 +1055,8 @@ function TeamTab() {
             {[0, 1].map((i) => <div key={i} className="h-16 rounded-2xl bg-muted animate-pulse" />)}
           </div>
         ) : members.length === 0 ? (
-          <div className="rounded-[1.75rem] bg-muted/40 p-1.5 ring-1 ring-border/60">
-            <div className="rounded-[calc(1.75rem-0.375rem)] bg-card px-6 py-12 text-center">
+          <div className="rounded-[2.5rem] bg-foreground/[0.02] p-2 border border-foreground/5 shadow-inner">
+            <div className="rounded-[calc(2.5rem-0.5rem)] bg-card/60 backdrop-blur-md px-6 py-12 text-center border border-white/5 shadow-xl">
               <span className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-primary/10 text-primary">
                 <Users className="w-5 h-5" />
               </span>
@@ -1072,9 +1072,9 @@ function TeamTab() {
             {members.map((m) => (
               <div
                 key={m.userId}
-                className="rounded-[1.5rem] bg-muted/40 p-1.5 ring-1 ring-border/60 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/70"
+                className="rounded-[2rem] bg-foreground/[0.02] p-2 border border-foreground/5 transition-all duration-500 hover:border-primary/20 hover:bg-primary/[0.02]"
               >
-                <div className="rounded-[calc(1.5rem-0.375rem)] bg-card p-3 flex items-center justify-between gap-3">
+                <div className="rounded-[calc(2rem-0.5rem)] bg-card/80 p-4 flex items-center justify-between gap-4 border border-white/5 shadow-sm transition-all hover:shadow-md">
                   <div className="flex items-center gap-3 min-w-0">
                     {m.avatarUrl ? (
                       <img src={m.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover ring-1 ring-border" />
@@ -1156,9 +1156,9 @@ function TeamTab() {
 
       {/* دعوة عضو */}
       <AlertDialog open={inviteOpen} onOpenChange={(v) => !v && setInviteOpen(false)}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="rounded-[2.5rem] border-foreground/10 bg-card/95 backdrop-blur-2xl p-8 max-w-lg shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-right">دعوة عضو جديد</AlertDialogTitle>
+            <AlertDialogTitle className="text-right text-2xl font-black tracking-tight">دعوة عضو جديد</AlertDialogTitle>
             <AlertDialogDescription className="text-right">
               هيوصله بريد بدعوة، وأول ما يسجّل هياخد الصلاحية دي تلقائياً.
             </AlertDialogDescription>
@@ -1181,10 +1181,10 @@ function TeamTab() {
               <p className="text-[11px] text-muted-foreground">{ROLE_HINT[inviteRole]}</p>
             </div>
           </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={sending}>إلغاء</AlertDialogCancel>
-            <Button onClick={submitInvite} disabled={sending} className="rounded-full px-6">
-              {sending ? "جاري الإرسال…" : "ابعت الدعوة"}
+          <AlertDialogFooter className="mt-8 gap-3 sm:justify-end">
+            <AlertDialogCancel disabled={sending} className="rounded-2xl border-none hover:bg-foreground/5 h-12 px-6 font-bold">إلغاء</AlertDialogCancel>
+            <Button onClick={submitInvite} disabled={sending} className="rounded-2xl bg-primary h-12 px-8 font-black text-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20">
+              {sending ? "جاري الإرسال…" : "إرسال الدعوة"}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
