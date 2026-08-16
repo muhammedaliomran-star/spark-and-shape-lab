@@ -238,7 +238,21 @@ function NewInvoicePage() {
     if (!stay) navigate({ to: "/invoices" });
   };
 
+  // اختصارات الكيبورد: Alt+N منتج جديد، Ctrl+S حفظ
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.altKey && (e.key === "n" || e.key === "ن")) { e.preventDefault(); setStep(2); addProduct(); }
+      if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "س")) {
+        e.preventDefault();
+        if (!blockReason) submit(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   return (
+
     <>
       <PageHeader
         eyebrow="الفواتير"
