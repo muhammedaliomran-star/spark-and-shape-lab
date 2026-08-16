@@ -25,6 +25,7 @@ import {
 } from "@/lib/store";
 import { applyTheme } from "@/lib/theme";
 import { downloadExcelBackup, downloadJsonBackup, dataCounts, wipeAllData } from "@/lib/backup";
+import { cn } from "@/lib/utils";
 import {
   Settings as SettingsIcon, Store, KeyRound, Save, LogOut, Receipt, Bell,
   Palette, Database, Upload, Trash2, FileJson, FileSpreadsheet, RotateCcw, ShieldAlert, Mail,
@@ -119,14 +120,25 @@ function SettingsPage() {
       />
 
       <Tabs defaultValue="shop" dir="rtl" className="w-full text-right">
-        <TabsList dir="rtl" className="flex flex-wrap h-auto justify-start gap-1 mb-5">
-          <TabsTrigger value="shop" className="gap-1.5"><Store className="w-4 h-4" /> المحل</TabsTrigger>
-          <TabsTrigger value="billing" className="gap-1.5"><Receipt className="w-4 h-4" /> الفواتير والطباعة</TabsTrigger>
-          <TabsTrigger value="alerts" className="gap-1.5"><Bell className="w-4 h-4" /> التنبيهات</TabsTrigger>
-          <TabsTrigger value="appearance" className="gap-1.5"><Palette className="w-4 h-4" /> المظهر</TabsTrigger>
-          <TabsTrigger value="account" className="gap-1.5"><KeyRound className="w-4 h-4" /> الحساب</TabsTrigger>
-          <TabsTrigger value="team" className="gap-1.5"><Users className="w-4 h-4" /> الفريق والصلاحيات</TabsTrigger>
-          <TabsTrigger value="data" className="gap-1.5"><Database className="w-4 h-4" /> البيانات</TabsTrigger>
+        <TabsList dir="rtl" className="h-auto w-full bg-transparent justify-start gap-2 mb-8 border-b border-foreground/5 p-0 rounded-none overflow-x-auto custom-scrollbar no-scrollbar">
+          {[
+            { value: "shop", label: "المحل", icon: Store },
+            { value: "billing", label: "الفواتير والطباعة", icon: Receipt },
+            { value: "alerts", label: "التنبيهات", icon: Bell },
+            { value: "appearance", label: "المظهر", icon: Palette },
+            { value: "team", label: "الفريق", icon: Users },
+            { value: "account", label: "الحساب", icon: KeyRound },
+            { value: "data", label: "البيانات", icon: Database },
+          ].map((tab) => (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="relative h-11 px-6 gap-2 rounded-none border-b-2 border-transparent bg-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary transition-all duration-300 font-bold opacity-70 data-[state=active]:opacity-100 hover:opacity-100"
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         <TabsContent value="shop"><ShopTab form={form} set={set} /></TabsContent>
@@ -141,18 +153,30 @@ function SettingsPage() {
       </Tabs>
 
 
-      {/* Sticky save bar — every tab writes into the same settings row */}
-      <div className="sticky bottom-4 mt-6 z-20">
-        <div className="bg-card/95 backdrop-blur plate p-3 flex items-center justify-between gap-3">
-          <span className="text-xs text-muted-foreground">
-            {dirty ? "فيه تعديلات لسه متحفظتش" : "كل التعديلات محفوظة"}
-          </span>
+      <div className="sticky bottom-4 mt-12 z-20 mx-auto max-w-2xl px-4">
+        <div className="plate-glow flex items-center justify-between gap-6 rounded-[2rem] border border-primary/20 bg-background/80 p-3 backdrop-blur-xl shadow-2xl shadow-primary/10">
+          <div className="flex items-center gap-3 px-3">
+            <div className={cn("h-2 w-2 rounded-full animate-pulse", dirty ? "bg-warning" : "bg-success")} />
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+              {dirty ? "تغييرات غير محفوظة" : "الإعدادات محفوظة"}
+            </span>
+          </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="gap-1.5" disabled={!dirty} onClick={() => setForm(settings)}>
-              <RotateCcw className="w-4 h-4" /> تراجع
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-10 gap-2 rounded-2xl px-5 font-bold hover:bg-foreground/5"
+              disabled={!dirty}
+              onClick={() => setForm(settings)}
+            >
+              <RotateCcw className="w-4 h-4 opacity-60" /> تراجع
             </Button>
-            <Button onClick={save} disabled={busy || loading || !dirty} className="gap-1.5">
-              <Save className="w-4 h-4" /> {busy ? "جاري الحفظ..." : "حفظ الإعدادات"}
+            <Button
+              onClick={save}
+              disabled={busy || loading || !dirty}
+              className="h-10 gap-2 rounded-2xl bg-primary px-6 font-black text-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
+            >
+              <Save className="w-4 h-4" /> {busy ? "جاري الحفظ..." : "حفظ التغييرات"}
             </Button>
           </div>
         </div>
@@ -170,13 +194,19 @@ function Section({ icon, title, hint, children, className = "" }: {
   icon: React.ReactNode; title: string; hint?: string; children: React.ReactNode; className?: string;
 }) {
   return (
-    <section dir="rtl" className={`bg-card plate p-6 text-right ${className}`}>
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-primary">{icon}</span>
-        <h2 className="text-lg font-bold">{title}</h2>
+    <section dir="rtl" className={`plate-glow overflow-hidden rounded-[2rem] border border-foreground/10 bg-card/40 backdrop-blur-sm text-right ${className}`}>
+      <div className="flex items-center gap-3 border-b border-foreground/5 p-6 bg-foreground/[0.02]">
+        <div className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/10 text-primary">
+          {icon}
+        </div>
+        <div>
+          <h2 className="text-lg font-black tracking-tight">{title}</h2>
+          {hint && <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">{hint}</p>}
+        </div>
       </div>
-      {hint ? <p className="text-xs text-muted-foreground mb-5">{hint}</p> : <div className="mb-4" />}
-      {children}
+      <div className="p-6">
+        {children}
+      </div>
     </section>
   );
 }
@@ -190,7 +220,7 @@ function ShopTab({ form, set }: TabProps) {
     if (!file.type.startsWith("image/")) { toast.error("اختار صورة من فضلك"); return; }
     if (file.size > 3 * 1024 * 1024) { toast.error("حجم الصورة أكبر من 3 ميجا"); return; }
     try {
-      const dataUrl = await resizeImage(file, 256);
+      const dataUrl = await shrinkImage(file, 256);
       set("logoUrl", dataUrl);
       toast.success("تم تحميل اللوجو — اضغط حفظ");
     } catch {
@@ -199,55 +229,58 @@ function ShopTab({ form, set }: TabProps) {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <Section icon={<Store className="w-5 h-5" />} title="هوية المحل" hint="الاسم والتليفون والعنوان بيتطبعوا في رأس كل فاتورة أو تقرير.">
+    <div className="grid gap-6 lg:grid-cols-2 animate-[fade-in_0.3s_ease-out]">
+      <Section icon={<Store className="w-5 h-5" />} title="هوية المحل" hint="بيانات النشاط التجاري للمطبوعات">
         <div className="grid gap-3">
-          <Field label="اسم المحل">
-            <Input value={form.shopName} onChange={(e) => set("shopName", e.target.value)} placeholder="محل النور للأجهزة" maxLength={80} />
+          <Field label="اسم النشاط التجاري">
+            <Input value={form.shopName} onChange={(e) => set("shopName", e.target.value)} placeholder="مثال: شركة النور للتجارة" maxLength={80} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
           </Field>
           <div className="grid sm:grid-cols-2 gap-3">
             <Field label="رقم التليفون">
-              <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="01xxxxxxxxx" dir="ltr" maxLength={30} />
+              <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="01xxxxxxxxx" dir="ltr" maxLength={30} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
             </Field>
             <Field label="رقم الواتساب" hint="بيستخدم في أزرار إرسال التذكيرات">
-              <Input value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="201xxxxxxxxx" dir="ltr" maxLength={30} />
+              <Input value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="201xxxxxxxxx" dir="ltr" maxLength={30} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
             </Field>
           </div>
           <Field label="العنوان">
-            <Input value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="شارع الجمهورية — طنطا" maxLength={200} />
+            <Input value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="مثال: القاهرة، حي المعادي" maxLength={200} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
           </Field>
           <Field label="الرقم الضريبي (اختياري)">
-            <Input value={form.taxNumber} onChange={(e) => set("taxNumber", e.target.value)} placeholder="000-000-000" dir="ltr" maxLength={40} />
+            <Input value={form.taxNumber} onChange={(e) => set("taxNumber", e.target.value)} placeholder="000-000-000" dir="ltr" maxLength={40} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
           </Field>
           <Field label="ملاحظة أسفل الفاتورة (اختياري)">
             <Textarea
               value={form.footerNote}
               onChange={(e) => set("footerNote", e.target.value)}
-              placeholder="البضاعة المباعة لا ترد ولا تستبدل بعد 14 يوم."
+              placeholder="مثال: البضاعة المباعة لا ترد ولا تستبدل بعد 14 يوم."
               maxLength={300}
               rows={3}
+              className="rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all resize-none p-4"
             />
-            <span className="text-[11px] text-muted-foreground">{form.footerNote.length}/300</span>
+            <div className="flex justify-end mt-1">
+              <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">{form.footerNote.length}/300</span>
+            </div>
           </Field>
         </div>
       </Section>
 
       <div className="grid gap-6 h-fit">
-        <Section icon={<Upload className="w-5 h-5" />} title="اللوجو" hint="ارفع صورة من جهازك أو حط رابط مباشر. بتتحفظ مع بيانات المحل وتظهر في الطباعة.">
+        <Section icon={<Upload className="w-5 h-5" />} title="شعار المحل" hint="أبعاد مربعة أفضل للطباعة">
           <div className="flex items-start gap-4">
-            <div className="h-20 w-20 rounded-[1.25rem] hairline bg-foreground/[0.035] grid place-items-center overflow-hidden shrink-0">
+            <div className="h-24 w-24 rounded-[2rem] border-2 border-dashed border-foreground/10 bg-foreground/[0.02] grid place-items-center overflow-hidden shrink-0 transition-all hover:border-primary/40 hover:bg-primary/5">
               {form.logoUrl
-                ? <img src={form.logoUrl} alt="لوجو المحل" className="h-full w-full object-contain" />
-                : <Store className="w-7 h-7 text-muted-foreground" />}
+                ? <img src={form.logoUrl} alt="لوجو المحل" className="h-full w-full object-contain p-2" />
+                : <Store className="w-8 h-8 text-muted-foreground/40" />}
             </div>
             <div className="grid gap-2 flex-1">
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => onLogo(e.target.files?.[0])} />
-              <div className="flex gap-2">
-                <Button type="button" variant="secondary" size="sm" className="gap-1.5" onClick={() => fileRef.current?.click()}>
+              <div className="flex gap-2 mb-2">
+                <Button type="button" variant="secondary" size="sm" className="h-10 gap-2 rounded-2xl bg-foreground/5 hover:bg-foreground/10 border-none transition-all px-4" onClick={() => fileRef.current?.click()}>
                   <Upload className="w-4 h-4" /> رفع صورة
                 </Button>
                 {form.logoUrl ? (
-                  <Button type="button" variant="ghost" size="sm" className="gap-1.5 text-destructive" onClick={() => set("logoUrl", null)}>
+                  <Button type="button" variant="ghost" size="sm" className="h-10 gap-2 rounded-2xl text-danger hover:bg-danger/10 transition-all px-4" onClick={() => set("logoUrl", null)}>
                     <Trash2 className="w-4 h-4" /> حذف
                   </Button>
                 ) : null}
@@ -255,31 +288,34 @@ function ShopTab({ form, set }: TabProps) {
               <Input
                 value={form.logoUrl?.startsWith("data:") ? "" : (form.logoUrl ?? "")}
                 onChange={(e) => set("logoUrl", e.target.value || null)}
-                placeholder="https://..."
+                placeholder="أو رابط مباشر للشعار https://..."
                 dir="ltr"
+                className="h-10 rounded-xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all"
               />
             </div>
           </div>
         </Section>
 
-        <Section icon={<Receipt className="w-5 h-5" />} title="معاينة رأس الفاتورة" hint="كده هيبان الهيدر في الورق المطبوع.">
-          <div className="rounded-xl bg-background hairline p-4">
-            <div className="flex items-start justify-between gap-3 border-b-2 border-primary pb-3">
-              <div className="flex items-center gap-2">
-                {form.logoUrl ? <img src={form.logoUrl} alt="" className="h-10 w-10 object-contain rounded" /> : null}
-                <div>
-                  <div className="text-lg font-extrabold">{form.shopName || "اسم المحل"}</div>
-                  <div className="text-[11px] text-muted-foreground">{form.address || "عنوان المحل"}</div>
+        <Section icon={<Receipt className="w-5 h-5" />} title="معاينة رأس الفاتورة" hint="شكل الهيدر في الورق">
+          <div className="rounded-[2.5rem] bg-foreground/[0.02] p-2 border border-foreground/5 shadow-inner">
+            <div className="rounded-[calc(2.5rem-0.5rem)] bg-background/60 p-6 backdrop-blur-md shadow-xl border border-white/5">
+              <div className="flex items-start justify-between gap-3 border-b-2 border-primary/20 pb-4">
+                <div className="flex items-center gap-4">
+                  {form.logoUrl ? <img src={form.logoUrl} alt="" className="h-12 w-12 object-contain rounded-xl bg-white p-1" /> : null}
+                  <div className="text-right">
+                    <div className="text-xl font-black tracking-tight">{form.shopName || "اسم المحل"}</div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{form.address || "عنوان المحل"}</div>
+                  </div>
+                </div>
+                <div className="text-[9px] font-black text-muted-foreground text-left leading-5 uppercase tracking-[0.16em]">
+                  <div dir="ltr">{form.phone || "01xxxxxxxxx"}</div>
+                  {form.taxNumber ? <div dir="ltr">T.R: {form.taxNumber}</div> : null}
+                  <Badge variant="secondary" className="mt-2 rounded-lg bg-primary/10 text-primary border-none text-[9px] font-black">{form.invoicePrefix || "INV"}-0001</Badge>
                 </div>
               </div>
-              <div className="text-[11px] text-muted-foreground text-left leading-6">
-                <div dir="ltr">{form.phone || "01xxxxxxxxx"}</div>
-                {form.taxNumber ? <div dir="ltr">ض.ر: {form.taxNumber}</div> : null}
-                <Badge variant="secondary">{form.invoicePrefix || "INV"}-0001</Badge>
+              <div className="pt-4 text-[10px] font-bold text-muted-foreground/60 leading-relaxed italic">
+                {form.footerNote || "ملاحظة أسفل الفاتورة"}
               </div>
-            </div>
-            <div className="pt-3 text-[11px] text-muted-foreground">
-              {form.footerNote || "ملاحظة أسفل الفاتورة"}
             </div>
           </div>
         </Section>
@@ -291,15 +327,15 @@ function ShopTab({ form, set }: TabProps) {
 /* ------------------------- الفواتير والطباعة ------------------------- */
 function BillingTab({ form, set }: TabProps) {
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2 animate-[fade-in_0.3s_ease-out]">
       <Section icon={<Receipt className="w-5 h-5" />} title="الفواتير والأقساط" hint="القيم دي بتتحط تلقائياً وانت بتعمل فاتورة جديدة.">
         <div className="grid gap-3">
           <div className="grid sm:grid-cols-2 gap-3">
             <Field label="رمز العملة">
-              <Input value={form.currency} onChange={(e) => set("currency", e.target.value)} placeholder="ج.م" maxLength={10} />
+              <Input value={form.currency} onChange={(e) => set("currency", e.target.value)} placeholder="ج.م" maxLength={10} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
             </Field>
             <Field label="بادئة رقم الفاتورة" hint="مثال: INV → INV-0001">
-              <Input value={form.invoicePrefix} onChange={(e) => set("invoicePrefix", e.target.value.toUpperCase())} placeholder="INV" dir="ltr" maxLength={10} />
+              <Input value={form.invoicePrefix} onChange={(e) => set("invoicePrefix", e.target.value.toUpperCase())} placeholder="INV" dir="ltr" maxLength={10} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
             </Field>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
@@ -308,6 +344,7 @@ function BillingTab({ form, set }: TabProps) {
                 type="number" min={1} max={60} inputMode="numeric"
                 value={form.defaultInstallmentMonths}
                 onChange={(e) => set("defaultInstallmentMonths", Number(e.target.value) || 1)}
+                className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all"
               />
             </Field>
             <Field label="يوم الاستحقاق الافتراضي" hint="من 1 لـ 28 من كل شهر">
@@ -315,11 +352,13 @@ function BillingTab({ form, set }: TabProps) {
                 type="number" min={1} max={28} inputMode="numeric"
                 value={form.defaultDueDay}
                 onChange={(e) => set("defaultDueDay", Number(e.target.value) || 1)}
+                className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all"
               />
             </Field>
           </div>
-          <div className="rounded-2xl bg-foreground/[0.04] p-3 text-xs text-muted-foreground leading-6">
-            مثال: فاتورة بـ <strong className="text-foreground">{fmt(12000)} {form.currency}</strong> على{" "}
+          <div className="rounded-[1.75rem] bg-primary/[0.04] p-5 text-[11px] text-muted-foreground leading-loose border border-primary/10">
+            <span className="block mb-2 font-black uppercase tracking-widest text-primary/60">معاينة الحسابات:</span>
+            فاتورة بقيمة <strong className="text-foreground">{fmt(12000)} {form.currency}</strong> على{" "}
             <strong className="text-foreground">{form.defaultInstallmentMonths}</strong> شهر →
             القسط ≈ <strong className="text-foreground">{fmt(12000 / Math.max(1, form.defaultInstallmentMonths))} {form.currency}</strong>{" "}
             يوم <strong className="text-foreground">{form.defaultDueDay}</strong> من كل شهر.
@@ -331,7 +370,7 @@ function BillingTab({ form, set }: TabProps) {
         <div className="grid gap-3">
           <Field label="مقاس الورق">
             <Select value={form.printPaper} onValueChange={(v) => set("printPaper", v as PrintPaper)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="a4">A4 — طابعة عادية</SelectItem>
                 <SelectItem value="thermal">حراري 80mm — طابعة كاشير</SelectItem>
@@ -352,41 +391,43 @@ function BillingTab({ form, set }: TabProps) {
 /* ----------------------------- التنبيهات ----------------------------- */
 function AlertsTab({ form, set }: TabProps) {
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <Section icon={<Bell className="w-5 h-5" />} title="تنبيهات الأقساط" hint="بتتحكم في شارة التنبيهات وصفحة التنبيهات.">
+    <div className="grid gap-6 lg:grid-cols-2 animate-[fade-in_0.3s_ease-out]">
+      <Section icon={<Bell className="w-5 h-5" />} title="تنبيهات المديونية" hint="إعدادات إشعارات مواعيد الأقساط">
         <div className="grid gap-5">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <div className="text-sm font-bold">تشغيل التنبيهات</div>
-              <p className="text-xs text-muted-foreground">لو قفلتها مش هتشوف عدّاد التنبيهات في القائمة.</p>
+              <div className="text-sm font-black">تفعيل نظام التنبيهات</div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-60">تفعيل الإشعارات في شريط التنقل</p>
             </div>
             <Switch checked={form.alertsEnabled} onCheckedChange={(v) => set("alertsEnabled", v)} />
           </div>
           <Separator />
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
-              <Label>تذكير قبل الاستحقاق بـ</Label>
-              <Badge variant="secondary">{form.reminderDaysBefore} يوم</Badge>
+              <Label className="text-xs font-bold">تذكير قبل الاستحقاق بـ</Label>
+              <Badge variant="secondary" className="rounded-xl px-3 py-1 bg-primary/10 text-primary border-none font-black">{form.reminderDaysBefore} يوم</Badge>
             </div>
             <Slider
               value={[form.reminderDaysBefore]} min={0} max={30} step={1}
               onValueChange={([v]) => set("reminderDaysBefore", v)}
               disabled={!form.alertsEnabled}
+              className="py-4"
             />
             <p className="text-xs text-muted-foreground">صفر = التنبيه يوم الاستحقاق نفسه.</p>
           </div>
         </div>
       </Section>
 
-      <Section icon={<ShieldAlert className="w-5 h-5" />} title="تنبيه المخزون" hint="الصنف اللي كميته أقل من الحد ده هيظهر في التنبيهات.">
+      <Section icon={<ShieldAlert className="w-5 h-5" />} title="تنبيهات المخزون" hint="إشعارات قرب نفاد المنتجات">
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
-            <Label>حد المخزون المنخفض</Label>
-            <Badge variant="secondary">{form.lowStockThreshold} وحدة</Badge>
+            <Label className="text-xs font-bold">حد المخزون المنخفض</Label>
+            <Badge variant="secondary" className="rounded-xl px-3 py-1 bg-primary/10 text-primary border-none font-black">{form.lowStockThreshold} قطعة</Badge>
           </div>
           <Slider
             value={[form.lowStockThreshold]} min={0} max={50} step={1}
             onValueChange={([v]) => set("lowStockThreshold", v)}
+            className="py-4"
           />
           <p className="text-xs text-muted-foreground">القيمة الافتراضية 5 وحدات.</p>
         </div>
@@ -404,19 +445,19 @@ const THEMES: Array<{ value: ThemeMode; label: string; desc: string }> = [
 
 function AppearanceTab({ form, set }: TabProps) {
   return (
-    <Section icon={<Palette className="w-5 h-5" />} title="مظهر التطبيق" hint="التغيير بيظهر فوراً، واضغط حفظ علشان يفضل على كل الأجهزة.">
+    <Section icon={<Palette className="w-5 h-5" />} title="سمة التطبيق" hint="تخصيص تجربة المستخدم البصرية">
       <div className="grid sm:grid-cols-3 gap-3">
         {THEMES.map((t) => (
           <button
             key={t.value}
             type="button"
             onClick={() => set("theme", t.value)}
-            className={`text-right rounded-xl border p-4 transition ${
-              form.theme === t.value ? "border-primary bg-primary/10" : "border-border hover:bg-foreground/[0.05]"
+            className={`text-right rounded-[1.75rem] border-2 p-5 transition-all duration-500 hover:scale-[1.02] active:scale-[0.98] ${
+              form.theme === t.value ? "border-primary bg-primary/10 shadow-lg shadow-primary/10" : "border-foreground/5 bg-foreground/[0.02] hover:bg-foreground/[0.05]"
             }`}
           >
-            <div className="text-sm font-bold mb-1">{t.label}</div>
-            <div className="text-xs text-muted-foreground">{t.desc}</div>
+            <div className="text-sm font-black mb-1">{t.label}</div>
+            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">{t.desc}</div>
           </button>
         ))}
       </div>
@@ -433,25 +474,19 @@ const fmtDate = (iso: string | null) => (iso ? dateFmt.format(new Date(iso)) : "
 function AccountTab({ onSignOut }: { onSignOut: () => void }) {
   const { user, authReady, hasPassword } = useAccount();
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2 animate-[fade-in_0.3s_ease-out]">
       <IdentityCard onSignOut={onSignOut} />
       <div className="grid gap-6">
         <Section
           icon={<KeyRound className="w-5 h-5" />}
-          title={hasPassword ? "كلمة السر" : "إضافة كلمة سر"}
-          hint={
-            !authReady
-              ? undefined
-              : hasPassword
-                ? "غيّر كلمة السر بشكل دوري للحفاظ على أمان حسابك."
-                : "أنت داخل بحساب جوجل، ومفيش كلمة سر للحساب. تقدر تضيف واحدة وتدخل بالبريد كذلك."
-          }
+          title={hasPassword ? "كلمة المرور" : "إضافة كلمة مرور"}
+          hint="حماية الخصوصية والأمان"
         >
           {authReady ? <ChangePassword mode={hasPassword ? "change" : "add"} /> : <LineSkeleton rows={3} />}
         </Section>
 
         {user?.provider === "google" ? null : (
-          <Section icon={<Mail className="w-5 h-5" />} title="تغيير البريد الإلكتروني">
+          <Section icon={<Mail className="w-5 h-5" />} title="البريد الإلكتروني" hint="تحديث وسيلة التواصل الأساسية">
             <ChangeEmail />
           </Section>
         )}
@@ -560,28 +595,28 @@ function IdentityCard({ onSignOut }: { onSignOut: () => void }) {
       ) : (
         <div className="grid gap-5">
           {/* Double-bezel identity plate */}
-          <div className="rounded-[2rem] bg-foreground/[0.04] p-2 ring-1 ring-[var(--hairline)]">
-            <div className="flex items-center gap-4 rounded-[calc(2rem-0.5rem)] bg-card p-4 shadow-[inset_0_1px_1px_hsl(0_0%_100%/0.12)]">
+          <div className="rounded-[2.5rem] bg-foreground/[0.02] p-2 border border-foreground/5 shadow-inner">
+            <div className="flex items-center gap-5 rounded-[calc(2.5rem-0.5rem)] bg-card/60 p-6 backdrop-blur-md shadow-xl border border-white/5">
               <UserAvatar size={58} />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-lg font-bold leading-tight">{label || "بدون اسم"}</div>
                 <div dir="ltr" className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
                   {user.email ?? "—"}
                 </div>
-                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <div className="mt-3 flex flex-wrap items-center gap-2">
                   {(user.providers.length ? user.providers : ["unknown"]).map((p: string) => (
-                    <Badge key={p} variant="secondary" className="rounded-full px-3 py-0.5 text-[10px] uppercase tracking-[0.14em]">
+                    <Badge key={p} variant="secondary" className="rounded-xl px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] bg-foreground/10 border-none">
                       {providerLabel(p)}
                     </Badge>
                   ))}
                   <Badge
                     variant="outline"
-                    className={`rounded-full px-3 py-0.5 text-[10px] ${user.emailConfirmed ? "text-success" : "text-warning"}`}
+                    className={cn("rounded-xl px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] border-none", user.emailConfirmed ? "bg-success/10 text-success" : "bg-warning/10 text-warning")}
                   >
                     {user.emailConfirmed ? (
-                      <><ShieldCheck className="mr-1 h-3 w-3" /> بريد مؤكد</>
+                      <><ShieldCheck className="mr-1 h-3 w-3" /> مؤكد</>
                     ) : (
-                      <><ShieldAlert className="mr-1 h-3 w-3" /> بريد غير مؤكد</>
+                      <><ShieldAlert className="mr-1 h-3 w-3" /> غير مؤكد</>
                     )}
                   </Badge>
                 </div>
@@ -598,9 +633,10 @@ function IdentityCard({ onSignOut }: { onSignOut: () => void }) {
                 onChange={(e) => { setName(e.target.value); setEditing(true); }}
                 placeholder={user.metaName ?? "اكتب اسمك"}
                 maxLength={60}
+                className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all"
               />
-              <Button onClick={submit} disabled={busy || !editing} variant="secondary" className="shrink-0 gap-1.5">
-                <Save className="h-4 w-4" /> حفظ
+              <Button onClick={submit} disabled={busy || !editing} variant="secondary" className="h-11 shrink-0 gap-2 rounded-2xl bg-foreground/5 hover:bg-foreground/10 border-none transition-all px-6 font-bold">
+                <Save className="h-4 w-4 opacity-60" /> حفظ
               </Button>
             </div>
           </div>
@@ -623,9 +659,9 @@ function IdentityCard({ onSignOut }: { onSignOut: () => void }) {
                 variant="secondary"
                 disabled={uploading}
                 onClick={() => fileRef.current?.click()}
-                className="gap-1.5"
+                className="h-11 gap-2 rounded-2xl bg-foreground/5 hover:bg-foreground/10 border-none transition-all px-6 font-bold"
               >
-                <UserRound className="h-4 w-4" /> {uploading ? "جاري الرفع..." : avatar ? "تغيير الصورة" : "رفع صورة"}
+                <UserRound className="h-4 w-4 opacity-60" /> {uploading ? "جاري الرفع..." : avatar ? "تغيير الصورة" : "رفع صورة"}
               </Button>
               {profile.avatarUrl ? (
                 <Button type="button" variant="ghost" disabled={uploading} onClick={removeAvatar} className="text-destructive">
@@ -684,13 +720,13 @@ function ChangeEmail() {
   return (
     <form onSubmit={submit} className="grid gap-2">
       <Label>البريد الجديد</Label>
-      <Input value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" placeholder="new@email.com" type="email" />
+      <Input value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" placeholder="new@email.com" type="email" className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
       <p className="rounded-2xl bg-warning/10 p-3 text-[11px] leading-relaxed text-muted-foreground">
         البريد <span className="font-semibold text-foreground">مش بيتغير فوراً</span>: هنبعت رسالة تأكيد على البريد الجديد،
         ولازم تفتح اللينك اللي جواها. لحد ما تأكّد، تسجيل الدخول يفضل بالبريد القديم.
       </p>
-      <Button type="submit" variant="secondary" disabled={busy} className="gap-1.5">
-        <Mail className="w-4 h-4" /> {busy ? "جاري الإرسال..." : "إرسال تأكيد التغيير"}
+      <Button type="submit" variant="secondary" disabled={busy} className="h-11 gap-2 rounded-2xl bg-foreground/5 hover:bg-foreground/10 border-none transition-all px-6 font-bold">
+        <Mail className="w-4 h-4 opacity-60" /> {busy ? "جاري الإرسال..." : "تأكيد تغيير البريد"}
       </Button>
     </form>
   );
@@ -722,7 +758,7 @@ function ChangePassword({ mode = "change" }: { mode?: "change" | "add" }) {
   return (
     <form onSubmit={submit} className="grid gap-3">
       <Field label="كلمة السر الجديدة">
-        <Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} dir="ltr" placeholder="••••••••" maxLength={72} />
+        <Input type="password" value={pw} onChange={(e) => setPw(e.target.value)} dir="ltr" placeholder="••••••••" maxLength={72} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
       </Field>
       {pw ? (
         <div className="flex items-center gap-2">
@@ -736,10 +772,10 @@ function ChangePassword({ mode = "change" }: { mode?: "change" | "add" }) {
         </div>
       ) : null}
       <Field label="تأكيد كلمة السر">
-        <Input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} dir="ltr" placeholder="••••••••" maxLength={72} />
+        <Input type="password" value={pw2} onChange={(e) => setPw2(e.target.value)} dir="ltr" placeholder="••••••••" maxLength={72} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
       </Field>
-      <Button type="submit" variant="secondary" disabled={busy} className="gap-1.5">
-        <KeyRound className="w-4 h-4" /> {busy ? "جاري الحفظ..." : mode === "add" ? "إضافة كلمة السر" : "تغيير كلمة السر"}
+      <Button type="submit" variant="secondary" disabled={busy} className="h-11 gap-2 rounded-2xl bg-foreground/5 hover:bg-foreground/10 border-none transition-all px-6 font-bold">
+        <KeyRound className="w-4 h-4 opacity-60" /> {busy ? "جاري الحفظ..." : mode === "add" ? "إضافة كلمة مرور" : "تحديث كلمة المرور"}
       </Button>
     </form>
   );
@@ -777,18 +813,18 @@ function DataTab() {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2 animate-[fade-in_0.3s_ease-out]">
       <Section icon={<Database className="w-5 h-5" />} title="ملخص بياناتك" hint="عدد السجلات المخزّنة على حسابك.">
         <div className="grid grid-cols-2 gap-2">
           {Object.entries(TABLE_LABELS).map(([key, label]) => (
-            <div key={key} className="rounded-2xl bg-foreground/[0.04] p-3 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">{label}</span>
-              <span className="text-sm font-bold tabular-nums">{counts ? fmt(counts[key] ?? 0) : "…"}</span>
+            <div key={key} className="rounded-2xl bg-foreground/[0.03] border border-foreground/5 p-4 flex items-center justify-between transition-all hover:bg-foreground/[0.05]">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{label}</span>
+              <span className="text-sm font-black tabular-nums text-primary">{counts ? fmt(counts[key] ?? 0) : "…"}</span>
             </div>
           ))}
         </div>
-        <Button variant="ghost" size="sm" className="mt-3 gap-1.5" onClick={load}>
-          <RotateCcw className="w-4 h-4" /> تحديث
+        <Button variant="ghost" size="sm" className="mt-4 gap-2 rounded-xl text-[10px] font-black uppercase tracking-widest opacity-60 hover:opacity-100" onClick={load}>
+          <RotateCcw className="w-3.5 h-3.5" /> تحديث الإحصائيات
         </Button>
       </Section>
 
@@ -796,16 +832,16 @@ function DataTab() {
         <Section icon={<FileJson className="w-5 h-5" />} title="نسخة احتياطية" hint="نزّل كل بياناتك على جهازك في ملف واحد.">
           <div className="flex flex-wrap gap-2">
             <Button
-              variant="secondary" className="gap-1.5" disabled={busy !== null}
+              variant="secondary" className="h-12 gap-2 rounded-2xl bg-foreground/5 hover:bg-foreground/10 border-none transition-all px-6 font-bold flex-1" disabled={busy !== null}
               onClick={() => run("json", downloadJsonBackup, "تم تنزيل النسخة الاحتياطية (JSON)")}
             >
-              <FileJson className="w-4 h-4" /> تنزيل JSON
+              <FileJson className="w-4 h-4 opacity-60" /> تنزيل JSON
             </Button>
             <Button
-              variant="secondary" className="gap-1.5" disabled={busy !== null}
+              variant="secondary" className="h-12 gap-2 rounded-2xl bg-foreground/5 hover:bg-foreground/10 border-none transition-all px-6 font-bold flex-1" disabled={busy !== null}
               onClick={() => run("xlsx", downloadExcelBackup, "تم تنزيل ملف Excel")}
             >
-              <FileSpreadsheet className="w-4 h-4" /> تنزيل Excel
+              <FileSpreadsheet className="w-4 h-4 opacity-60" /> تنزيل Excel
             </Button>
           </div>
         </Section>
@@ -813,29 +849,30 @@ function DataTab() {
         <Section icon={<ShieldAlert className="w-5 h-5" />} title="منطقة الخطر" hint="حذف كل العملاء والفواتير والمخزن والمصروفات نهائياً. بيانات المحل بتفضل زي ما هي.">
           <Button
             variant="outline"
-            className="gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+            className="h-12 w-full gap-2 rounded-2xl text-danger border-danger/20 bg-danger/[0.02] hover:bg-danger/10 hover:border-danger/40 transition-all font-black"
             onClick={() => { setConfirmText(""); setConfirmOpen(true); }}
           >
-            <Trash2 className="w-4 h-4" /> حذف كل البيانات
+            <Trash2 className="w-4 h-4" /> مسح كافة البيانات نهائياً
           </Button>
         </Section>
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="rounded-[2.5rem] border-danger/10 bg-card/95 backdrop-blur-2xl p-8 max-w-lg shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-right">متأكد إنك عايز تمسح كل البيانات؟</AlertDialogTitle>
-            <AlertDialogDescription className="text-right">
-              الإجراء ده نهائي ومش هينفع تتراجع عنه. اكتب كلمة <strong>حذف</strong> للتأكيد.
-              يُفضّل تنزيل نسخة احتياطية الأول.
+            <AlertDialogTitle className="text-right text-2xl font-black tracking-tight text-danger">حذف كل البيانات؟</AlertDialogTitle>
+            <AlertDialogDescription className="text-right text-sm leading-relaxed">
+              هذا الإجراء سيقوم بمسح كافة الفواتير، العملاء، الموردين، والمخزون بشكل نهائي. لا يمكن التراجع عن هذه الخطوة.
+              <br /><br />
+              لتأكيد الحذف، يرجى كتابة كلمة <strong className="text-foreground">حذف</strong> في الحقل أدناه.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <Input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} placeholder="حذف" />
-          <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          <Input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} placeholder="اكتب حذف هنا" className="h-12 rounded-2xl bg-foreground/[0.03] border-danger/20 focus:border-danger transition-all text-center font-bold" />
+          <AlertDialogFooter className="mt-6 gap-3 sm:justify-end">
+            <AlertDialogCancel className="rounded-2xl border-none hover:bg-foreground/5 h-12 px-6 font-bold">إلغاء</AlertDialogCancel>
             <AlertDialogAction
               disabled={confirmText.trim() !== "حذف" || busy !== null}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="rounded-2xl bg-danger h-12 px-8 font-black text-white transition-all hover:bg-danger/90 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-danger/20"
               onClick={async () => {
                 await run("wipe", wipeAllData, "تم حذف كل البيانات");
                 setConfirmOpen(false);
@@ -854,11 +891,13 @@ function DataTab() {
 /* ------------------------------ helpers ------------------------------ */
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div dir="rtl" className="grid grid-cols-[8rem_minmax(0,1fr)] items-start gap-3 text-right">
-      <Label className="mt-2 text-right">{label}</Label>
-      <div className="min-w-0 grid gap-1 text-right">
+    <div dir="rtl" className="grid grid-cols-[8.5rem_minmax(0,1fr)] items-start gap-4 text-right group">
+      <div className="mt-2 text-right">
+        <Label className="text-xs font-black tracking-tight group-hover:text-primary transition-colors">{label}</Label>
+        {hint && <p className="mt-1 text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed opacity-60">{hint}</p>}
+      </div>
+      <div className="min-w-0 grid gap-2 text-right">
         {children}
-        {hint ? <span className="text-[11px] text-muted-foreground">{hint}</span> : null}
       </div>
     </div>
   );
@@ -894,14 +933,14 @@ const ALL_ROLES: AppRole[] = ["owner", "manager", "seller"];
 
 function RoleBadge({ role, big = false }: { role: AppRole; big?: boolean }) {
   const tone: Record<AppRole, string> = {
-    owner: "bg-primary/12 text-primary ring-primary/20",
-    manager: "bg-info/12 text-info ring-info/20",
-    seller: "bg-muted text-muted-foreground ring-border",
+    owner: "bg-primary/10 text-primary border-primary/20",
+    manager: "bg-info/10 text-info border-info/20",
+    seller: "bg-foreground/5 text-muted-foreground border-foreground/10",
   };
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full ring-1 font-medium ${tone[role]} ${
-        big ? "px-4 py-1.5 text-sm" : "px-3 py-1 text-[11px]"
+      className={`inline-flex items-center gap-2 rounded-xl border font-black uppercase tracking-widest ${tone[role]} ${
+        big ? "px-5 py-2 text-xs" : "px-3 py-1.5 text-[9px]"
       }`}
     >
       <ShieldCheck className={big ? "w-4 h-4" : "w-3 h-3"} />
@@ -955,37 +994,37 @@ function TeamTab() {
           <div className="h-24 rounded-2xl bg-muted animate-pulse" />
         ) : (
           <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-4 p-6 rounded-[2rem] bg-primary/[0.03] border border-primary/10">
               {myRole ? <RoleBadge role={myRole} big /> : (
-                <span className="rounded-full bg-muted px-4 py-1.5 text-sm text-muted-foreground ring-1 ring-border">
+                <span className="rounded-xl bg-foreground/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-muted-foreground border border-foreground/10">
                   بدون صلاحية
                 </span>
               )}
-              <span className="text-xs text-muted-foreground">
-                {myRole ? ROLE_HINT[myRole] : "مفيش صلاحية متسجلة لحسابك."}
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed opacity-60">
+                {myRole ? ROLE_HINT[myRole] : "لم يتم العثور على صلاحيات مسجلة لحسابك حالياً."}
               </span>
             </div>
 
-            <div className="rounded-[1.75rem] bg-muted/40 p-1.5 ring-1 ring-border/60">
-              <div className="overflow-x-auto rounded-[calc(1.75rem-0.375rem)] bg-card">
+            <div className="rounded-[2.5rem] bg-foreground/[0.02] p-2 border border-foreground/5 shadow-inner">
+              <div className="overflow-x-auto rounded-[calc(2.5rem-0.5rem)] bg-card border border-white/5 shadow-xl">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border/70 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                      <th className="py-3 px-4 text-right font-medium">إيه اللي تقدر تعمله</th>
+                    <tr className="border-b border-foreground/5 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 bg-foreground/[0.02]">
+                      <th className="py-4 px-6 text-right">صلاحيات النظام</th>
                       {ALL_ROLES.map((r) => (
-                        <th key={r} className="py-3 px-3 font-medium whitespace-nowrap">{ROLE_LABEL[r]}</th>
+                        <th key={r} className="py-4 px-4 whitespace-nowrap">{ROLE_LABEL[r]}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {ABILITIES.map((a) => (
-                      <tr key={a.label} className="border-b border-border/40 last:border-0">
-                        <td className="py-2.5 px-4 text-right">{a.label}</td>
+                      <tr key={a.label} className="border-b border-foreground/5 last:border-0 hover:bg-foreground/[0.01] transition-colors">
+                        <td className="py-3.5 px-6 text-right font-bold text-xs">{a.label}</td>
                         {ALL_ROLES.map((r) => {
                           const ok = a.roles.includes(r);
                           return (
-                            <td key={r} className={`py-2.5 px-3 text-center ${myRole === r ? "bg-primary/[0.04]" : ""}`}>
-                              <span className={ok ? "text-success" : "text-muted-foreground/40"}>{ok ? "✓" : "✗"}</span>
+                            <td key={r} className={`py-3.5 px-4 text-center ${myRole === r ? "bg-primary/[0.03]" : ""}`}>
+                              <span className={ok ? "text-success font-black" : "text-muted-foreground/20"}>{ok ? "✓" : "✗"}</span>
                             </td>
                           );
                         })}
@@ -1007,9 +1046,9 @@ function TeamTab() {
       >
         {isOwner && (
           <div className="mb-4 flex justify-start">
-            <Button onClick={() => setInviteOpen(true)} className="group rounded-full ps-6 pe-1.5 py-3 h-auto gap-3">
-              <span>دعوة عضو</span>
-              <span className="w-8 h-8 rounded-full bg-primary-foreground/15 grid place-items-center transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:-translate-x-1 group-hover:-translate-y-[1px]">
+            <Button onClick={() => setInviteOpen(true)} className="group rounded-[1.75rem] ps-6 pe-2 py-2 h-12 gap-4 bg-primary text-black font-black shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
+              <span className="text-xs uppercase tracking-widest">دعوة عضو جديد</span>
+              <span className="w-8 h-8 rounded-2xl bg-black/10 grid place-items-center transition-transform duration-500 group-hover:-translate-x-1">
                 <Mail className="w-4 h-4" />
               </span>
             </Button>
@@ -1021,15 +1060,15 @@ function TeamTab() {
             {[0, 1].map((i) => <div key={i} className="h-16 rounded-2xl bg-muted animate-pulse" />)}
           </div>
         ) : members.length === 0 ? (
-          <div className="rounded-[1.75rem] bg-muted/40 p-1.5 ring-1 ring-border/60">
-            <div className="rounded-[calc(1.75rem-0.375rem)] bg-card px-6 py-12 text-center">
+          <div className="rounded-[2.5rem] bg-foreground/[0.02] p-2 border border-foreground/5 shadow-inner">
+            <div className="rounded-[calc(2.5rem-0.5rem)] bg-card/60 backdrop-blur-md px-6 py-12 text-center border border-white/5 shadow-xl">
               <span className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-primary/10 text-primary">
                 <Users className="w-5 h-5" />
               </span>
               <p className="font-semibold">لسه مفيش أعضاء في الفريق</p>
               <p className="mt-1 text-xs text-muted-foreground">ابعت دعوة بالبريد وحدّد صلاحية العضو.</p>
               {isOwner && (
-                <Button onClick={() => setInviteOpen(true)} className="mt-5 rounded-full px-6">دعوة عضو</Button>
+                <Button onClick={() => setInviteOpen(true)} className="mt-5 rounded-2xl px-8 h-11 bg-primary text-black font-black shadow-lg shadow-primary/20">دعوة عضو</Button>
               )}
             </div>
           </div>
@@ -1038,22 +1077,22 @@ function TeamTab() {
             {members.map((m) => (
               <div
                 key={m.userId}
-                className="rounded-[1.5rem] bg-muted/40 p-1.5 ring-1 ring-border/60 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-muted/70"
+                className="rounded-[2rem] bg-foreground/[0.02] p-2 border border-foreground/5 transition-all duration-500 hover:border-primary/20 hover:bg-primary/[0.02]"
               >
-                <div className="rounded-[calc(1.5rem-0.375rem)] bg-card p-3 flex items-center justify-between gap-3">
+                <div className="rounded-[calc(2rem-0.5rem)] bg-card/80 p-4 flex items-center justify-between gap-4 border border-white/5 shadow-sm transition-all hover:shadow-md">
                   <div className="flex items-center gap-3 min-w-0">
                     {m.avatarUrl ? (
-                      <img src={m.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover ring-1 ring-border" />
+                      <img src={m.avatarUrl} alt="" className="w-10 h-10 rounded-2xl object-cover ring-1 ring-foreground/10" />
                     ) : (
-                      <span className="w-10 h-10 rounded-full bg-primary/10 text-primary grid place-items-center font-bold">
+                      <span className="w-10 h-10 rounded-2xl bg-primary/10 text-primary grid place-items-center font-black text-xs">
                         {m.displayName.slice(0, 1)}
                       </span>
                     )}
                     <div className="min-w-0">
-                      <div className="font-semibold truncate">
+                      <div className="font-black text-sm tracking-tight truncate">
                         {m.displayName}{m.isMe ? " (أنا)" : ""}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">آخر نشاط: {relativeTime(m.lastSeenAt)}</div>
+                      <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">آخر ظهور: {relativeTime(m.lastSeenAt)}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -1065,7 +1104,7 @@ function TeamTab() {
                           catch (e: any) { toast.error(e.message || "خطأ"); }
                         }}
                       >
-                        <SelectTrigger className="w-28 rounded-full"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="w-32 h-9 rounded-xl bg-foreground/[0.03] border-none font-bold text-[10px]"><SelectValue /></SelectTrigger>
                         <SelectContent dir="rtl">
                           {ALL_ROLES.map((r) => (
                             <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>
@@ -1078,7 +1117,7 @@ function TeamTab() {
                     {isOwner && !m.isMe && (
                       <Button
                         size="icon" variant="ghost" title="إزالة العضو"
-                        className="h-9 w-9 rounded-full text-muted-foreground hover:text-danger hover:bg-danger/10"
+                        className="h-9 w-9 rounded-xl text-muted-foreground hover:text-danger hover:bg-danger/10 transition-colors"
                         onClick={() => setRemoving(m.userId)}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1096,17 +1135,17 @@ function TeamTab() {
             <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">دعوات مُرسلة</p>
             <div className="space-y-2">
               {pending.map((iv) => (
-                <div key={iv.id} className="rounded-2xl border border-dashed border-border p-3 flex items-center justify-between gap-3">
+                <div key={iv.id} className="rounded-[1.75rem] border border-dashed border-foreground/10 p-4 flex items-center justify-between gap-4 bg-foreground/[0.01]">
                   <div className="min-w-0">
-                    <div className="truncate font-medium">{iv.email}</div>
-                    <div className="text-[11px] text-muted-foreground">
-                      بتنتهي {new Date(iv.expiresAt).toLocaleDateString("en-US")}
+                    <div className="truncate font-black text-xs">{iv.email}</div>
+                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                      تنتهي في: {new Date(iv.expiresAt).toLocaleDateString("en-US")}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <RoleBadge role={iv.role} />
                     <Button
-                      size="sm" variant="ghost" className="rounded-full text-muted-foreground hover:text-danger"
+                      size="sm" variant="ghost" className="rounded-xl h-9 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-danger hover:bg-danger/10 transition-colors"
                       onClick={async () => {
                         try { await revokeInvite(iv.id); toast.success("تم إلغاء الدعوة"); }
                         catch (e: any) { toast.error(e.message || "خطأ"); }
@@ -1122,58 +1161,58 @@ function TeamTab() {
 
       {/* دعوة عضو */}
       <AlertDialog open={inviteOpen} onOpenChange={(v) => !v && setInviteOpen(false)}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="rounded-[2.5rem] border-foreground/10 bg-card/95 backdrop-blur-2xl p-8 max-w-lg shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-right">دعوة عضو جديد</AlertDialogTitle>
-            <AlertDialogDescription className="text-right">
-              هيوصله بريد بدعوة، وأول ما يسجّل هياخد الصلاحية دي تلقائياً.
+            <AlertDialogTitle className="text-right text-2xl font-black tracking-tight">دعوة عضو جديد</AlertDialogTitle>
+            <AlertDialogDescription className="text-right text-[11px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed opacity-60">
+              سيتم إرسال دعوة رسمية عبر البريد الإلكتروني لتفعيل حساب العضو الجديد.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-3 text-right">
-            <div className="space-y-1.5">
-              <Label>البريد الإلكتروني</Label>
-              <Input dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" />
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60">البريد الإلكتروني</Label>
+              <Input dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
             </div>
-            <div className="space-y-1.5">
-              <Label>الصلاحية</Label>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60">الصلاحية</Label>
               <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as AppRole)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all font-bold"><SelectValue /></SelectTrigger>
                 <SelectContent dir="rtl">
                   {ALL_ROLES.map((r) => (
-                    <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>
+                    <SelectItem key={r} value={r} className="font-bold text-xs">{ROLE_LABEL[r]}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-[11px] text-muted-foreground">{ROLE_HINT[inviteRole]}</p>
+              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed italic px-1 opacity-60">{ROLE_HINT[inviteRole]}</p>
             </div>
           </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={sending}>إلغاء</AlertDialogCancel>
-            <Button onClick={submitInvite} disabled={sending} className="rounded-full px-6">
-              {sending ? "جاري الإرسال…" : "ابعت الدعوة"}
+          <AlertDialogFooter className="mt-8 gap-3 sm:justify-end">
+            <AlertDialogCancel disabled={sending} className="rounded-2xl border-none hover:bg-foreground/5 h-12 px-6 font-bold">إلغاء</AlertDialogCancel>
+            <Button onClick={submitInvite} disabled={sending} className="rounded-2xl bg-primary h-12 px-8 font-black text-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20">
+              {sending ? "جاري الإرسال…" : "إرسال الدعوة"}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <AlertDialog open={!!removing} onOpenChange={(v) => !v && setRemoving(null)}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="rounded-[2.5rem] border-danger/10 bg-card/95 backdrop-blur-2xl p-8 max-w-lg shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-right">إزالة العضو؟</AlertDialogTitle>
-            <AlertDialogDescription className="text-right">
-              هيفقد صلاحيته على المحل. تقدر تضيفه تاني في أي وقت.
+            <AlertDialogTitle className="text-right text-2xl font-black tracking-tight text-danger">إزالة العضو؟</AlertDialogTitle>
+            <AlertDialogDescription className="text-right text-[11px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed opacity-60">
+              سيتم سحب جميع الصلاحيات الممنوحة لهذا العضو فوراً، ولن يتمكن من الوصول إلى النظام مجدداً.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          <AlertDialogFooter className="mt-8 gap-3 sm:justify-end">
+            <AlertDialogCancel className="rounded-2xl border-none hover:bg-foreground/5 h-12 px-6 font-bold text-xs uppercase tracking-widest">إلغاء</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-danger text-danger-foreground hover:bg-danger/90"
+              className="rounded-2xl bg-danger h-12 px-8 font-black text-white transition-all hover:bg-danger/90 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-danger/20 text-xs uppercase tracking-widest"
               onClick={async () => {
                 try { await removeMember(removing!); toast.success("تمت الإزالة"); }
                 catch (e: any) { toast.error(e.message || "خطأ"); }
                 setRemoving(null);
               }}
-            >إزالة</AlertDialogAction>
+            >تأكيد الإزالة</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
