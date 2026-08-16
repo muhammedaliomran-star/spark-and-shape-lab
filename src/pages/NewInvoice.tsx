@@ -55,6 +55,10 @@ function NewInvoicePage() {
   const [saleType, setSaleType] = useState<"cash" | "installments">("installments");
   const [cashPaid, setCashPaid] = useState("");
   const [step, setStep] = useState(1);
+  const [discountPct, setDiscountPct] = useState("");
+  const [discountAmt, setDiscountAmt] = useState("");
+  const [taxPct, setTaxPct] = useState("");
+  const [status, setStatus] = useState<"paid" | "pending" | "cancelled">("pending");
 
 
   const defaultFirstDue = () => {
