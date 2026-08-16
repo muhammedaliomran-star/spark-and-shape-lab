@@ -123,9 +123,13 @@ function NewInvoicePage() {
   const blocked = customer && (customer.frozen || customer.status === "defaulter");
 
   const totalCost = products.reduce((s, p) => s + Number(p.cost || 0) * Number(p.quantity || 1), 0);
-  const totalPrice = products.reduce((s, p) => s + Number(p.price || 0) * Number(p.quantity || 1), 0);
+  const subtotal = products.reduce((s, p) => s + Number(p.price || 0) * Number(p.quantity || 1), 0);
+  const discountValue = Math.min(subtotal, Math.max(0, Number(discountAmt || 0)));
+  const afterDiscount = Math.max(0, subtotal - discountValue);
+  const taxValue = Math.max(0, (afterDiscount * Number(taxPct || 0)) / 100);
+  const totalPrice = afterDiscount + taxValue;
   const remaining = Math.max(0, totalPrice - Number(down || 0));
-  const profit = totalPrice - totalCost;
+  const profit = afterDiscount - totalCost;
   const profitPct = totalCost > 0 ? (profit / totalCost) * 100 : 0;
 
   const downNum = Number(down || 0);
