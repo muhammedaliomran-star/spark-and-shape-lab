@@ -449,9 +449,13 @@ function NewInvoicePage() {
               ))}
             </AnimatePresence>
           </div>
+          )}
 
+          {step === 3 && (
+          <div className="space-y-4">
           {/* لوح الدفع */}
           <div className="plate rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
+
             <div className="rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
               <AnimatePresence mode="wait" initial={false}>
                 {isCashMode ? (
