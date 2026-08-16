@@ -73,7 +73,7 @@ export default function PaymentsPage() {
             title="الدفعات" 
             icon={<Banknote className="h-7 w-7" />} 
             subtitle="إدارة سندات القبض والصرف" 
-          >
+            action={
             <Button 
               onClick={() => setIsDialogOpen(true)}
               className="rounded-full px-6 shadow-lg shadow-primary/20"
@@ -81,7 +81,7 @@ export default function PaymentsPage() {
               <Plus className="ml-2 h-4 w-4" />
               إضافة سند جديد
             </Button>
-          </PageHeader>
+          } />
 
           {/* Metrics Grid */}
           <Reveal className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -114,14 +114,14 @@ export default function PaymentsPage() {
             </div>
             <div className="flex gap-2">
               <Button 
-                variant={typeFilter === "all" ? "primary" : "outline"} 
+                variant={typeFilter === "all" ? "default" : "outline"} 
                 onClick={() => setTypeFilter("all")}
                 className="rounded-xl px-6 h-12"
               >
                 الكل
               </Button>
               <Button 
-                variant={typeFilter === "receipt" ? "primary" : "outline"} 
+                variant={typeFilter === "receipt" ? "default" : "outline"} 
                 onClick={() => setTypeFilter("receipt")}
                 className="rounded-xl px-6 h-12 gap-2"
               >
@@ -129,7 +129,7 @@ export default function PaymentsPage() {
                 قبض
               </Button>
               <Button 
-                variant={typeFilter === "payment" ? "primary" : "outline"} 
+                variant={typeFilter === "payment" ? "default" : "outline"} 
                 onClick={() => setTypeFilter("payment")}
                 className="rounded-xl px-6 h-12 gap-2"
               >
