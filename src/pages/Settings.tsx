@@ -119,14 +119,25 @@ function SettingsPage() {
       />
 
       <Tabs defaultValue="shop" dir="rtl" className="w-full text-right">
-        <TabsList dir="rtl" className="flex flex-wrap h-auto justify-start gap-1 mb-5">
-          <TabsTrigger value="shop" className="gap-1.5"><Store className="w-4 h-4" /> المحل</TabsTrigger>
-          <TabsTrigger value="billing" className="gap-1.5"><Receipt className="w-4 h-4" /> الفواتير والطباعة</TabsTrigger>
-          <TabsTrigger value="alerts" className="gap-1.5"><Bell className="w-4 h-4" /> التنبيهات</TabsTrigger>
-          <TabsTrigger value="appearance" className="gap-1.5"><Palette className="w-4 h-4" /> المظهر</TabsTrigger>
-          <TabsTrigger value="account" className="gap-1.5"><KeyRound className="w-4 h-4" /> الحساب</TabsTrigger>
-          <TabsTrigger value="team" className="gap-1.5"><Users className="w-4 h-4" /> الفريق والصلاحيات</TabsTrigger>
-          <TabsTrigger value="data" className="gap-1.5"><Database className="w-4 h-4" /> البيانات</TabsTrigger>
+        <TabsList dir="rtl" className="h-auto w-full bg-transparent justify-start gap-2 mb-8 border-b border-foreground/5 p-0 rounded-none overflow-x-auto custom-scrollbar no-scrollbar">
+          {[
+            { value: "shop", label: "المحل", icon: Store },
+            { value: "billing", label: "الفواتير والطباعة", icon: Receipt },
+            { value: "alerts", label: "التنبيهات", icon: Bell },
+            { value: "appearance", label: "المظهر", icon: Palette },
+            { value: "team", label: "الفريق", icon: Users },
+            { value: "account", label: "الحساب", icon: KeyRound },
+            { value: "data", label: "البيانات", icon: Database },
+          ].map((tab) => (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="relative h-11 px-6 gap-2 rounded-none border-b-2 border-transparent bg-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary transition-all duration-300 font-bold opacity-70 data-[state=active]:opacity-100 hover:opacity-100"
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         <TabsContent value="shop"><ShopTab form={form} set={set} /></TabsContent>
@@ -141,18 +152,30 @@ function SettingsPage() {
       </Tabs>
 
 
-      {/* Sticky save bar — every tab writes into the same settings row */}
-      <div className="sticky bottom-4 mt-6 z-20">
-        <div className="bg-card/95 backdrop-blur plate p-3 flex items-center justify-between gap-3">
-          <span className="text-xs text-muted-foreground">
-            {dirty ? "فيه تعديلات لسه متحفظتش" : "كل التعديلات محفوظة"}
-          </span>
+      <div className="sticky bottom-4 mt-12 z-20 mx-auto max-w-2xl px-4">
+        <div className="plate-glow flex items-center justify-between gap-6 rounded-[2rem] border border-primary/20 bg-background/80 p-3 backdrop-blur-xl shadow-2xl shadow-primary/10">
+          <div className="flex items-center gap-3 px-3">
+            <div className={cn("h-2 w-2 rounded-full animate-pulse", dirty ? "bg-warning" : "bg-success")} />
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+              {dirty ? "تغييرات غير محفوظة" : "الإعدادات محفوظة"}
+            </span>
+          </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="gap-1.5" disabled={!dirty} onClick={() => setForm(settings)}>
-              <RotateCcw className="w-4 h-4" /> تراجع
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-10 gap-2 rounded-2xl px-5 font-bold hover:bg-foreground/5"
+              disabled={!dirty}
+              onClick={() => setForm(settings)}
+            >
+              <RotateCcw className="w-4 h-4 opacity-60" /> تراجع
             </Button>
-            <Button onClick={save} disabled={busy || loading || !dirty} className="gap-1.5">
-              <Save className="w-4 h-4" /> {busy ? "جاري الحفظ..." : "حفظ الإعدادات"}
+            <Button
+              onClick={save}
+              disabled={busy || loading || !dirty}
+              className="h-10 gap-2 rounded-2xl bg-primary px-6 font-black text-black transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
+            >
+              <Save className="w-4 h-4" /> {busy ? "جاري الحفظ..." : "حفظ التغييرات"}
             </Button>
           </div>
         </div>
@@ -170,13 +193,19 @@ function Section({ icon, title, hint, children, className = "" }: {
   icon: React.ReactNode; title: string; hint?: string; children: React.ReactNode; className?: string;
 }) {
   return (
-    <section dir="rtl" className={`bg-card plate p-6 text-right ${className}`}>
-      <div className="flex items-center gap-2 mb-1">
-        <span className="text-primary">{icon}</span>
-        <h2 className="text-lg font-bold">{title}</h2>
+    <section dir="rtl" className={`plate-glow overflow-hidden rounded-[2rem] border border-foreground/10 bg-card/40 backdrop-blur-sm text-right ${className}`}>
+      <div className="flex items-center gap-3 border-b border-foreground/5 p-6 bg-foreground/[0.02]">
+        <div className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/10 text-primary">
+          {icon}
+        </div>
+        <div>
+          <h2 className="text-lg font-black tracking-tight">{title}</h2>
+          {hint && <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">{hint}</p>}
+        </div>
       </div>
-      {hint ? <p className="text-xs text-muted-foreground mb-5">{hint}</p> : <div className="mb-4" />}
-      {children}
+      <div className="p-6">
+        {children}
+      </div>
     </section>
   );
 }
@@ -200,7 +229,7 @@ function ShopTab({ form, set }: TabProps) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <Section icon={<Store className="w-5 h-5" />} title="هوية المحل" hint="الاسم والتليفون والعنوان بيتطبعوا في رأس كل فاتورة أو تقرير.">
+      <Section icon={<Store className="w-5 h-5" />} title="هوية المحل" hint="بيانات النشاط التجاري للمطبوعات">
         <div className="grid gap-3">
           <Field label="اسم المحل">
             <Input value={form.shopName} onChange={(e) => set("shopName", e.target.value)} placeholder="محل النور للأجهزة" maxLength={80} />
@@ -233,7 +262,7 @@ function ShopTab({ form, set }: TabProps) {
       </Section>
 
       <div className="grid gap-6 h-fit">
-        <Section icon={<Upload className="w-5 h-5" />} title="اللوجو" hint="ارفع صورة من جهازك أو حط رابط مباشر. بتتحفظ مع بيانات المحل وتظهر في الطباعة.">
+        <Section icon={<Upload className="w-5 h-5" />} title="شعار المحل" hint="أبعاد مربعة أفضل للطباعة">
           <div className="flex items-start gap-4">
             <div className="h-20 w-20 rounded-[1.25rem] hairline bg-foreground/[0.035] grid place-items-center overflow-hidden shrink-0">
               {form.logoUrl
@@ -262,7 +291,7 @@ function ShopTab({ form, set }: TabProps) {
           </div>
         </Section>
 
-        <Section icon={<Receipt className="w-5 h-5" />} title="معاينة رأس الفاتورة" hint="كده هيبان الهيدر في الورق المطبوع.">
+        <Section icon={<Receipt className="w-5 h-5" />} title="معاينة رأس الفاتورة" hint="شكل الهيدر في الورق">
           <div className="rounded-xl bg-background hairline p-4">
             <div className="flex items-start justify-between gap-3 border-b-2 border-primary pb-3">
               <div className="flex items-center gap-2">
