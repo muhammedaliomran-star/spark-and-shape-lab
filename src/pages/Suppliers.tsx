@@ -360,11 +360,21 @@ function StatBox({
 function SupplierFormDialog({
   open, onOpenChange, editing,
 }: { open: boolean; onOpenChange: (v: boolean) => void; editing: Supplier | null }) {
+  const data = useDB();
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [notes, setNotes] = useState("");
   const [opening, setOpening] = useState("0");
+  const [joinDate, setJoinDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [busy, setBusy] = useState(false);
+
+  const supplierCode = useMemo(() => {
+    if (editing) {
+      const idx = (data.suppliers ?? []).findIndex((s) => s.id === editing.id);
+      return `S-${String((idx < 0 ? 0 : idx) + 1).padStart(4, "0")}`;
+    }
+    return `S-${String((data.suppliers?.length ?? 0) + 1).padStart(4, "0")}`;
+  }, [data.suppliers, editing]);
 
   // Reset on open
   useMemoOnOpen(open, () => {
@@ -372,6 +382,7 @@ function SupplierFormDialog({
     setContact(editing?.contact ?? "");
     setNotes(editing?.notes ?? "");
     setOpening(String(editing?.openingBalance ?? 0));
+    setJoinDate((editing?.createdAt ?? new Date().toISOString()).slice(0, 10));
   });
 
   const submit = async () => {
@@ -396,6 +407,11 @@ function SupplierFormDialog({
     finally { setBusy(false); }
   };
 
+  const firstOfMonth = () => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent dir="rtl">
@@ -404,8 +420,31 @@ function SupplierFormDialog({
           <DialogDescription className="text-right">بيانات المورد ومديونيته الافتتاحية.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3 text-right">
+          <div>
+            <Label>كود المورد</Label>
+            <Input value={supplierCode} readOnly dir="ltr" className="font-mono tracking-wider text-muted-foreground" />
+          </div>
           <div><Label>الاسم</Label><Input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} /></div>
           <div><Label>رقم الهاتف</Label><Input value={contact} onChange={(e) => setContact(e.target.value)} dir="ltr" maxLength={30} /></div>
+          <div>
+            <Label>تاريخ انضمام المورد</Label>
+            <div className="relative">
+              <CalendarDays className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="date"
+                value={joinDate}
+                onChange={(e) => setJoinDate(e.target.value)}
+                className="pr-9 text-left"
+                dir="ltr"
+              />
+            </div>
+            <div className="flex gap-2 justify-end mt-2">
+              <Button type="button" variant="outline" size="sm" className="h-7 rounded-full px-3 text-[11px]"
+                onClick={() => setJoinDate(firstOfMonth())}>أول الشهر</Button>
+              <Button type="button" variant="outline" size="sm" className="h-7 rounded-full px-3 text-[11px]"
+                onClick={() => setJoinDate(new Date().toISOString().slice(0, 10))}>النهارده</Button>
+            </div>
+          </div>
           <div>
             <Label>مديونية افتتاحية (ج.م)</Label>
             <Input type="number" value={opening} onChange={(e) => setOpening(e.target.value)} />
@@ -420,6 +459,7 @@ function SupplierFormDialog({
     </Dialog>
   );
 }
+
 
 // Tiny helper: run effect when dialog transitions to open.
 function useMemoOnOpen(open: boolean, fn: () => void) {
