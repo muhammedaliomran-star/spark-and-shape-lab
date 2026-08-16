@@ -30,6 +30,7 @@ import { Route as SupportRouteImport } from './routes/support'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WarehouseRouteImport } from './routes/warehouse'
 import { Route as InventoryNewRouteImport } from './routes/inventory_.new'
+import { Route as InvoicesNewRouteImport } from './routes/invoices_.new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -136,6 +137,11 @@ const InventoryNewRoute = InventoryNewRouteImport.update({
   path: '/inventory/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InvoicesNewRoute = InvoicesNewRouteImport.update({
+  id: '/invoices_/new',
+  path: '/invoices/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/warehouse': typeof WarehouseRoute
   '/inventory/new': typeof InventoryNewRoute
+  '/invoices/new': typeof InvoicesNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -182,6 +189,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/warehouse': typeof WarehouseRoute
   '/inventory/new': typeof InventoryNewRoute
+  '/invoices/new': typeof InvoicesNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/warehouse': typeof WarehouseRoute
   '/inventory_/new': typeof InventoryNewRoute
+  '/invoices_/new': typeof InvoicesNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/warehouse'
     | '/inventory/new'
+    | '/invoices/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -254,6 +264,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/warehouse'
     | '/inventory/new'
+    | '/invoices/new'
   id:
     | '__root__'
     | '/'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/warehouse'
     | '/inventory_/new'
+    | '/invoices_/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -301,6 +313,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   WarehouseRoute: typeof WarehouseRoute
   InventoryNewRoute: typeof InventoryNewRoute
+  InvoicesNewRoute: typeof InvoicesNewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -452,6 +465,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InventoryNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/invoices_/new': {
+      id: '/invoices_/new'
+      path: '/invoices/new'
+      fullPath: '/invoices/new'
+      preLoaderRoute: typeof InvoicesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -477,6 +497,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   WarehouseRoute: WarehouseRoute,
   InventoryNewRoute: InventoryNewRoute,
+  InvoicesNewRoute: InvoicesNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
