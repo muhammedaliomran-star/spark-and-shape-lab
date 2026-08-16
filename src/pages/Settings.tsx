@@ -994,14 +994,14 @@ function TeamTab() {
           <div className="h-24 rounded-2xl bg-muted animate-pulse" />
         ) : (
           <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-4 p-6 rounded-[2rem] bg-primary/[0.03] border border-primary/10">
               {myRole ? <RoleBadge role={myRole} big /> : (
-                <span className="rounded-full bg-muted px-4 py-1.5 text-sm text-muted-foreground ring-1 ring-border">
+                <span className="rounded-xl bg-foreground/5 px-4 py-2 text-xs font-black uppercase tracking-widest text-muted-foreground border border-foreground/10">
                   بدون صلاحية
                 </span>
               )}
-              <span className="text-xs text-muted-foreground">
-                {myRole ? ROLE_HINT[myRole] : "مفيش صلاحية متسجلة لحسابك."}
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed opacity-60">
+                {myRole ? ROLE_HINT[myRole] : "لم يتم العثور على صلاحيات مسجلة لحسابك حالياً."}
               </span>
             </div>
 
@@ -1009,22 +1009,22 @@ function TeamTab() {
               <div className="overflow-x-auto rounded-[calc(2.5rem-0.5rem)] bg-card border border-white/5 shadow-xl">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border/70 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                      <th className="py-3 px-4 text-right font-medium">إيه اللي تقدر تعمله</th>
+                    <tr className="border-b border-foreground/5 text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 bg-foreground/[0.02]">
+                      <th className="py-4 px-6 text-right">صلاحيات النظام</th>
                       {ALL_ROLES.map((r) => (
-                        <th key={r} className="py-3 px-3 font-medium whitespace-nowrap">{ROLE_LABEL[r]}</th>
+                        <th key={r} className="py-4 px-4 whitespace-nowrap">{ROLE_LABEL[r]}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {ABILITIES.map((a) => (
-                      <tr key={a.label} className="border-b border-border/40 last:border-0">
-                        <td className="py-2.5 px-4 text-right">{a.label}</td>
+                      <tr key={a.label} className="border-b border-foreground/5 last:border-0 hover:bg-foreground/[0.01] transition-colors">
+                        <td className="py-3.5 px-6 text-right font-bold text-xs">{a.label}</td>
                         {ALL_ROLES.map((r) => {
                           const ok = a.roles.includes(r);
                           return (
-                            <td key={r} className={`py-2.5 px-3 text-center ${myRole === r ? "bg-primary/[0.04]" : ""}`}>
-                              <span className={ok ? "text-success" : "text-muted-foreground/40"}>{ok ? "✓" : "✗"}</span>
+                            <td key={r} className={`py-3.5 px-4 text-center ${myRole === r ? "bg-primary/[0.03]" : ""}`}>
+                              <span className={ok ? "text-success font-black" : "text-muted-foreground/20"}>{ok ? "✓" : "✗"}</span>
                             </td>
                           );
                         })}
@@ -1046,9 +1046,9 @@ function TeamTab() {
       >
         {isOwner && (
           <div className="mb-4 flex justify-start">
-            <Button onClick={() => setInviteOpen(true)} className="group rounded-full ps-6 pe-1.5 py-3 h-auto gap-3">
-              <span>دعوة عضو</span>
-              <span className="w-8 h-8 rounded-full bg-primary-foreground/15 grid place-items-center transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:-translate-x-1 group-hover:-translate-y-[1px]">
+            <Button onClick={() => setInviteOpen(true)} className="group rounded-[1.75rem] ps-6 pe-2 py-2 h-12 gap-4 bg-primary text-black font-black shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
+              <span className="text-xs uppercase tracking-widest">دعوة عضو جديد</span>
+              <span className="w-8 h-8 rounded-2xl bg-black/10 grid place-items-center transition-transform duration-500 group-hover:-translate-x-1">
                 <Mail className="w-4 h-4" />
               </span>
             </Button>
@@ -1068,7 +1068,7 @@ function TeamTab() {
               <p className="font-semibold">لسه مفيش أعضاء في الفريق</p>
               <p className="mt-1 text-xs text-muted-foreground">ابعت دعوة بالبريد وحدّد صلاحية العضو.</p>
               {isOwner && (
-                <Button onClick={() => setInviteOpen(true)} className="mt-5 rounded-full px-6">دعوة عضو</Button>
+                <Button onClick={() => setInviteOpen(true)} className="mt-5 rounded-2xl px-8 h-11 bg-primary text-black font-black shadow-lg shadow-primary/20">دعوة عضو</Button>
               )}
             </div>
           </div>
@@ -1082,17 +1082,17 @@ function TeamTab() {
                 <div className="rounded-[calc(2rem-0.5rem)] bg-card/80 p-4 flex items-center justify-between gap-4 border border-white/5 shadow-sm transition-all hover:shadow-md">
                   <div className="flex items-center gap-3 min-w-0">
                     {m.avatarUrl ? (
-                      <img src={m.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover ring-1 ring-border" />
+                      <img src={m.avatarUrl} alt="" className="w-10 h-10 rounded-2xl object-cover ring-1 ring-foreground/10" />
                     ) : (
-                      <span className="w-10 h-10 rounded-full bg-primary/10 text-primary grid place-items-center font-bold">
+                      <span className="w-10 h-10 rounded-2xl bg-primary/10 text-primary grid place-items-center font-black text-xs">
                         {m.displayName.slice(0, 1)}
                       </span>
                     )}
                     <div className="min-w-0">
-                      <div className="font-semibold truncate">
+                      <div className="font-black text-sm tracking-tight truncate">
                         {m.displayName}{m.isMe ? " (أنا)" : ""}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">آخر نشاط: {relativeTime(m.lastSeenAt)}</div>
+                      <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">آخر ظهور: {relativeTime(m.lastSeenAt)}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -1104,7 +1104,7 @@ function TeamTab() {
                           catch (e: any) { toast.error(e.message || "خطأ"); }
                         }}
                       >
-                        <SelectTrigger className="w-28 rounded-full"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="w-32 h-9 rounded-xl bg-foreground/[0.03] border-none font-bold text-[10px]"><SelectValue /></SelectTrigger>
                         <SelectContent dir="rtl">
                           {ALL_ROLES.map((r) => (
                             <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>
@@ -1117,7 +1117,7 @@ function TeamTab() {
                     {isOwner && !m.isMe && (
                       <Button
                         size="icon" variant="ghost" title="إزالة العضو"
-                        className="h-9 w-9 rounded-full text-muted-foreground hover:text-danger hover:bg-danger/10"
+                        className="h-9 w-9 rounded-xl text-muted-foreground hover:text-danger hover:bg-danger/10 transition-colors"
                         onClick={() => setRemoving(m.userId)}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1135,17 +1135,17 @@ function TeamTab() {
             <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">دعوات مُرسلة</p>
             <div className="space-y-2">
               {pending.map((iv) => (
-                <div key={iv.id} className="rounded-2xl border border-dashed border-border p-3 flex items-center justify-between gap-3">
+                <div key={iv.id} className="rounded-[1.75rem] border border-dashed border-foreground/10 p-4 flex items-center justify-between gap-4 bg-foreground/[0.01]">
                   <div className="min-w-0">
-                    <div className="truncate font-medium">{iv.email}</div>
-                    <div className="text-[11px] text-muted-foreground">
-                      بتنتهي {new Date(iv.expiresAt).toLocaleDateString("en-US")}
+                    <div className="truncate font-black text-xs">{iv.email}</div>
+                    <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                      تنتهي في: {new Date(iv.expiresAt).toLocaleDateString("en-US")}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <RoleBadge role={iv.role} />
                     <Button
-                      size="sm" variant="ghost" className="rounded-full text-muted-foreground hover:text-danger"
+                      size="sm" variant="ghost" className="rounded-xl h-9 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-danger hover:bg-danger/10 transition-colors"
                       onClick={async () => {
                         try { await revokeInvite(iv.id); toast.success("تم إلغاء الدعوة"); }
                         catch (e: any) { toast.error(e.message || "خطأ"); }
