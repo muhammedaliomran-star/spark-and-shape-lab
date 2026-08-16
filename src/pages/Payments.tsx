@@ -258,9 +258,10 @@ export default function PaymentsPage() {
       </PageTransition>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl">
+        <DialogContent dir="rtl" className="sm:max-w-[500px] p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl">
           <div className="glass-header sticky top-0 z-10 border-b border-[var(--hairline)] px-8 py-6">
             <DialogTitle className="text-2xl font-bold">تسجيل سند جديد</DialogTitle>
+            <p className="text-xs text-muted-foreground mt-1">قم بتسجيل عملية دفع أو تحصيل مالي جديدة</p>
           </div>
           <form onSubmit={handleSave} className="p-8 space-y-6">
             <div className="space-y-4">
@@ -268,34 +269,36 @@ export default function PaymentsPage() {
                 <Button 
                   type="button" 
                   variant="ghost" 
-                  className={cn("rounded-xl gap-2", typeFilter === "receipt" && "bg-background shadow-sm")}
+                  className={cn("rounded-xl gap-2 h-11 transition-all duration-300", typeFilter === "receipt" && "bg-background shadow-sm text-success")}
                   onClick={() => setTypeFilter("receipt")}
                 >
-                  <ArrowDownLeft className="h-4 w-4 text-success" />
-                  قبض
+                  <ArrowDownLeft className="h-4 w-4" />
+                  سند قبض
                 </Button>
                 <Button 
                   type="button" 
                   variant="ghost"
-                  className={cn("rounded-xl gap-2", typeFilter === "payment" && "bg-background shadow-sm")}
+                  className={cn("rounded-xl gap-2 h-11 transition-all duration-300", typeFilter === "payment" && "bg-background shadow-sm text-danger")}
                   onClick={() => setTypeFilter("payment")}
                 >
-                  <ArrowUpRight className="h-4 w-4 text-danger" />
-                  صرف
+                  <ArrowUpRight className="h-4 w-4" />
+                  سند صرف
                 </Button>
                 <input type="hidden" name="type" value={typeFilter === "all" ? "receipt" : typeFilter} />
               </div>
 
               <div className="space-y-2">
-                <Label>{typeFilter === "payment" ? "المورد" : "العميل"}</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pr-1">
+                  {typeFilter === "payment" ? "جهة الصرف (المورد)" : "جهة القبض (العميل)"}
+                </Label>
                 <Select name="partyId" required>
-                  <SelectTrigger className="h-12 rounded-2xl pr-4">
+                  <SelectTrigger className="h-12 rounded-2xl pr-4 bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-all">
                     <SelectValue placeholder={typeFilter === "payment" ? "اختر المورد..." : "اختر العميل..."} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent dir="rtl">
                     {typeFilter === "payment" 
-                      ? suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)
-                      : customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)
+                      ? suppliers.map(s => <SelectItem key={s.id} value={s.id} className="font-bold">{s.name}</SelectItem>)
+                      : customers.map(c => <SelectItem key={c.id} value={c.id} className="font-bold">{c.name}</SelectItem>)
                     }
                   </SelectContent>
                 </Select>
@@ -303,42 +306,79 @@ export default function PaymentsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="amount">المبلغ</Label>
-                  <Input id="amount" name="amount" type="number" required placeholder="0.00" className="h-12 rounded-2xl text-center text-lg font-bold" />
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pr-1">المبلغ</Label>
+                  <div className="relative">
+                    <Banknote className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                    <Input 
+                      id="amount" 
+                      name="amount" 
+                      type="number" 
+                      required 
+                      placeholder="0.00" 
+                      className="h-12 rounded-2xl text-center text-xl font-black bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-all pr-11" 
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="voucherDate">تاريخ السند</Label>
-                  <Input id="voucherDate" name="voucherDate" type="date" defaultValue={format(new Date(), "yyyy-MM-dd")} className="h-12 rounded-2xl" />
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pr-1">تاريخ السند</Label>
+                  <div className="relative">
+                    <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      id="voucherDate" 
+                      name="voucherDate" 
+                      type="date" 
+                      defaultValue={format(new Date(), "yyyy-MM-dd")} 
+                      className="h-12 rounded-2xl bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-all pr-11 text-xs font-bold" 
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>طريقة الدفع</Label>
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pr-1">طريقة الدفع</Label>
                 <Select name="paymentMethod" defaultValue="كاش">
-                  <SelectTrigger className="h-12 rounded-2xl pr-4">
-                    <SelectValue />
+                  <SelectTrigger className="h-12 rounded-2xl pr-4 bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-all">
+                    <div className="flex items-center gap-2">
+                      <Wallet className="h-4 w-4 text-primary" />
+                      <SelectValue />
+                    </div>
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="كاش">نقدي (كاش)</SelectItem>
-                    <SelectItem value="تحويل بنكي">تحويل بنكي</SelectItem>
-                    <SelectItem value="شيك">شيك بنكي</SelectItem>
-                    <SelectItem value="فودافون كاش">فودافون كاش</SelectItem>
+                  <SelectContent dir="rtl">
+                    <SelectItem value="كاش" className="font-bold">نقدي (كاش)</SelectItem>
+                    <SelectItem value="تحويل بنكي" className="font-bold">تحويل بنكي</SelectItem>
+                    <SelectItem value="شيك" className="font-bold">شيك بنكي</SelectItem>
+                    <SelectItem value="فودافون كاش" className="font-bold">فودافون كاش</SelectItem>
+                    <SelectItem value="أخرى" className="font-bold">وسيلة أخرى</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">ملاحظات / وصف</Label>
-                <Input id="description" name="description" placeholder="اكتب تفاصيل إضافية هنا..." className="h-12 rounded-2xl" />
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pr-1">ملاحظات / وصف</Label>
+                <div className="relative">
+                  <Receipt className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    id="description" 
+                    name="description" 
+                    placeholder="اكتب تفاصيل إضافية هنا..." 
+                    className="h-12 rounded-2xl bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-all pr-11 text-sm" 
+                  />
+                </div>
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-12 rounded-2xl font-bold text-lg shadow-lg shadow-primary/20">
-              تسجيل السند
-            </Button>
+            <div className="flex gap-3 pt-2">
+              <Button type="submit" className="flex-1 h-12 rounded-2xl font-black text-lg shadow-lg shadow-primary/20 bg-primary text-black transition-all hover:scale-[1.02] active:scale-[0.98]">
+                تسجيل السند
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="h-12 px-6 rounded-2xl border-foreground/10 hover:bg-foreground/5 transition-all">
+                إلغاء
+              </Button>
+            </div>
           </form>
         </DialogContent>
       </Dialog>
+
     </AppShell>
   );
 }
