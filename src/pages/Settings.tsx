@@ -330,10 +330,10 @@ function BillingTab({ form, set }: TabProps) {
         <div className="grid gap-3">
           <div className="grid sm:grid-cols-2 gap-3">
             <Field label="رمز العملة">
-              <Input value={form.currency} onChange={(e) => set("currency", e.target.value)} placeholder="ج.م" maxLength={10} />
+              <Input value={form.currency} onChange={(e) => set("currency", e.target.value)} placeholder="ج.م" maxLength={10} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
             </Field>
             <Field label="بادئة رقم الفاتورة" hint="مثال: INV → INV-0001">
-              <Input value={form.invoicePrefix} onChange={(e) => set("invoicePrefix", e.target.value.toUpperCase())} placeholder="INV" dir="ltr" maxLength={10} />
+              <Input value={form.invoicePrefix} onChange={(e) => set("invoicePrefix", e.target.value.toUpperCase())} placeholder="INV" dir="ltr" maxLength={10} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all" />
             </Field>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
@@ -342,6 +342,7 @@ function BillingTab({ form, set }: TabProps) {
                 type="number" min={1} max={60} inputMode="numeric"
                 value={form.defaultInstallmentMonths}
                 onChange={(e) => set("defaultInstallmentMonths", Number(e.target.value) || 1)}
+                className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all"
               />
             </Field>
             <Field label="يوم الاستحقاق الافتراضي" hint="من 1 لـ 28 من كل شهر">
@@ -349,11 +350,13 @@ function BillingTab({ form, set }: TabProps) {
                 type="number" min={1} max={28} inputMode="numeric"
                 value={form.defaultDueDay}
                 onChange={(e) => set("defaultDueDay", Number(e.target.value) || 1)}
+                className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all"
               />
             </Field>
           </div>
-          <div className="rounded-2xl bg-foreground/[0.04] p-3 text-xs text-muted-foreground leading-6">
-            مثال: فاتورة بـ <strong className="text-foreground">{fmt(12000)} {form.currency}</strong> على{" "}
+          <div className="rounded-[1.75rem] bg-primary/[0.04] p-5 text-[11px] text-muted-foreground leading-loose border border-primary/10">
+            <span className="block mb-2 font-black uppercase tracking-widest text-primary/60">معاينة الحسابات:</span>
+            فاتورة بقيمة <strong className="text-foreground">{fmt(12000)} {form.currency}</strong> على{" "}
             <strong className="text-foreground">{form.defaultInstallmentMonths}</strong> شهر →
             القسط ≈ <strong className="text-foreground">{fmt(12000 / Math.max(1, form.defaultInstallmentMonths))} {form.currency}</strong>{" "}
             يوم <strong className="text-foreground">{form.defaultDueDay}</strong> من كل شهر.
@@ -365,7 +368,7 @@ function BillingTab({ form, set }: TabProps) {
         <div className="grid gap-3">
           <Field label="مقاس الورق">
             <Select value={form.printPaper} onValueChange={(v) => set("printPaper", v as PrintPaper)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="a4">A4 — طابعة عادية</SelectItem>
                 <SelectItem value="thermal">حراري 80mm — طابعة كاشير</SelectItem>
