@@ -253,11 +253,14 @@ function ShopTab({ form, set }: TabProps) {
             <Textarea
               value={form.footerNote}
               onChange={(e) => set("footerNote", e.target.value)}
-              placeholder="البضاعة المباعة لا ترد ولا تستبدل بعد 14 يوم."
+              placeholder="مثال: البضاعة المباعة لا ترد ولا تستبدل بعد 14 يوم."
               maxLength={300}
               rows={3}
+              className="rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all resize-none p-4"
             />
-            <span className="text-[11px] text-muted-foreground">{form.footerNote.length}/300</span>
+            <div className="flex justify-end mt-1">
+              <span className="text-[10px] font-black tracking-widest text-muted-foreground/60">{form.footerNote.length}/300</span>
+            </div>
           </Field>
         </div>
       </Section>
@@ -285,8 +288,9 @@ function ShopTab({ form, set }: TabProps) {
               <Input
                 value={form.logoUrl?.startsWith("data:") ? "" : (form.logoUrl ?? "")}
                 onChange={(e) => set("logoUrl", e.target.value || null)}
-                placeholder="https://..."
+                placeholder="أو رابط مباشر للشعار https://..."
                 dir="ltr"
+                className="h-10 rounded-xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all"
               />
             </div>
           </div>
