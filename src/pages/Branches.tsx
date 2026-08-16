@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
 
 export default function BranchesPage() {
   const { branches, addBranch, updateBranch, removeBranch, loading } = useDB();
@@ -85,32 +87,12 @@ export default function BranchesPage() {
             </div>
           </Reveal>
 
-          {/* Main Branch */}
-          {mainBranch && (
-            <div className="flex flex-col gap-4">
-              <h2 className="text-lg font-bold flex items-center gap-2 px-1">
-                <Star className="h-5 w-5 text-warning fill-warning" />
-                الفرع الرئيسي
-              </h2>
-              <Reveal>
-                <BranchCard 
-                  branch={mainBranch} 
-                  onEdit={(b) => {
-                    setEditingBranch(b);
-                    setIsDialogOpen(true);
-                  }}
-                  onDelete={removeBranch}
-                />
-              </Reveal>
-            </div>
-          )}
-
-          {/* Other Branches */}
+          {/* Branches List */}
           <div className="flex flex-col gap-4">
-            <h2 className="text-lg font-bold px-1">باقي الفروع</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {otherBranches.map((branch, idx) => (
-                <Reveal key={branch.id} delay={idx * 0.1}>
+            <h2 className="text-lg font-bold px-1">قائمة الفروع</h2>
+            <div className="flex flex-col gap-3">
+              {branches.map((branch, idx) => (
+                <Reveal key={branch.id} delay={idx * 0.05}>
                   <BranchCard 
                     branch={branch} 
                     onEdit={(b) => {
@@ -121,13 +103,14 @@ export default function BranchesPage() {
                   />
                 </Reveal>
               ))}
-              {otherBranches.length === 0 && !mainBranch && !loading && (
-                <div className="col-span-full py-20 text-center text-muted-foreground plate italic">
+              {branches.length === 0 && !loading && (
+                <div className="py-20 text-center text-muted-foreground plate italic">
                   لا توجد فروع مسجلة حالياً
                 </div>
               )}
             </div>
           </div>
+
         </div>
       </PageTransition>
 
@@ -196,22 +179,56 @@ function BranchCard({ branch, onEdit, onDelete }: {
   onDelete: (id: string) => void;
 }) {
   return (
-    <div className="plate-glow bezel-lift group relative overflow-hidden p-6 flex flex-col gap-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center ring-1 ring-primary/20">
-            <GitBranch className="h-6 w-6 text-primary" />
+    <div className="plate-glow bezel-lift group relative overflow-hidden flex flex-col">
+      {/* Status Stripe */}
+      <div className={cn(
+        "absolute right-0 top-0 bottom-0 w-1.5 rounded-r-full",
+        branch.isMain ? "bg-warning" : "bg-primary"
+      )} />
+
+      <div className="flex items-center gap-6 p-5">
+        {/* Identity Column */}
+        <div className="flex flex-1 items-center gap-4 min-w-0">
+          <div className={cn(
+            "h-12 w-12 shrink-0 rounded-2xl flex items-center justify-center ring-1",
+            branch.isMain ? "bg-warning/10 ring-warning/20 text-warning" : "bg-primary/10 ring-primary/20 text-primary"
+          )}>
+            <GitBranch className="h-6 w-6" />
           </div>
-          <div>
-            <h3 className="font-bold text-lg">{branch.name}</h3>
-            <p className="text-sm text-muted-foreground flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
-              {branch.location || "بدون عنوان"}
-            </p>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="font-bold text-lg truncate">{branch.name}</span>
+              {branch.isMain && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-warning/20 font-bold text-warning uppercase">
+                  الفرع الرئيسي
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
+                {branch.location || "بدون عنوان"}
+              </span>
+              <span className="flex items-center gap-1">
+                <User className="h-3.5 w-3.5" />
+                المدير: {branch.managerName || "غير محدد"}
+              </span>
+            </div>
           </div>
         </div>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="icon" onClick={() => onEdit(branch)} className="h-8 w-8 rounded-full">
+
+        {/* Info Column */}
+        <div className="flex flex-col items-end gap-1 px-8 border-x border-[var(--hairline)]">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">رقم الهاتف</span>
+          <span className="text-xl font-black tabular-nums" dir="ltr">
+            {branch.phone || "---"}
+          </span>
+          <span className="text-[10px] text-muted-foreground font-medium">نشط</span>
+        </div>
+
+        {/* Actions Column */}
+        <div className="flex gap-2">
+          <Button variant="ghost" size="icon" onClick={() => onEdit(branch)} className="h-10 w-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
             <Pencil className="h-4 w-4" />
           </Button>
           <Button 
@@ -220,29 +237,13 @@ function BranchCard({ branch, onEdit, onDelete }: {
             onClick={() => {
               if (confirm("هل أنت متأكد من حذف هذا الفرع؟")) onDelete(branch.id);
             }} 
-            className="h-8 w-8 rounded-full text-danger hover:bg-danger/10"
+            className="h-10 w-10 rounded-full text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </div>
-
-      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[var(--hairline)]">
-        <div className="flex flex-col gap-1">
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">المدير المسئول</span>
-          <span className="text-sm font-semibold flex items-center gap-1.5">
-            <User className="h-3.5 w-3.5 text-primary" />
-            {branch.managerName || "غير محدد"}
-          </span>
-        </div>
-        <div className="flex flex-col gap-1">
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">رقم الهاتف</span>
-          <span className="text-sm font-semibold flex items-center gap-1.5" dir="ltr">
-            <Phone className="h-3.5 w-3.5 text-primary" />
-            {branch.phone || "---"}
-          </span>
-        </div>
-      </div>
     </div>
   );
 }
+
