@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   Plus, AlertTriangle, ShieldAlert, Trash2, CalendarIcon, Package, ScanLine,
-  Receipt, Banknote, ArrowRight,
+  Receipt, Banknote, ArrowRight, Eye, EyeOff
 } from "lucide-react";
 
 export default function Page() {
@@ -38,7 +38,7 @@ export default function Page() {
 function NewInvoicePage() {
   const data = useDB();
   const { settings: shop } = useShopSettings();
-  const { privacy } = usePrivacy();
+  const { privacy, toggle } = usePrivacy();
   const navigate = useNavigate();
   const blurCls = privacy ? "privacy-blur" : "privacy-clear";
 
@@ -258,6 +258,11 @@ function NewInvoicePage() {
         e.preventDefault();
         if (!blockReason) submit(false);
       }
+      if ((e.ctrlKey || e.metaKey) && (e.key === "h" || e.key === "ا")) {
+        e.preventDefault();
+        toggle();
+        toast.info(privacy ? "تم إظهار بيانات الربح" : "تم إخفاء بيانات الربح (وضع الخصوصية)");
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -273,6 +278,18 @@ function NewInvoicePage() {
         icon={<Receipt className="h-7 w-7" />}
         action={
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggle}
+              className={cn(
+                "h-10 w-10 rounded-full transition-colors",
+                privacy ? "bg-warning/10 text-warning hover:bg-warning/20" : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10"
+              )}
+              title={privacy ? "إظهار الأرباح (Ctrl+H)" : "إخفاء الأرباح (Ctrl+H)"}
+            >
+              {privacy ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </Button>
             <span className="rounded-full border border-primary/30 bg-primary/10 px-4 py-2 font-mono text-sm font-bold tracking-wider text-primary">
               {invoiceCode}
             </span>
@@ -352,10 +369,10 @@ function NewInvoicePage() {
                   <Badge variant="outline" className={cn("gap-1 font-bold",
                     customerInfo.balance > 0 ? "bg-danger/10 text-danger border-danger/40" : "bg-success/10 text-success border-success/40"
                   )}>
-                    مديونية حالية: <span className={blurCls}>{fmt(customerInfo.balance)} ج.م</span>
+                    مديونية حالية: {fmt(customerInfo.balance)} ج.م
                   </Badge>
                   <Badge variant="outline" className="bg-primary/10 text-primary border-primary/40 font-bold">
-                    سقف الائتمان: <span className={blurCls}>{customerInfo.limit > 0 ? `${fmt(customerInfo.limit)} ج.م` : "بدون حد"}</span>
+                    سقف الائتمان: {customerInfo.limit > 0 ? `${fmt(customerInfo.limit)} ج.م` : "بدون حد"}
                   </Badge>
                   {customerInfo.wouldExceed && (
                     <Badge variant="outline" className="bg-warning/15 text-warning border-warning/40 gap-1">
@@ -482,7 +499,7 @@ function NewInvoicePage() {
                         </div>
                         <div>
                           {idx === 0 && <Label className="mb-1 block text-[10px] text-muted-foreground">سعر البيع</Label>}
-                          <Input type="number" value={p.price} onChange={(e) => updateProduct(p.id, { price: e.target.value })} className={cn(blurCls, "h-9 bg-white/5 border-white/10 text-center")} />
+                          <Input type="number" value={p.price} onChange={(e) => updateProduct(p.id, { price: e.target.value })} className="h-9 bg-white/5 border-white/10 text-center" />
                         </div>
                         <div className="flex justify-end">
                           <Button
@@ -496,7 +513,7 @@ function NewInvoicePage() {
                         </div>
                       </div>
                       <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
-                        <span className={cn("font-bold text-muted-foreground", blurCls)}>
+                        <span className="font-bold text-muted-foreground">
                           الإجمالي: {fmt(lineTotal)} ج.م
                         </span>
                         {s && (
@@ -515,7 +532,7 @@ function NewInvoicePage() {
             <div className="plate rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-1.5">
               <div className="space-y-3 rounded-[calc(1.75rem-0.375rem)] bg-background/50 p-4">
                 <div className="flex items-center justify-between">
-                  <span className={cn("text-xs font-bold", discountValue > 0 ? "text-primary" : "text-muted-foreground/50", blurCls)}>
+                  <span className={cn("text-xs font-bold", discountValue > 0 ? "text-primary" : "text-muted-foreground/50")}>
                     − {fmt(discountValue)} ج.م
                   </span>
                   <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">الخصم</Label>
@@ -844,7 +861,7 @@ function NewInvoicePage() {
                 <div className="space-y-1">
                   <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">إجمالي سعر البيع</span>
                   <div className="flex items-baseline gap-1">
-                    <span className={cn("text-xl font-bold tracking-tight", blurCls)}>{fmt(totalPrice)}</span>
+                    <span className="text-xl font-bold tracking-tight">{fmt(totalPrice)}</span>
                     <span className="text-[10px] font-bold text-muted-foreground/40">ج.م</span>
                   </div>
                 </div>
@@ -906,12 +923,12 @@ function NewInvoicePage() {
 
               <div className="space-y-2 text-sm">
                 <Row label="عدد المنتجات" value={String(products.filter((p) => p.name.trim()).length)} />
-                <Row label="الإجمالي قبل الخصم" value={`${fmt(subtotal)} ج.م`} valueClass={blurCls} />
-                {discountValue > 0 && <Row label="الخصم" value={`− ${fmt(discountValue)} ج.م`} valueClass={blurCls} />}
-                {taxValue > 0 && <Row label={`الضريبة (${Number(taxPct || 0)}%)`} value={`${fmt(taxValue)} ج.م`} valueClass={blurCls} />}
-                <Row label="إجمالي الفاتورة" value={`${fmt(totalPrice)} ج.م`} valueClass={blurCls} />
-                <Row label={isCashMode ? "المدفوع الآن" : "المقدم"} value={`${fmt(isCashMode ? totalPrice : downNum)} ج.م`} valueClass={blurCls} />
-                {!isCashMode && <Row label="المتبقي للتقسيط" value={`${fmt(remaining)} ج.م`} valueClass={blurCls} />}
+                <Row label="الإجمالي قبل الخصم" value={`${fmt(subtotal)} ج.م`} />
+                {discountValue > 0 && <Row label="الخصم" value={`− ${fmt(discountValue)} ج.م`} />}
+                {taxValue > 0 && <Row label={`الضريبة (${Number(taxPct || 0)}%)`} value={`${fmt(taxValue)} ج.م`} />}
+                <Row label="إجمالي الفاتورة" value={`${fmt(totalPrice)} ج.م`} />
+                <Row label={isCashMode ? "المدفوع الآن" : "المقدم"} value={`${fmt(isCashMode ? totalPrice : downNum)} ج.م`} />
+                {!isCashMode && <Row label="المتبقي للتقسيط" value={`${fmt(remaining)} ج.م`} />}
                 {!isCashMode && countNum > 0 && <Row label="عدد الأقساط" value={String(countNum)} />}
               </div>
 
@@ -920,7 +937,7 @@ function NewInvoicePage() {
                   {isCashMode ? "إجمالي الفاتورة" : "المقدم الآن"}
                 </span>
                 <div className="flex items-baseline gap-1">
-                  <span className={cn("text-4xl font-black leading-none tracking-tighter text-primary", blurCls)}>
+                  <span className="text-4xl font-black leading-none tracking-tighter text-primary">
                     {fmt(isCashMode ? totalPrice : downNum)}
                   </span>
                   <span className="text-xs font-bold text-primary">ج.م</span>
@@ -977,7 +994,7 @@ function NewInvoicePage() {
           </Button>
           <div className="text-right">
             <span className="block text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">الإجمالي</span>
-            <span className={cn("text-lg font-black leading-none text-primary", blurCls)}>{fmt(totalPrice)}</span>
+            <span className="text-lg font-black leading-none text-primary">{fmt(totalPrice)}</span>
           </div>
         </div>
       </div>
