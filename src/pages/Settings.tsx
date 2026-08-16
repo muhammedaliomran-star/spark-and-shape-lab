@@ -126,7 +126,7 @@ function SettingsPage() {
             { value: "billing", label: "الفواتير والطباعة", icon: Receipt },
             { value: "alerts", label: "التنبيهات", icon: Bell },
             { value: "appearance", label: "المظهر", icon: Palette },
-            { value: "team", label: "الفريق", icon: Users },
+            { value: "team", label: "الفريق والصلاحيات", icon: Users },
             { value: "account", label: "الحساب", icon: KeyRound },
             { value: "data", label: "البيانات", icon: Database },
           ].map((tab) => (
@@ -265,7 +265,7 @@ function ShopTab({ form, set }: TabProps) {
         </div>
       </Section>
 
-      <div className="grid gap-6 h-fit">
+      <div className="grid gap-6 h-fit order-first lg:order-none">
         <Section icon={<Upload className="w-5 h-5" />} title="شعار المحل" hint="أبعاد مربعة أفضل للطباعة">
           <div className="flex items-start gap-4">
             <div className="h-24 w-24 rounded-[2rem] border-2 border-dashed border-foreground/10 bg-foreground/[0.02] grid place-items-center overflow-hidden shrink-0 transition-all hover:border-primary/40 hover:bg-primary/5">
@@ -445,23 +445,56 @@ const THEMES: Array<{ value: ThemeMode; label: string; desc: string }> = [
 
 function AppearanceTab({ form, set }: TabProps) {
   return (
-    <Section icon={<Palette className="w-5 h-5" />} title="سمة التطبيق" hint="تخصيص تجربة المستخدم البصرية">
-      <div className="grid sm:grid-cols-3 gap-3">
-        {THEMES.map((t) => (
-          <button
-            key={t.value}
-            type="button"
-            onClick={() => set("theme", t.value)}
-            className={`text-right rounded-[1.75rem] border-2 p-5 transition-all duration-500 hover:scale-[1.02] active:scale-[0.98] ${
-              form.theme === t.value ? "border-primary bg-primary/10 shadow-lg shadow-primary/10" : "border-foreground/5 bg-foreground/[0.02] hover:bg-foreground/[0.05]"
-            }`}
-          >
-            <div className="text-sm font-black mb-1">{t.label}</div>
-            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">{t.desc}</div>
-          </button>
-        ))}
-      </div>
-    </Section>
+    <div className="grid gap-6 animate-[fade-in_0.3s_ease-out]">
+      <Section icon={<Palette className="w-5 h-5" />} title="وضع العرض" hint="اختر وضع النهار أو الليل، ثم اختر لوحة الألوان التي تناسبك.">
+        <div className="grid sm:grid-cols-3 gap-3">
+          {THEMES.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => set("theme", t.value)}
+              className={`text-right rounded-[1.75rem] border-2 p-5 transition-all duration-500 hover:scale-[1.02] active:scale-[0.98] ${
+                form.theme === t.value ? "border-primary bg-primary/10 shadow-lg shadow-primary/10" : "border-foreground/5 bg-foreground/[0.02] hover:bg-foreground/[0.05]"
+              }`}
+            >
+              <div className="text-sm font-black mb-1">{t.label}</div>
+              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">{t.desc}</div>
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      <Section icon={<Palette className="w-5 h-5" />} title="ألوان الثيم" hint="١٠ لوحات ألوان، وكل لوحة مهيأة لتظل واضحة في الوضعين الليلي والنهاري.">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {[
+            { label: "زمردي", sub: "الأصل الهادئ", color: "#10b981" },
+            { label: "عنبري", sub: "إضاءة دافئة", color: "#f59e0b" },
+            { label: "ياقوتي", sub: "أزرق عميق", color: "#3b82f6" },
+            { label: "بنفسجي", sub: "تباين ناعم", color: "#8b5cf6" },
+            { label: "وردي", sub: "دفء عصري", color: "#ec4899" },
+            { label: "أوركيد", sub: "بنفسجي وردي", color: "#d946ef" },
+            { label: "محيطي", sub: "أزرق منعش", color: "#06b6d4" },
+            { label: "نحاسي", sub: "طابع راق", color: "#b45309" },
+            { label: "ليموني", sub: "حيوية متزنة", color: "#84cc16" },
+            { label: "فحمي", sub: "محايد ودقيق", color: "#4b5563" },
+          ].map((c) => (
+            <div key={c.label} className={cn("plate bezel-lift p-4 cursor-pointer border-2 transition-all", c.label === "زمردي" ? "border-primary bg-primary/5" : "border-transparent")}>
+              <div className="flex justify-between items-start mb-4">
+                 <div className="flex gap-1">
+                   <div className="w-2 h-2 rounded-full bg-foreground/20" />
+                   <div className="w-2 h-2 rounded-full bg-foreground/10" />
+                   <div className="w-2 h-2 rounded-full bg-background" />
+                 </div>
+                 {c.label === "زمردي" && <div className="w-2 h-2 rounded-full bg-white ring-2 ring-primary ring-offset-2 ring-offset-background" />}
+              </div>
+              <div className="text-xs font-black">{c.label}</div>
+              <div className="text-[9px] text-muted-foreground font-bold">{c.sub}</div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 text-[10px] text-muted-foreground font-bold text-center opacity-60">تُحفظ اختياراتك فوراً وتظل ثابتة بعد تسجيل الدخول والريلود.</p>
+      </Section>
+    </div>
   );
 }
 
@@ -988,7 +1021,7 @@ function TeamTab() {
       <Section
         icon={<ShieldCheck className="w-5 h-5" />}
         title="صلاحيتك"
-        hint="الصلاحيات محفوظة في قاعدة البيانات وبتتفحص على السيرفر — مش من المتصفح."
+        hint="حدد للمدير والبائع إيه اللي يقدروا يعملوه. صلاحية المالك ثابتة ومش قابلة للتعديل."
       >
         {roleLoading ? (
           <div className="h-24 rounded-2xl bg-muted animate-pulse" />
