@@ -193,6 +193,7 @@ function NewInvoicePage() {
     setNotes("");
     setSaleType("installments");
     setCashPaid("");
+    setDiscountPct(""); setDiscountAmt(""); setTaxPct(""); setStatus("pending");
   };
 
   const submit = async (stay = false) => {
