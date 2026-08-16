@@ -226,6 +226,9 @@ function NewInvoicePage() {
       await db.addInvoice({
         customerId, total: t, downPayment: isCash ? t : d, monthlyInstallment: m,
         firstDueDate: iso, notes: productNotes, paid: isCash ? t : d,
+        discountPct: Number(discountPct || 0), discountAmount: discountValue,
+        taxPct: Number(taxPct || 0), taxAmount: taxValue,
+        status: isCash ? "paid" : status,
         items: validProducts.flatMap((p) => {
           const qty = Math.max(1, Number(p.quantity || 1));
           return Array.from({ length: qty }, () => ({
