@@ -27,6 +27,7 @@ import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ShippingRouteImport } from './routes/shipping'
 import { Route as SuppliersRouteImport } from './routes/suppliers'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -127,6 +128,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShippingRoute = ShippingRouteImport.update({
+  id: '/shipping',
+  path: '/shipping',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SuppliersRoute = SuppliersRouteImport.update({
   id: '/suppliers',
   path: '/suppliers',
@@ -192,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
+  '/shipping': typeof ShippingRoute
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
+  '/shipping': typeof ShippingRoute
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
+  '/shipping': typeof ShippingRoute
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
@@ -281,6 +290,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/returns'
     | '/settings'
+    | '/shipping'
     | '/suppliers'
     | '/support'
     | '/terms'
@@ -309,6 +319,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/returns'
     | '/settings'
+    | '/shipping'
     | '/suppliers'
     | '/support'
     | '/terms'
@@ -338,6 +349,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/returns'
     | '/settings'
+    | '/shipping'
     | '/suppliers'
     | '/support'
     | '/terms'
@@ -368,6 +380,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ReturnsRoute: typeof ReturnsRoute
   SettingsRoute: typeof SettingsRoute
+  ShippingRoute: typeof ShippingRoute
   SuppliersRoute: typeof SuppliersRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
@@ -506,6 +519,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shipping': {
+      id: '/shipping'
+      path: '/shipping'
+      fullPath: '/shipping'
+      preLoaderRoute: typeof ShippingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/suppliers': {
       id: '/suppliers'
       path: '/suppliers'
@@ -602,6 +622,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ReturnsRoute: ReturnsRoute,
   SettingsRoute: SettingsRoute,
+  ShippingRoute: ShippingRoute,
   SuppliersRoute: SuppliersRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
