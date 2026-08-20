@@ -255,7 +255,7 @@ function CustomersPage() {
         subtitle={`'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
                                         
                                             
-                                            مالتالى`}
+                                            تحقق من أن جميع النصوص المضافة في صفحة العملاء تظهر بالضبط كما طلبت بدون أي تغيير بصري آخر.`}
         action={
           <div className="flex items-center gap-2">
             <TooltipProvider>
