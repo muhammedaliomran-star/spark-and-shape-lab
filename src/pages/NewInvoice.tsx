@@ -937,8 +937,8 @@ function NewInvoicePage() {
               type="button"
               variant="outline"
               className="rounded-full px-6"
-              disabled={step === 3}
-              onClick={() => setStep((s) => Math.min(3, s + 1))}
+              disabled={step === 4}
+              onClick={() => setStep((s) => Math.min(4, s + 1))}
             >
               الخطوة التالية
             </Button>
@@ -951,6 +951,7 @@ function NewInvoicePage() {
             >
               الخطوة السابقة
             </Button>
+
           </div>
         </div>
 
