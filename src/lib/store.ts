@@ -1025,6 +1025,8 @@ export const db = {
     if (error) throw error;
     await fetchAll();
   },
+};
+
 
 export const WAREHOUSE_SEASONS: { value: WarehouseSeason; label: string }[] = [
   { value: "all", label: "عام / مستمر" },
