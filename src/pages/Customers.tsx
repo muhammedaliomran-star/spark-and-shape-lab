@@ -1590,50 +1590,73 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
             />
           </div>
 
-          {/* Status tabs */}
-          <div>
-            <Label>حالة الالتزام</Label>
-            <Tabs value={status} onValueChange={(v) => setStatus(v as CustomerStatus)}>
-              <TabsList className="grid grid-cols-3 w-full">
-                {STATUS_TABS.map((t) => (
-                  <TabsTrigger key={t.value} value={t.value} className={cn("gap-1.5", t.active)}>
-                    <span className={cn("w-2 h-2 rounded-full", t.dot)} />
-                    {t.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-          </div>
+          {/* لوح خاص بحالة الالتزام والتقييم - يختفي عند العميل الفوري */}
+          <AnimatePresence mode="wait" initial={false}>
+            {customerType === "installment" && (
+              <motion.div
+                key="rating-section"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-4 overflow-hidden"
+              >
+                {/* Status tabs */}
+                <div>
+                  <Label>حالة الالتزام</Label>
+                  <Tabs 
+                    value={status} 
+                    onValueChange={(v) => {
+                      const newStatus = v as CustomerStatus;
+                      setStatus(newStatus);
+                      // Link status to rating: committed -> 5, neutral -> 3, defaulter -> 1
+                      if (newStatus === "committed") setRating(5);
+                      else if (newStatus === "neutral") setRating(3);
+                      else if (newStatus === "defaulter") setRating(1);
+                    }}
+                  >
+                    <TabsList className="grid grid-cols-3 w-full">
+                      {STATUS_TABS.map((t) => (
+                        <TabsTrigger key={t.value} value={t.value} className={cn("gap-1.5", t.active)}>
+                          <span className={cn("w-2 h-2 rounded-full", t.dot)} />
+                          {t.label}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+                </div>
 
-          {/* Star rating */}
-          <div>
-            <Label>التقييم</Label>
-            <div className="flex items-center gap-1" dir="ltr">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setRating(n)}
-                  className="p-1 hover:scale-110 transition-transform"
-                  aria-label={`${n} stars`}
-                >
-                  <Star
-                    className={cn("w-6 h-6 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]", n <= rating ? "fill-warning text-warning" : "text-muted-foreground/40")}
-                  />
-                </button>
-              ))}
-            </div>
-            <div className={cn("mt-2 flex items-start gap-2 rounded-xl border px-3 py-2 text-xs", tip.cls)}>
-              <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-              <span className="text-right flex-1">{tip.text}</span>
-            </div>
-          </div>
+                {/* Star rating */}
+                <div>
+                  <Label>التقييم</Label>
+                  <div className="flex items-center gap-1" dir="ltr">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setRating(n)}
+                        className="p-1 hover:scale-110 transition-transform"
+                        aria-label={`${n} stars`}
+                      >
+                        <Star
+                          className={cn("w-6 h-6 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]", n <= rating ? "fill-warning text-warning" : "text-muted-foreground/40")}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <div className={cn("mt-2 flex items-start gap-2 rounded-xl border px-3 py-2 text-xs", tip.cls)}>
+                    <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                    <span className="text-right flex-1">{tip.text}</span>
+                  </div>
+                </div>
 
-          {/* Notes */}
-          <div>
-            <Label>ملاحظات (اختياري)</Label>
-            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="أي ملاحظات إضافية..." maxLength={300} />
-          </div>
+                {/* Notes */}
+                <div>
+                  <Label>ملاحظات (اختياري)</Label>
+                  <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="أي ملاحظات إضافية..." maxLength={300} />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Freeze */}
           <div className="rounded-2xl hairline p-3">
