@@ -80,6 +80,43 @@ export interface InvoiceItem {
 
 export type ExpenseCategory = "rent" | "electricity" | "salaries" | "transport" | "other";
 
+export interface ShipmentCarrier {
+  id: string;
+  name: string;
+  contactPerson: string | null;
+  phone: string | null;
+  email: string | null;
+  baseCost: number;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface ShippingZone {
+  id: string;
+  name: string;
+  carrierId: string;
+  deliveryCost: number;
+  estimatedDays: number;
+  createdAt: string;
+}
+
+export type ShipmentStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'returned' | 'cancelled';
+
+export interface Shipment {
+  id: string;
+  invoiceId: string | null;
+  carrierId: string | null;
+  zoneId: string | null;
+  trackingNumber: string | null;
+  status: ShipmentStatus;
+  recipientName: string | null;
+  recipientPhone: string | null;
+  deliveryAddress: string | null;
+  actualDeliveryDate: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
 export interface Expense {
   id: string;
   amount: number;
@@ -88,6 +125,7 @@ export interface Expense {
   notes: string | null;
   createdAt: string;
 }
+
 
 export interface Supplier {
   id: string;
@@ -185,7 +223,8 @@ export interface StockItem {
   updatedAt: string;
 }
 
-interface DBState {
+export interface DBState {
+
   customers: Customer[];
   invoices: Invoice[];
   payments: Payment[];
@@ -201,6 +240,10 @@ interface DBState {
   returnItems: ReturnItem[];
   branches: Branch[];
   paymentVouchers: PaymentVoucher[];
+  carriers: ShipmentCarrier[];
+  zones: ShippingZone[];
+  shipments: Shipment[];
+
   loading: boolean;
   addBranch: (b: Omit<Branch, "id" | "createdAt">) => Promise<void>;
   updateBranch: (id: string, patch: Partial<Branch>) => Promise<void>;
@@ -224,7 +267,14 @@ interface DBState {
   }>;
   
   refresh: () => Promise<void>;
+  
+  // Shipping
+  addCarrier: (c: Omit<ShipmentCarrier, "id" | "createdAt">) => Promise<void>;
+  updateCarrier: (id: string, patch: Partial<ShipmentCarrier>) => Promise<void>;
+  addShipment: (s: Omit<Shipment, "id" | "createdAt">) => Promise<void>;
+  updateShipmentStatus: (id: string, status: ShipmentStatus) => Promise<void>;
 }
+
 
 const listeners = new Set<() => void>();
 let cache: {
@@ -236,12 +286,17 @@ let cache: {
   returnItems: ReturnItem[];
   branches: Branch[];
   paymentVouchers: PaymentVoucher[];
+  carriers: ShipmentCarrier[];
+  zones: ShippingZone[];
+  shipments: Shipment[];
 } = {
   customers: [], invoices: [], payments: [], expenses: [], invoiceItems: [],
   suppliers: [], purchases: [], purchaseItems: [], supplierPayments: [], stockItems: [], warehouseItems: [],
   returns: [], returnItems: [],
   branches: [], paymentVouchers: [],
+  carriers: [], zones: [], shipments: [],
 };
+
 let loading = true;
 let loaded = false;
 
@@ -252,12 +307,12 @@ async function fetchAll() {
   notify();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    cache = { customers: [], invoices: [], payments: [], expenses: [], invoiceItems: [], suppliers: [], purchases: [], purchaseItems: [], supplierPayments: [], stockItems: [], warehouseItems: [], returns: [], returnItems: [], branches: [], paymentVouchers: [] };
+    cache = { customers: [], invoices: [], payments: [], expenses: [], invoiceItems: [], suppliers: [], purchases: [], purchaseItems: [], supplierPayments: [], stockItems: [], warehouseItems: [], returns: [], returnItems: [], branches: [], paymentVouchers: [], carriers: [], zones: [], shipments: [] };
     loading = false;
     notify();
     return;
   }
-  const [c, i, p, e, ii, s, pu, pi, sp, st, wh, rr, ri, br, pv] = await Promise.all([
+  const [c, i, p, e, ii, s, pu, pi, sp, st, wh, rr, ri, br, pv, sc, sz, sh] = await Promise.all([
     supabase.from("customers").select("*").order("name"),
     supabase.from("invoices").select("*").order("created_at", { ascending: false }),
     supabase.from("payments").select("*"),
@@ -273,7 +328,11 @@ async function fetchAll() {
     supabase.from("return_items").select("*").order("created_at"),
     (supabase.from as any)("branches").select("*").order("name"),
     (supabase.from as any)("payment_vouchers").select("*").order("voucher_date", { ascending: false }),
+    (supabase.from as any)("shipping_carriers").select("*").order("name"),
+    (supabase.from as any)("shipping_zones").select("*").order("name"),
+    (supabase.from as any)("shipments").select("*").order("created_at", { ascending: false }),
   ]);
+
   cache = {
     customers: (c.data ?? []).map((r: any) => ({
       id: r.id, name: r.name, phone: r.phone, rating: r.rating,
@@ -358,6 +417,22 @@ async function fetchAll() {
       paymentMethod: r.payment_method, description: r.description,
       voucherDate: r.voucher_date, createdAt: r.created_at,
     })),
+    carriers: (sc.data ?? []).map((r: any) => ({
+      id: r.id, name: r.name, contactPerson: r.contact_person, phone: r.phone,
+      email: r.email, baseCost: Number(r.base_cost ?? 0), active: r.active, createdAt: r.created_at,
+    })),
+    zones: (sz.data ?? []).map((r: any) => ({
+      id: r.id, name: r.name, carrierId: r.carrier_id,
+      deliveryCost: Number(r.delivery_cost ?? 0), estimatedDays: r.estimated_days ?? 2, createdAt: r.created_at,
+    })),
+    shipments: (sh.data ?? []).map((r: any) => ({
+      id: r.id, invoiceId: r.invoice_id, carrierId: r.carrier_id, zoneId: r.zone_id,
+      trackingNumber: r.tracking_number, status: r.status as ShipmentStatus,
+      recipientName: r.recipient_name, recipientPhone: r.recipient_phone,
+      deliveryAddress: r.delivery_address, actualDeliveryDate: r.actual_delivery_date,
+      notes: r.notes, createdAt: r.created_at,
+    })),
+
   };
   loading = false;
   loaded = true;
@@ -377,6 +452,10 @@ export function useDB(): DBState {
     ...cache, 
     loading, 
     refresh,
+    carriers: cache.carriers,
+    zones: cache.zones,
+    shipments: cache.shipments,
+
     addBranch: db.addBranch,
     updateBranch: db.updateBranch,
     removeBranch: db.removeBranch,
@@ -385,10 +464,15 @@ export function useDB(): DBState {
     addPurchase: db.addPurchase,
     removePurchase: db.removePurchase,
     getFinancialReport: db.getFinancialReport,
+    addCarrier: db.addCarrier,
+    updateCarrier: db.updateCarrier,
+    addShipment: db.addShipment,
+    updateShipmentStatus: db.updateShipmentStatus,
+
   };
 }
 
-async function uid() {
+export async function uid() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
   return user.id;
@@ -1034,7 +1118,47 @@ export const db = {
     if (error) throw error;
     await fetchAll();
   },
+  // Shipping
+  async addCarrier(c: Omit<ShipmentCarrier, "id" | "createdAt">) {
+    const user_id = await uid();
+    const { error } = await (supabase.from as any)("shipping_carriers").insert({
+      user_id, name: c.name, contact_person: c.contactPerson, phone: c.phone,
+      email: c.email, base_cost: c.baseCost, active: c.active
+    });
+    if (error) throw error;
+    await fetchAll();
+  },
+  async updateCarrier(id: string, patch: Partial<ShipmentCarrier>) {
+    const upd: any = {};
+    if (patch.name !== undefined) upd.name = patch.name;
+    if (patch.contactPerson !== undefined) upd.contact_person = patch.contactPerson;
+    if (patch.phone !== undefined) upd.phone = patch.phone;
+    if (patch.email !== undefined) upd.email = patch.email;
+    if (patch.baseCost !== undefined) upd.base_cost = patch.baseCost;
+    if (patch.active !== undefined) upd.active = patch.active;
+    const { error } = await (supabase.from as any)("shipping_carriers").update(upd).eq("id", id);
+    if (error) throw error;
+    await fetchAll();
+  },
+  async addShipment(s: Omit<Shipment, "id" | "createdAt">) {
+    const user_id = await uid();
+    const { error } = await (supabase.from as any)("shipments").insert({
+      user_id, invoice_id: s.invoiceId, carrier_id: s.carrierId, zone_id: s.zoneId,
+      tracking_number: s.trackingNumber, status: s.status,
+      recipient_name: s.recipientName, recipient_phone: s.recipientPhone,
+      delivery_address: s.deliveryAddress, actual_delivery_date: s.actualDeliveryDate,
+      notes: s.notes
+    });
+    if (error) throw error;
+    await fetchAll();
+  },
+  async updateShipmentStatus(id: string, status: ShipmentStatus) {
+    const { error } = await (supabase.from as any)("shipments").update({ status }).eq("id", id);
+    if (error) throw error;
+    await fetchAll();
+  },
 };
+
 
 
 export const WAREHOUSE_SEASONS: { value: WarehouseSeason; label: string }[] = [

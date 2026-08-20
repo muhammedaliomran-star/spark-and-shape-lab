@@ -5,7 +5,9 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { PageTransition } from "@/components/PageTransition";
 import { StockProductPicker, type ProductRow } from "@/pages/Invoices";
-import { useDB, db, fmt, customerBalance, useShopSettings } from "@/lib/store";
+import { useDB, db, fmt, customerBalance, useShopSettings, uid } from "@/lib/store";
+import { supabase } from "@/integrations/supabase/client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,8 +24,9 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   Plus, AlertTriangle, ShieldAlert, Trash2, CalendarIcon, Package, ScanLine,
-  Receipt, Banknote, ArrowRight, Eye, EyeOff
+  Receipt, Banknote, ArrowRight, Eye, EyeOff, Truck, Undo2
 } from "lucide-react";
+
 
 export default function Page() {
   return (
@@ -59,6 +62,11 @@ function NewInvoicePage() {
   const [discountAmt, setDiscountAmt] = useState("");
   const [taxPct, setTaxPct] = useState("");
   const [status, setStatus] = useState<"paid" | "pending" | "cancelled">("pending");
+  const [shippingCarrierId, setShippingCarrierId] = useState("");
+  const [shippingZoneId, setShippingZoneId] = useState("");
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [trackingNumber, setTrackingNumber] = useState("");
+
 
 
   const defaultFirstDue = () => {
@@ -194,7 +202,9 @@ function NewInvoicePage() {
     setSaleType("installments");
     setCashPaid("");
     setDiscountPct(""); setDiscountAmt(""); setTaxPct(""); setStatus("pending");
+    setShippingCarrierId(""); setShippingZoneId(""); setShippingAddress(""); setTrackingNumber("");
   };
+
 
   const submit = async (stay = false) => {
     if (!customerId) return toast.error("اختر عميل");
@@ -224,19 +234,56 @@ function NewInvoicePage() {
     const summary = validProducts.map((p) => `${p.name.trim()}${Number(p.quantity) > 1 ? ` ×${p.quantity}` : ""}`).join("، ");
     const productNotes = `${summary}${notes ? ` — ${notes}` : ""}`;
     try {
-      await db.addInvoice({
-        customerId, total: t, downPayment: isCash ? t : d, monthlyInstallment: m,
-        firstDueDate: iso, notes: productNotes, paid: isCash ? t : d,
-        discountPct: Number(discountPct || 0), discountAmount: discountValue,
-        taxPct: Number(taxPct || 0), taxAmount: taxValue,
+      const { data: invData, error: invErr } = await (supabase.from as any)("invoices").insert({
+        user_id: await uid(),
+        customer_id: customerId,
+        total: t,
+        down_payment: isCash ? t : d,
+        monthly_installment: m,
+        first_due_date: iso,
+        notes: productNotes,
+        paid: isCash ? t : d,
+        discount_pct: Number(discountPct || 0),
+        discount_amount: discountValue,
+        tax_pct: Number(taxPct || 0),
+        tax_amount: taxValue,
         status: isCash ? "paid" : status,
-        items: validProducts.flatMap((p) => {
+      }).select("id").single();
+
+      if (invErr) throw invErr;
+
+      // Add Invoice Items
+      if (validProducts.length > 0 && invData?.id) {
+        const itemRows = validProducts.flatMap((p) => {
           const qty = Math.max(1, Number(p.quantity || 1));
           return Array.from({ length: qty }, () => ({
-            name: p.name.trim(), cost: Number(p.cost || 0), price: Number(p.price || 0),
+            user_id: invData.user_id,
+            invoice_id: invData.id,
+            name: p.name.trim(),
+            cost: Number(p.cost || 0),
+            price: Number(p.price || 0),
           }));
-        }),
-      });
+        });
+        const { error: itemsErr } = await supabase.from("invoice_items").insert(itemRows);
+        if (itemsErr) throw itemsErr;
+      }
+
+      // Add Shipment if carrier selected
+      if (shippingCarrierId && invData?.id) {
+        const { error: shipErr } = await (supabase.from as any)("shipments").insert({
+          user_id: await uid(),
+          invoice_id: invData.id,
+          carrier_id: shippingCarrierId,
+          zone_id: shippingZoneId || null,
+          tracking_number: trackingNumber || null,
+          status: 'pending',
+          recipient_name: customer?.name,
+          recipient_phone: customer?.phone,
+          delivery_address: shippingAddress || customer?.address,
+        });
+        if (shipErr) throw shipErr;
+      }
+
       const deductions = validProducts
         .filter((p) => p.stockId)
         .map((p) => ({ stockId: p.stockId!, quantity: Number(p.quantity || 0) }));
@@ -311,8 +358,10 @@ function NewInvoicePage() {
             {[
               { n: 1, label: "العميل والنوع" },
               { n: 2, label: `المنتجات (${products.length})` },
-              { n: 3, label: "الدفع والأقساط" },
+              { n: 3, label: "الشحن" },
+              { n: 4, label: "الدفع والأقساط" },
             ].map((s) => (
+
               <button
                 key={s.n}
                 type="button"
@@ -631,8 +680,74 @@ function NewInvoicePage() {
           )}
 
           {step === 3 && (
-          <div className="space-y-4">
-          {/* لوح الدفع */}
+            <div className="space-y-4">
+              <div className="plate rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
+                <div className="space-y-6 rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <Badge className="gap-1.5 border border-primary/40 bg-primary/15 px-3 py-1 text-primary">
+                      <Truck className="h-3.5 w-3.5" /> تفاصيل الشحن
+                    </Badge>
+                    <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">اختياري</Label>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="text-xs">شركة الشحن</Label>
+                      <Select value={shippingCarrierId} onValueChange={setShippingCarrierId}>
+                        <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04]">
+                          <SelectValue placeholder="اختر الشركة" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {data.carriers.filter((c: any) => c.active).map((c: any) => (
+                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs">المنطقة / المحافظة</Label>
+                      <Select value={shippingZoneId} onValueChange={setShippingZoneId} disabled={!shippingCarrierId}>
+                        <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04]">
+                          <SelectValue placeholder="اختر المنطقة" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {data.zones.filter((z: any) => z.carrierId === shippingCarrierId).map((z: any) => (
+                            <SelectItem key={z.id} value={z.id}>{z.name} ({z.deliveryCost} ج.م)</SelectItem>
+                          ))}
+                        </SelectContent>
+
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs">عنوان التوصيل</Label>
+                    <Input 
+                      value={shippingAddress} 
+                      onChange={(e) => setShippingAddress(e.target.value)} 
+                      placeholder={customer?.address || "اكتب العنوان هنا..."}
+                      className="h-11 rounded-2xl border-white/10 bg-white/[0.04]"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs">رقم التتبع (إن وجد)</Label>
+                    <Input 
+                      value={trackingNumber} 
+                      onChange={(e) => setTrackingNumber(e.target.value)} 
+                      placeholder="رقم البوليصة"
+                      className="h-11 rounded-2xl border-white/10 bg-white/[0.04]"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="space-y-4">
+
           <div className="plate rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
 
             <div className="rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
@@ -889,8 +1004,8 @@ function NewInvoicePage() {
               type="button"
               variant="outline"
               className="rounded-full px-6"
-              disabled={step === 3}
-              onClick={() => setStep((s) => Math.min(3, s + 1))}
+              disabled={step === 4}
+              onClick={() => setStep((s) => Math.min(4, s + 1))}
             >
               الخطوة التالية
             </Button>
@@ -903,6 +1018,7 @@ function NewInvoicePage() {
             >
               الخطوة السابقة
             </Button>
+
           </div>
         </div>
 
