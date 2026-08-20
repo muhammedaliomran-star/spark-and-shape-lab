@@ -679,7 +679,72 @@ function NewInvoicePage() {
           )}
 
           {step === 3 && (
-          <div className="space-y-4">
+            <div className="space-y-4">
+              <div className="plate rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
+                <div className="space-y-6 rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <Badge className="gap-1.5 border border-primary/40 bg-primary/15 px-3 py-1 text-primary">
+                      <Truck className="h-3.5 w-3.5" /> تفاصيل الشحن
+                    </Badge>
+                    <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">اختياري</Label>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="text-xs">شركة الشحن</Label>
+                      <Select value={shippingCarrierId} onValueChange={setShippingCarrierId}>
+                        <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04]">
+                          <SelectValue placeholder="اختر الشركة" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {db.carriers.filter(c => c.active).map((c) => (
+                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs">المنطقة / المحافظة</Label>
+                      <Select value={shippingZoneId} onValueChange={setShippingZoneId} disabled={!shippingCarrierId}>
+                        <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04]">
+                          <SelectValue placeholder="اختر المنطقة" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {db.zones.filter(z => z.carrierId === shippingCarrierId).map((z) => (
+                            <SelectItem key={z.id} value={z.id}>{z.name} ({z.deliveryCost} ج.م)</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs">عنوان التوصيل</Label>
+                    <Input 
+                      value={shippingAddress} 
+                      onChange={(e) => setShippingAddress(e.target.value)} 
+                      placeholder={customer?.address || "اكتب العنوان هنا..."}
+                      className="h-11 rounded-2xl border-white/10 bg-white/[0.04]"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs">رقم التتبع (إن وجد)</Label>
+                    <Input 
+                      value={trackingNumber} 
+                      onChange={(e) => setTrackingNumber(e.target.value)} 
+                      placeholder="رقم البوليصة"
+                      className="h-11 rounded-2xl border-white/10 bg-white/[0.04]"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+
           {/* لوح الدفع */}
           <div className="plate rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
 
