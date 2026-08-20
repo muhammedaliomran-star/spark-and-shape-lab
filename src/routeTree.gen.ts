@@ -33,6 +33,9 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WarehouseRouteImport } from './routes/warehouse'
 import { Route as InventoryNewRouteImport } from './routes/inventory_.new'
 import { Route as InvoicesNewRouteImport } from './routes/invoices_.new'
+import { Route as PurchasesIndexRouteImport } from './routes/purchases/index'
+import { Route as PurchasesNewRouteImport } from './routes/purchases/new'
+import { Route as ReportsIndexRouteImport } from './routes/reports/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -154,6 +157,21 @@ const InvoicesNewRoute = InvoicesNewRouteImport.update({
   path: '/invoices/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PurchasesIndexRoute = PurchasesIndexRouteImport.update({
+  id: '/purchases/',
+  path: '/purchases/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PurchasesNewRoute = PurchasesNewRouteImport.update({
+  id: '/purchases/new',
+  path: '/purchases/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsIndexRoute = ReportsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ReportsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -170,7 +188,7 @@ export interface FileRoutesByFullPath {
   '/landing': typeof LandingRoute
   '/payments': typeof PaymentsRoute
   '/privacy': typeof PrivacyRoute
-  '/reports': typeof ReportsRoute
+  '/reports': typeof ReportsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
@@ -180,6 +198,9 @@ export interface FileRoutesByFullPath {
   '/warehouse': typeof WarehouseRoute
   '/inventory/new': typeof InventoryNewRoute
   '/invoices/new': typeof InvoicesNewRoute
+  '/purchases/new': typeof PurchasesNewRoute
+  '/purchases/': typeof PurchasesIndexRoute
+  '/reports/': typeof ReportsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -196,7 +217,6 @@ export interface FileRoutesByTo {
   '/landing': typeof LandingRoute
   '/payments': typeof PaymentsRoute
   '/privacy': typeof PrivacyRoute
-  '/reports': typeof ReportsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
@@ -206,6 +226,9 @@ export interface FileRoutesByTo {
   '/warehouse': typeof WarehouseRoute
   '/inventory/new': typeof InventoryNewRoute
   '/invoices/new': typeof InvoicesNewRoute
+  '/purchases/new': typeof PurchasesNewRoute
+  '/purchases': typeof PurchasesIndexRoute
+  '/reports': typeof ReportsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -223,7 +246,7 @@ export interface FileRoutesById {
   '/landing': typeof LandingRoute
   '/payments': typeof PaymentsRoute
   '/privacy': typeof PrivacyRoute
-  '/reports': typeof ReportsRoute
+  '/reports': typeof ReportsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
@@ -233,6 +256,9 @@ export interface FileRoutesById {
   '/warehouse': typeof WarehouseRoute
   '/inventory_/new': typeof InventoryNewRoute
   '/invoices_/new': typeof InvoicesNewRoute
+  '/purchases/new': typeof PurchasesNewRoute
+  '/purchases/': typeof PurchasesIndexRoute
+  '/reports/': typeof ReportsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -261,6 +287,9 @@ export interface FileRouteTypes {
     | '/warehouse'
     | '/inventory/new'
     | '/invoices/new'
+    | '/purchases/new'
+    | '/purchases/'
+    | '/reports/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -277,7 +306,6 @@ export interface FileRouteTypes {
     | '/landing'
     | '/payments'
     | '/privacy'
-    | '/reports'
     | '/reset-password'
     | '/returns'
     | '/settings'
@@ -287,6 +315,9 @@ export interface FileRouteTypes {
     | '/warehouse'
     | '/inventory/new'
     | '/invoices/new'
+    | '/purchases/new'
+    | '/purchases'
+    | '/reports'
   id:
     | '__root__'
     | '/'
@@ -313,6 +344,9 @@ export interface FileRouteTypes {
     | '/warehouse'
     | '/inventory_/new'
     | '/invoices_/new'
+    | '/purchases/new'
+    | '/purchases/'
+    | '/reports/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -330,7 +364,7 @@ export interface RootRouteChildren {
   LandingRoute: typeof LandingRoute
   PaymentsRoute: typeof PaymentsRoute
   PrivacyRoute: typeof PrivacyRoute
-  ReportsRoute: typeof ReportsRoute
+  ReportsRoute: typeof ReportsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   ReturnsRoute: typeof ReturnsRoute
   SettingsRoute: typeof SettingsRoute
@@ -340,6 +374,8 @@ export interface RootRouteChildren {
   WarehouseRoute: typeof WarehouseRoute
   InventoryNewRoute: typeof InventoryNewRoute
   InvoicesNewRoute: typeof InvoicesNewRoute
+  PurchasesNewRoute: typeof PurchasesNewRoute
+  PurchasesIndexRoute: typeof PurchasesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -512,8 +548,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InvoicesNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/purchases/': {
+      id: '/purchases/'
+      path: '/purchases'
+      fullPath: '/purchases/'
+      preLoaderRoute: typeof PurchasesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/purchases/new': {
+      id: '/purchases/new'
+      path: '/purchases/new'
+      fullPath: '/purchases/new'
+      preLoaderRoute: typeof PurchasesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports/': {
+      id: '/reports/'
+      path: '/'
+      fullPath: '/reports/'
+      preLoaderRoute: typeof ReportsIndexRouteImport
+      parentRoute: typeof ReportsRoute
+    }
   }
 }
+
+interface ReportsRouteChildren {
+  ReportsIndexRoute: typeof ReportsIndexRoute
+}
+
+const ReportsRouteChildren: ReportsRouteChildren = {
+  ReportsIndexRoute: ReportsIndexRoute,
+}
+
+const ReportsRouteWithChildren =
+  ReportsRoute._addFileChildren(ReportsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -530,7 +598,7 @@ const rootRouteChildren: RootRouteChildren = {
   LandingRoute: LandingRoute,
   PaymentsRoute: PaymentsRoute,
   PrivacyRoute: PrivacyRoute,
-  ReportsRoute: ReportsRoute,
+  ReportsRoute: ReportsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   ReturnsRoute: ReturnsRoute,
   SettingsRoute: SettingsRoute,
@@ -540,6 +608,8 @@ const rootRouteChildren: RootRouteChildren = {
   WarehouseRoute: WarehouseRoute,
   InventoryNewRoute: InventoryNewRoute,
   InvoicesNewRoute: InvoicesNewRoute,
+  PurchasesNewRoute: PurchasesNewRoute,
+  PurchasesIndexRoute: PurchasesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

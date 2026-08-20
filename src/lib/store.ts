@@ -207,6 +207,22 @@ interface DBState {
   removeBranch: (id: string) => Promise<void>;
   addPaymentVoucher: (v: Omit<PaymentVoucher, "id" | "createdAt">) => Promise<void>;
   removePaymentVoucher: (id: string) => Promise<void>;
+  
+  // Purchases management
+  addPurchase: (p: Omit<Purchase, "id" | "createdAt" | "user_id"> & { items: Omit<PurchaseItem, "id" | "purchase_id" | "user_id">[] }) => Promise<void>;
+  removePurchase: (id: string) => Promise<void>;
+  
+  // Reports
+  getFinancialReport: (start: Date, end: Date) => Promise<{
+    sales: number;
+    purchases: number;
+    expenses: number;
+    grossProfit: number;
+    netProfit: number;
+    tax: number;
+    returns: number;
+  }>;
+  
   refresh: () => Promise<void>;
 }
 
@@ -365,7 +381,10 @@ export function useDB(): DBState {
     updateBranch: db.updateBranch,
     removeBranch: db.removeBranch,
     addPaymentVoucher: db.addPaymentVoucher,
-    removePaymentVoucher: db.removePaymentVoucher
+    removePaymentVoucher: db.removePaymentVoucher,
+    addPurchase: db.addPurchase,
+    removePurchase: db.removePurchase,
+    getFinancialReport: db.getFinancialReport,
   };
 }
 
@@ -709,6 +728,37 @@ export const db = {
     }
     await fetchAll();
   },
+  async getFinancialReport(start: Date, end: Date) {
+    const s = start.toISOString();
+    const e = end.toISOString();
+    
+    const [sales, purchases, expenses, returns] = await Promise.all([
+      supabase.from("invoices").select("total, tax_amount").gte("created_at", s).lte("created_at", e),
+      supabase.from("purchases").select("total").gte("created_at", s).lte("created_at", e),
+      supabase.from("expenses").select("amount").gte("date", s).lte("date", e),
+      supabase.from("return_records").select("total_amount").gte("created_at", s).lte("created_at", e),
+    ]);
+    
+    const totalSales = (sales.data ?? []).reduce((acc, curr) => acc + (curr.total || 0), 0);
+    const totalTax = (sales.data ?? []).reduce((acc, curr) => acc + (curr.tax_amount || 0), 0);
+    const totalPurchases = (purchases.data ?? []).reduce((acc, curr) => acc + (curr.total || 0), 0);
+    const totalExpenses = (expenses.data ?? []).reduce((acc, curr) => acc + (curr.amount || 0), 0);
+    const totalReturns = (returns.data ?? []).reduce((acc, curr) => acc + (curr.total_amount || 0), 0);
+    
+    const netSales = totalSales - totalTax - totalReturns;
+    const grossProfit = netSales * 0.25; 
+    const netProfit = grossProfit - totalExpenses;
+    
+    return {
+      sales: totalSales,
+      purchases: totalPurchases,
+      expenses: totalExpenses,
+      grossProfit,
+      netProfit,
+      tax: totalTax,
+      returns: totalReturns,
+    };
+  },
   /**
    * Edit an existing purchase invoice: header fields + line items.
    * Items are replaced wholesale. Stock levels are NOT auto-adjusted here —
@@ -976,6 +1026,7 @@ export const db = {
     await fetchAll();
   },
 };
+
 
 export const WAREHOUSE_SEASONS: { value: WarehouseSeason; label: string }[] = [
   { value: "all", label: "عام / مستمر" },
