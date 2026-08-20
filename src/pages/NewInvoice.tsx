@@ -199,7 +199,9 @@ function NewInvoicePage() {
     setSaleType("installments");
     setCashPaid("");
     setDiscountPct(""); setDiscountAmt(""); setTaxPct(""); setStatus("pending");
+    setShippingCarrierId(""); setShippingZoneId(""); setShippingAddress(""); setTrackingNumber("");
   };
+
 
   const submit = async (stay = false) => {
     if (!customerId) return toast.error("اختر عميل");
