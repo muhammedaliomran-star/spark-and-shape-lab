@@ -381,7 +381,10 @@ export function useDB(): DBState {
     updateBranch: db.updateBranch,
     removeBranch: db.removeBranch,
     addPaymentVoucher: db.addPaymentVoucher,
-    removePaymentVoucher: db.removePaymentVoucher
+    removePaymentVoucher: db.removePaymentVoucher,
+    addPurchase: db.addPurchase,
+    removePurchase: db.removePurchase,
+    getFinancialReport: db.getFinancialReport,
   };
 }
 
@@ -724,6 +727,37 @@ export const db = {
       await restoreStockByName(items.map((it: any) => ({ name: it.name, quantity: -Number(it.quantity || 0) })));
     }
     await fetchAll();
+  },
+  async getFinancialReport(start: Date, end: Date) {
+    const s = start.toISOString();
+    const e = end.toISOString();
+    
+    const [sales, purchases, expenses, returns] = await Promise.all([
+      supabase.from("invoices").select("total, tax_amount").gte("created_at", s).lte("created_at", e),
+      supabase.from("purchases").select("total").gte("created_at", s).lte("created_at", e),
+      supabase.from("expenses").select("amount").gte("date", s).lte("date", e),
+      supabase.from("return_records").select("total_amount").gte("created_at", s).lte("created_at", e),
+    ]);
+    
+    const totalSales = (sales.data ?? []).reduce((acc, curr) => acc + (curr.total || 0), 0);
+    const totalTax = (sales.data ?? []).reduce((acc, curr) => acc + (curr.tax_amount || 0), 0);
+    const totalPurchases = (purchases.data ?? []).reduce((acc, curr) => acc + (curr.total || 0), 0);
+    const totalExpenses = (expenses.data ?? []).reduce((acc, curr) => acc + (curr.amount || 0), 0);
+    const totalReturns = (returns.data ?? []).reduce((acc, curr) => acc + (curr.total_amount || 0), 0);
+    
+    const netSales = totalSales - totalTax - totalReturns;
+    const grossProfit = netSales * 0.25; 
+    const netProfit = grossProfit - totalExpenses;
+    
+    return {
+      sales: totalSales,
+      purchases: totalPurchases,
+      expenses: totalExpenses,
+      grossProfit,
+      netProfit,
+      tax: totalTax,
+      returns: totalReturns,
+    };
   },
   /**
    * Edit an existing purchase invoice: header fields + line items.
