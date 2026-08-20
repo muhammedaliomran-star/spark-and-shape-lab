@@ -524,6 +524,11 @@
   line-height: 0.95;
   text-shadow: 0 10px 30px hsla(0, 0%, 0%, 0.3);
 }
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  text-shadow: 0 10px 30px hsla(0, 0%, 0%, 0.3);
+}
   line-height: 1.02;
   letter-spacing: -0.03em;
   font-weight: 800;

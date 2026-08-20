@@ -53,7 +53,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     navigate("/landing");
   };
   return (
-    <div dir="rtl" className="min-h-screen text-foreground flex">
+    <div dir="rtl" className="relative min-h-screen text-foreground flex overflow-hidden selection:bg-primary selection:text-black">
+      {/* Ambient background layer */}
+      <div className="fixed inset-0 z-[-1] ambient-mesh opacity-80" />
       {/* Sidebar */}
       <aside className="sticky top-0 hidden h-screen w-[17.5rem] shrink-0 flex-col gap-8 p-4 md:flex">
         <div className="glass flex h-full min-h-0 flex-col gap-6 overflow-hidden rounded-[1.75rem] p-5">

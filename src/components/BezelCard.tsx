@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 /**
  * Double-Bezel container: غلاف خارجي (tray) + قلب داخلي (plate)
  * بأنصاف أقطار متحدة المركز و inset highlight — إحساس عتاد مصنّع.
+ * تمت إضافة دعم لـ Backdrop Filter لتحسين مظهر Glassmorphism.
  */
 export const BezelCard = React.forwardRef<
   HTMLDivElement,
