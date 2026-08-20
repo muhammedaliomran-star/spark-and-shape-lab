@@ -698,7 +698,7 @@ function NewInvoicePage() {
                           <SelectValue placeholder="اختر الشركة" />
                         </SelectTrigger>
                         <SelectContent>
-                          {db.carriers.filter(c => c.active).map((c) => (
+                          {data.carriers.filter((c: any) => c.active).map((c: any) => (
                             <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                           ))}
                         </SelectContent>
@@ -712,10 +712,11 @@ function NewInvoicePage() {
                           <SelectValue placeholder="اختر المنطقة" />
                         </SelectTrigger>
                         <SelectContent>
-                          {db.zones.filter(z => z.carrierId === shippingCarrierId).map((z) => (
+                          {data.zones.filter((z: any) => z.carrierId === shippingCarrierId).map((z: any) => (
                             <SelectItem key={z.id} value={z.id}>{z.name} ({z.deliveryCost} ج.م)</SelectItem>
                           ))}
                         </SelectContent>
+
                       </Select>
                     </div>
                   </div>
