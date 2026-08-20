@@ -1153,8 +1153,24 @@ export const db = {
     await fetchAll();
   },
   async updateShipmentStatus(id: string, status: ShipmentStatus) {
-    const { error } = await (supabase.from as any)("shipments").update({ status }).eq("id", id);
+    const { data: shipment } = await (supabase.from as any)("shipments").select("invoice_id").eq("id", id).single();
+    const { error } = await (supabase.from as any)("shipments").update({ 
+      status,
+      actual_delivery_date: status === 'delivered' ? new Date().toISOString() : null
+    }).eq("id", id);
     if (error) throw error;
+
+    // Linkage logic: Update invoice status based on shipment status
+    if (shipment?.invoice_id) {
+      if (status === 'delivered') {
+        // If delivered, we can assume it's paid if it was pending delivery, 
+        // or just mark as paid to complete the cycle.
+        await supabase.from("invoices").update({ status: 'paid' }).eq("id", shipment.invoice_id);
+      } else if (status === 'returned') {
+        await supabase.from("invoices").update({ status: 'cancelled' }).eq("id", shipment.invoice_id);
+      }
+    }
+
     await fetchAll();
   },
 };

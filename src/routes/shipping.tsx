@@ -185,9 +185,27 @@ function ShippingPage() {
                         <p className="text-sm font-medium text-muted-foreground text-left">العنوان</p>
                         <p className="text-sm font-bold text-left truncate max-w-[200px]">{s.deliveryAddress}</p>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-muted">
-                        <History className="h-5 w-5" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Select 
+                          value={s.status} 
+                          onValueChange={(val) => db.updateShipmentStatus(s.id, val as ShipmentStatus)}
+                        >
+                          <SelectTrigger className="h-9 w-[130px] rounded-xl text-xs font-bold">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">قيد الانتظار</SelectItem>
+                            <SelectItem value="processing">جاري التجهيز</SelectItem>
+                            <SelectItem value="shipped">تم الشحن</SelectItem>
+                            <SelectItem value="delivered">تم التوصيل</SelectItem>
+                            <SelectItem value="returned">مرتجع</SelectItem>
+                            <SelectItem value="cancelled">ملغي</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-muted">
+                          <History className="h-5 w-5" />
+                        </Button>
+                      </div>
                     </BezelCard>
                   </Reveal>
                 ))
