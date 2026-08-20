@@ -97,9 +97,12 @@ function ReportsPage() {
       if (row) row.expenses += e.amount;
     }
     for (const pu of purchases) {
-      if (pu.paymentType !== "cash") continue;
       const row = base.get(monthKey(new Date(pu.purchaseDate)));
-      if (row) row.expenses += pu.total;
+      if (!row) continue;
+      // Cash purchases are like immediate expenses for cash flow/net profit purposes in this view
+      if (pu.paymentType === "cash") {
+        row.expenses += pu.total;
+      }
     }
     return months.map((m) => {
       const r = base.get(m)!;
