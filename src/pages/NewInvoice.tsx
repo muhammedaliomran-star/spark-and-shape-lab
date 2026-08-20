@@ -24,8 +24,9 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   Plus, AlertTriangle, ShieldAlert, Trash2, CalendarIcon, Package, ScanLine,
-  Receipt, Banknote, ArrowRight, Eye, EyeOff
+  Receipt, Banknote, ArrowRight, Eye, EyeOff, Truck, Undo2
 } from "lucide-react";
+
 
 export default function Page() {
   return (
