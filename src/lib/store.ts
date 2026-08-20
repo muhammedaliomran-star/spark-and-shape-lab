@@ -732,11 +732,12 @@ export const db = {
     const s = start.toISOString();
     const e = end.toISOString();
     
-    const [sales, purchases, expenses, returns] = await Promise.all([
-      supabase.from("invoices").select("total, tax_amount").gte("created_at", s).lte("created_at", e),
-      supabase.from("purchases").select("total").gte("created_at", s).lte("created_at", e),
-      supabase.from("expenses").select("amount").gte("date", s).lte("date", e),
+    const [sales, purchases, expenses, returns, saleItems] = await Promise.all([
+      supabase.from("invoices").select("id, total, tax_amount").gte("created_at", s).lte("created_at", e),
+      supabase.from("purchases").select("total").gte("purchase_date", s).lte("purchase_date", e),
+      supabase.from("expenses").select("amount, category").gte("expense_date", s).lte("expense_date", e),
       supabase.from("return_records").select("total_amount").gte("created_at", s).lte("created_at", e),
+      supabase.from("invoice_items").select("invoice_id, cost"),
     ]);
     
     const totalSales = (sales.data ?? []).reduce((acc, curr) => acc + (curr.total || 0), 0);
@@ -746,7 +747,14 @@ export const db = {
     const totalReturns = (returns.data ?? []).reduce((acc, curr) => acc + (curr.total_amount || 0), 0);
     
     const netSales = totalSales - totalTax - totalReturns;
-    const grossProfit = netSales * 0.25; 
+
+    // Accurate COGS calculation
+    const periodInvoiceIds = new Set((sales.data ?? []).map(i => i.id));
+    const periodSaleItems = (saleItems.data ?? []).filter(item => periodInvoiceIds.has(item.invoice_id));
+    const cogs = periodSaleItems.reduce((sum, item) => sum + (Number(item.cost) || 0), 0);
+    
+    // Fallback if no costs recorded
+    const grossProfit = cogs > 0 ? (netSales - cogs) : (netSales * 0.25);
     const netProfit = grossProfit - totalExpenses;
     
     return {
@@ -757,6 +765,7 @@ export const db = {
       netProfit,
       tax: totalTax,
       returns: totalReturns,
+      expenseBreakdown: (expenses.data ?? []),
     };
   },
   /**
