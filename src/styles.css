@@ -136,6 +136,17 @@
     background-repeat: no-repeat;
     color: hsl(var(--foreground));
     font-family: 'Cairo', system-ui, sans-serif;
+    position: relative;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
   [role="dialog"][data-state="open"] {
@@ -237,6 +248,11 @@
     radial-gradient(58rem 38rem at 86% -12%, hsl(160 84% 42% / 0.26), transparent 62%),
     radial-gradient(44rem 34rem at 4% 12%, hsl(186 78% 46% / 0.14), transparent 62%),
     radial-gradient(52rem 40rem at 48% 112%, hsl(160 70% 38% / 0.18), transparent 66%);
+
+  /* Impeccable style inspiration tokens */
+  --imp-bg-strong: hsla(166, 20%, 7%, 0.8);
+  --imp-border-light: hsla(0, 0%, 100%, 0.08);
+  --imp-glow: 0 0 40px -10px hsla(160, 84%, 39%, 0.3);
 }
 
 
@@ -254,31 +270,32 @@
 @utility bezel-shell {
   padding: var(--bezel-pad);
   border-radius: var(--bezel-outer-radius);
-  background: linear-gradient(160deg, hsl(0 0% 100% / 0.06), hsl(0 0% 100% / 0.015));
+  background: linear-gradient(160deg, hsl(0 0% 100% / 0.08), hsl(0 0% 100% / 0.02));
+  backdrop-filter: blur(8px);
   box-shadow:
-    inset 0 1px 0 hsl(0 0% 100% / 0.07),
+    inset 0 1px 0 hsl(0 0% 100% / 0.1),
     0 0 0 1px hsl(0 0% 100% / 0.05),
     var(--shadow-ambient);
   transition:
-    transform 0.7s var(--ease-fluid),
-    box-shadow 0.7s var(--ease-fluid);
+    transform 0.6s var(--ease-fluid),
+    box-shadow 0.6s var(--ease-fluid);
 }
 
 @utility bezel-core {
   height: 100%;
   border-radius: calc(var(--bezel-outer-radius) - var(--bezel-pad));
-  background: linear-gradient(165deg, hsl(var(--card)), hsl(var(--card) / 0.82));
+  background: linear-gradient(165deg, hsl(var(--card) / 0.95), hsl(var(--card) / 0.85));
   box-shadow:
-    inset 0 1px 1px hsl(0 0% 100% / 0.08),
-    inset 0 0 0 1px hsl(0 0% 100% / 0.035);
+    inset 0 1px 1px hsl(0 0% 100% / 0.1),
+    inset 0 0 0 1px hsl(0 0% 100% / 0.04);
 }
 
 @utility bezel-lift {
   &:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px) scale(1.005);
     box-shadow:
-      inset 0 1px 0 hsl(0 0% 100% / 0.1),
-      var(--shadow-glow),
+      inset 0 1px 0 hsl(0 0% 100% / 0.15),
+      var(--imp-glow),
       var(--shadow-ambient);
   }
 }
@@ -388,21 +405,25 @@
 /* --- Surface plate: بديل موحّد للبطاقات المسطّحة ------------- */
 @utility plate {
   border-radius: 1.4rem;
-  background: linear-gradient(165deg, hsl(var(--card)), hsl(var(--card) / 0.82));
+  background: linear-gradient(165deg, var(--imp-bg-strong), hsl(var(--card) / 0.6));
+  backdrop-filter: blur(12px);
   box-shadow:
-    inset 0 1px 1px hsl(0 0% 100% / 0.075),
+    inset 0 1px 1px var(--imp-border-light),
     inset 0 0 0 1px hsl(0 0% 100% / 0.05),
     0 20px 50px -26px hsl(240 20% 2% / 0.7);
   transition:
-    transform 0.7s var(--ease-fluid),
-    box-shadow 0.7s var(--ease-fluid);
+    transform 0.5s var(--ease-fluid),
+    box-shadow 0.5s var(--ease-fluid),
+    background-color 0.5s var(--ease-fluid);
   
   &:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px) scale(1.01);
+    background: linear-gradient(165deg, hsl(var(--card) / 0.9), hsl(var(--card) / 0.7));
     box-shadow:
-      inset 0 1px 1px hsl(0 0% 100% / 0.1),
+      inset 0 1px 1px hsl(0 0% 100% / 0.12),
       0 20px 60px -20px hsl(240 20% 2% / 0.8),
-      0 0 0 1px hsl(var(--primary) / 0.1);
+      var(--imp-glow),
+      0 0 0 1px hsl(var(--primary) / 0.2);
   }
 }
 
@@ -498,6 +519,15 @@
 @utility text-hero {
   font-family: var(--font-display);
   font-size: clamp(2.5rem, 6.5vw, 5.25rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  text-shadow: 0 10px 30px hsla(0, 0%, 0%, 0.3);
+}
+
+@utility text-display-lg {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3.5rem);
   line-height: 1.02;
   letter-spacing: -0.03em;
   font-weight: 800;
