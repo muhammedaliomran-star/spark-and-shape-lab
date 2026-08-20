@@ -357,8 +357,10 @@ function NewInvoicePage() {
             {[
               { n: 1, label: "العميل والنوع" },
               { n: 2, label: `المنتجات (${products.length})` },
-              { n: 3, label: "الدفع والأقساط" },
+              { n: 3, label: "الشحن" },
+              { n: 4, label: "الدفع والأقساط" },
             ].map((s) => (
+
               <button
                 key={s.n}
                 type="button"
