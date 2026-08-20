@@ -5,7 +5,9 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { PageTransition } from "@/components/PageTransition";
 import { StockProductPicker, type ProductRow } from "@/pages/Invoices";
-import { useDB, db, fmt, customerBalance, useShopSettings } from "@/lib/store";
+import { useDB, db, fmt, customerBalance, useShopSettings, uid } from "@/lib/store";
+import { supabase } from "@/integrations/supabase/client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
