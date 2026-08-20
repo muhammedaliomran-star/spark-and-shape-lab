@@ -59,6 +59,11 @@ function NewInvoicePage() {
   const [discountAmt, setDiscountAmt] = useState("");
   const [taxPct, setTaxPct] = useState("");
   const [status, setStatus] = useState<"paid" | "pending" | "cancelled">("pending");
+  const [shippingCarrierId, setShippingCarrierId] = useState("");
+  const [shippingZoneId, setShippingZoneId] = useState("");
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [trackingNumber, setTrackingNumber] = useState("");
+
 
 
   const defaultFirstDue = () => {
