@@ -459,6 +459,11 @@ export function useDB(): DBState {
     addPurchase: db.addPurchase,
     removePurchase: db.removePurchase,
     getFinancialReport: db.getFinancialReport,
+    addCarrier: db.addCarrier,
+    updateCarrier: db.updateCarrier,
+    addShipment: db.addShipment,
+    updateShipmentStatus: db.updateShipmentStatus,
+
   };
 }
 
