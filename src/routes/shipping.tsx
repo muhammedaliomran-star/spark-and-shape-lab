@@ -210,7 +210,8 @@ function ShippingPage() {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold">{c.name}</h3>
-                      <p className="text-sm text-muted-foreground">{c.contactPerson}</p>
+                      <p className="text-sm text-muted-foreground">{c.contactPerson || 'لا يوجد مسئول اتصال'}</p>
+                      {c.phone && <p className="text-xs text-muted-foreground mt-1">{c.phone}</p>}
                     </div>
                     <div className="pt-4 border-t border-hairline flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">التكلفة الأساسية</span>
@@ -219,16 +220,48 @@ function ShippingPage() {
                   </BezelCard>
                 </Reveal>
               ))}
+              
               <Reveal delay={carriers.length * 0.1}>
-                <button className="flex h-full w-full flex-col items-center justify-center gap-4 rounded-[1.75rem] border-2 border-dashed border-hairline p-8 transition-all hover:border-primary/50 hover:bg-primary/5 group">
-                  <div className="rounded-full bg-muted p-4 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                    <Plus className="h-6 w-6" />
-                  </div>
-                  <span className="font-bold text-muted-foreground group-hover:text-primary transition-colors">إضافة شركة شحن</span>
-                </button>
+                <Dialog open={isAddCarrierOpen} onOpenChange={setIsAddCarrierOpen}>
+                  <DialogTrigger asChild>
+                    <button className="flex h-full w-full min-h-[200px] flex-col items-center justify-center gap-4 rounded-[1.75rem] border-2 border-dashed border-hairline p-8 transition-all hover:border-primary/50 hover:bg-primary/5 group">
+                      <div className="rounded-full bg-muted p-4 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                        <Plus className="h-6 w-6" />
+                      </div>
+                      <span className="font-bold text-muted-foreground group-hover:text-primary transition-colors">إضافة شركة شحن</span>
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]" dir="rtl">
+                    <DialogHeader>
+                      <DialogTitle className="text-right">إضافة شركة شحن جديدة</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="space-y-2">
+                        <Label>اسم الشركة</Label>
+                        <Input value={carrierName} onChange={e => setCarrierName(e.target.value)} placeholder="مثلاً: ارامكس، مندوب خاص..." className="text-right" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>المسئول</Label>
+                        <Input value={carrierContact} onChange={e => setCarrierContact(e.target.value)} placeholder="اسم الشخص المسئول" className="text-right" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>رقم الهاتف</Label>
+                        <Input value={carrierPhone} onChange={e => setCarrierPhone(e.target.value)} placeholder="رقم الموبايل للتواصل" className="text-right" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>التكلفة الأساسية (ج.م)</Label>
+                        <Input type="number" value={carrierBaseCost} onChange={e => setCarrierBaseCost(e.target.value)} className="text-right" />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={handleAddCarrier} className="w-full h-12 rounded-xl font-bold">حفظ البيانات</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </Reveal>
             </div>
           </TabsContent>
+
 
           <TabsContent value="zones">
             {/* Zones content here */}
