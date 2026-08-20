@@ -126,23 +126,13 @@ export function Dashboard() {
       return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
     })
     .reduce((s, p) => s + p.amount, 0);
-  // Estimated gross profit on collected revenue (≈25% margin until per-invoice cost is tracked)
-  const monthGrossProfit = Math.round(monthCollected * 0.25);
-  const monthExpenses = data.expenses
-    .filter((e) => {
-      const d = new Date(e.expenseDate);
-      return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
-    })
-    .reduce((s, e) => s + e.amount, 0);
-  const monthCashPurchases = data.purchases
-    .filter((p) => {
-      if (p.paymentType !== "cash") return false;
-      const d = new Date(p.purchaseDate);
-      return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
-    })
-    .reduce((s, p) => s + p.total, 0);
-  // Net profit = gross profit on sales − expenses − cash purchases (actual outflow)
-  const monthlyNetProfit = monthGrossProfit - monthExpenses - monthCashPurchases;
+
+  // Use the new dynamic report logic
+  const report = await data.getFinancialReport(
+    new Date(today.getFullYear(), today.getMonth(), 1),
+    today
+  );
+  const monthlyNetProfit = report.netProfit;
 
   const activeCustomers = data.customers.filter((c) => !c.frozen).length;
   const frozenCustomers = data.customers.length - activeCustomers;
