@@ -231,19 +231,56 @@ function NewInvoicePage() {
     const summary = validProducts.map((p) => `${p.name.trim()}${Number(p.quantity) > 1 ? ` ×${p.quantity}` : ""}`).join("، ");
     const productNotes = `${summary}${notes ? ` — ${notes}` : ""}`;
     try {
-      await db.addInvoice({
-        customerId, total: t, downPayment: isCash ? t : d, monthlyInstallment: m,
-        firstDueDate: iso, notes: productNotes, paid: isCash ? t : d,
-        discountPct: Number(discountPct || 0), discountAmount: discountValue,
-        taxPct: Number(taxPct || 0), taxAmount: taxValue,
+      const { data: invData, error: invErr } = await (supabase.from as any)("invoices").insert({
+        user_id: await uid(),
+        customer_id: customerId,
+        total: t,
+        down_payment: isCash ? t : d,
+        monthly_installment: m,
+        first_due_date: iso,
+        notes: productNotes,
+        paid: isCash ? t : d,
+        discount_pct: Number(discountPct || 0),
+        discount_amount: discountValue,
+        tax_pct: Number(taxPct || 0),
+        tax_amount: taxValue,
         status: isCash ? "paid" : status,
-        items: validProducts.flatMap((p) => {
+      }).select("id").single();
+
+      if (invErr) throw invErr;
+
+      // Add Invoice Items
+      if (validProducts.length > 0 && invData?.id) {
+        const itemRows = validProducts.flatMap((p) => {
           const qty = Math.max(1, Number(p.quantity || 1));
           return Array.from({ length: qty }, () => ({
-            name: p.name.trim(), cost: Number(p.cost || 0), price: Number(p.price || 0),
+            user_id: invData.user_id,
+            invoice_id: invData.id,
+            name: p.name.trim(),
+            cost: Number(p.cost || 0),
+            price: Number(p.price || 0),
           }));
-        }),
-      });
+        });
+        const { error: itemsErr } = await supabase.from("invoice_items").insert(itemRows);
+        if (itemsErr) throw itemsErr;
+      }
+
+      // Add Shipment if carrier selected
+      if (shippingCarrierId && invData?.id) {
+        const { error: shipErr } = await (supabase.from as any)("shipments").insert({
+          user_id: await uid(),
+          invoice_id: invData.id,
+          carrier_id: shippingCarrierId,
+          zone_id: shippingZoneId || null,
+          tracking_number: trackingNumber || null,
+          status: 'pending',
+          recipient_name: customer?.name,
+          recipient_phone: customer?.phone,
+          delivery_address: shippingAddress || customer?.address,
+        });
+        if (shipErr) throw shipErr;
+      }
+
       const deductions = validProducts
         .filter((p) => p.stockId)
         .map((p) => ({ stockId: p.stockId!, quantity: Number(p.quantity || 0) }));
