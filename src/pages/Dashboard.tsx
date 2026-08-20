@@ -127,12 +127,32 @@ export function Dashboard() {
     })
     .reduce((s, p) => s + p.amount, 0);
 
-  // Use the new dynamic report logic
-  const report = await data.getFinancialReport(
-    new Date(today.getFullYear(), today.getMonth(), 1),
-    today
-  );
-  const monthlyNetProfit = report.netProfit;
+  // Simplified monthly calculation logic moved to useMemo to avoid async in component body
+  const { monthlyNetProfit, monthGrossProfit, monthExpenses, monthCashPurchases } = useMemo(() => {
+    const expenses = data.expenses
+      .filter((e) => {
+        const d = new Date(e.expenseDate);
+        return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+      })
+      .reduce((s, e) => s + e.amount, 0);
+    const cashPurchases = data.purchases
+      .filter((p) => {
+        if (p.paymentType !== "cash") return false;
+        const d = new Date(p.purchaseDate);
+        return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+      })
+      .reduce((s, p) => s + p.total, 0);
+    
+    // For now, keep the 25% estimate for the quick dashboard preview, 
+    // but the Reports page will show the detailed breakdown.
+    const grossProfit = Math.round(monthCollected * 0.25);
+    return {
+      monthlyNetProfit: grossProfit - expenses - cashPurchases,
+      monthGrossProfit: grossProfit,
+      monthExpenses: expenses,
+      monthCashPurchases: cashPurchases,
+    };
+  }, [data.expenses, data.purchases, monthCollected, today]);
 
   const activeCustomers = data.customers.filter((c) => !c.frozen).length;
   const frozenCustomers = data.customers.length - activeCustomers;
