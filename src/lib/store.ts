@@ -80,6 +80,43 @@ export interface InvoiceItem {
 
 export type ExpenseCategory = "rent" | "electricity" | "salaries" | "transport" | "other";
 
+export interface ShipmentCarrier {
+  id: string;
+  name: string;
+  contactPerson: string | null;
+  phone: string | null;
+  email: string | null;
+  baseCost: number;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface ShippingZone {
+  id: string;
+  name: string;
+  carrierId: string;
+  deliveryCost: number;
+  estimatedDays: number;
+  createdAt: string;
+}
+
+export type ShipmentStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'returned' | 'cancelled';
+
+export interface Shipment {
+  id: string;
+  invoiceId: string | null;
+  carrierId: string | null;
+  zoneId: string | null;
+  trackingNumber: string | null;
+  status: ShipmentStatus;
+  recipientName: string | null;
+  recipientPhone: string | null;
+  deliveryAddress: string | null;
+  actualDeliveryDate: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
 export interface Expense {
   id: string;
   amount: number;
@@ -88,6 +125,7 @@ export interface Expense {
   notes: string | null;
   createdAt: string;
 }
+
 
 export interface Supplier {
   id: string;
