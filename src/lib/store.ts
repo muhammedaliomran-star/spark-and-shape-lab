@@ -409,6 +409,22 @@ async function fetchAll() {
       paymentMethod: r.payment_method, description: r.description,
       voucherDate: r.voucher_date, createdAt: r.created_at,
     })),
+    carriers: (sc.data ?? []).map((r: any) => ({
+      id: r.id, name: r.name, contactPerson: r.contact_person, phone: r.phone,
+      email: r.email, baseCost: Number(r.base_cost ?? 0), active: r.active, createdAt: r.created_at,
+    })),
+    zones: (sz.data ?? []).map((r: any) => ({
+      id: r.id, name: r.name, carrierId: r.carrier_id,
+      deliveryCost: Number(r.delivery_cost ?? 0), estimatedDays: r.estimated_days ?? 2, createdAt: r.created_at,
+    })),
+    shipments: (sh.data ?? []).map((r: any) => ({
+      id: r.id, invoiceId: r.invoice_id, carrierId: r.carrier_id, zoneId: r.zone_id,
+      trackingNumber: r.tracking_number, status: r.status as ShipmentStatus,
+      recipientName: r.recipient_name, recipientPhone: r.recipient_phone,
+      deliveryAddress: r.delivery_address, actualDeliveryDate: r.actual_delivery_date,
+      notes: r.notes, createdAt: r.created_at,
+    })),
+
   };
   loading = false;
   loaded = true;
