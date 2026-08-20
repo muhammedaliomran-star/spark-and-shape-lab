@@ -223,7 +223,8 @@ export interface StockItem {
   updatedAt: string;
 }
 
-interface DBState {
+export interface DBState {
+
   customers: Customer[];
   invoices: Invoice[];
   payments: Payment[];
