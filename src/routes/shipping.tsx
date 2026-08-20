@@ -264,13 +264,43 @@ function ShippingPage() {
 
 
           <TabsContent value="zones">
-            {/* Zones content here */}
-            <BezelCard className="flex flex-col items-center justify-center py-20 text-center">
-              <MapPin className="h-12 w-12 text-muted-foreground/50 mb-4" />
-              <h3 className="text-xl font-bold">إدارة مناطق التوصيل</h3>
-              <p className="mt-2 text-muted-foreground">قريباً: تحديد أسعار الشحن حسب كل محافظة ومنطقة.</p>
-            </BezelCard>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {zones.map((z, i) => (
+                <Reveal key={z.id} delay={i * 0.1}>
+                  <BezelCard className="plate p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="h-12 w-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 ring-1 ring-inset ring-amber-500/20">
+                        <MapPin className="h-6 w-6" />
+                      </div>
+                      <span className="text-[10px] font-bold text-muted-foreground">
+                        {carriers.find(c => c.id === z.carrierId)?.name}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold">{z.name}</h3>
+                      <p className="text-sm text-muted-foreground">مدة التوصيل: {z.estimatedDays} أيام</p>
+                    </div>
+                    <div className="pt-4 border-t border-hairline flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">تكلفة التوصيل</span>
+                      <span className="font-bold text-primary">{z.deliveryCost} ج.م</span>
+                    </div>
+                  </BezelCard>
+                </Reveal>
+              ))}
+              <Reveal delay={zones.length * 0.1}>
+                <button 
+                  onClick={() => toast.info('يرجى التواصل مع الدعم الفني لإضافة مناطق جديدة')}
+                  className="flex h-full w-full min-h-[200px] flex-col items-center justify-center gap-4 rounded-[1.75rem] border-2 border-dashed border-hairline p-8 transition-all hover:border-amber-500/50 hover:bg-amber-500/5 group"
+                >
+                  <div className="rounded-full bg-muted p-4 group-hover:bg-amber-500/10 group-hover:text-amber-500 transition-colors">
+                    <Plus className="h-6 w-6" />
+                  </div>
+                  <span className="font-bold text-muted-foreground group-hover:text-amber-500 transition-colors">إضافة منطقة توصيل</span>
+                </button>
+              </Reveal>
+            </div>
           </TabsContent>
+
         </Tabs>
       </Reveal>
     </div>
