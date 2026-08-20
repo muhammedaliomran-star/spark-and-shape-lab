@@ -252,13 +252,11 @@ function CustomersPage() {
     <>
       <PageHeader
         title="العملاء"
-        subtitle={`'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
-                                        
-                                            
-                                            هل فيه طريقه استخدم بيها 
-"Impeccable
-دائما 
-حلل متنفذش"`}
+        subtitle={`اداه 
+Impeccable
+مطلعة الأخطاء دى 
+وحابب اننا نصلحها 
+حلل ومتنفذش`}
         action={
           <div className="flex items-center gap-2">
             <TooltipProvider>
