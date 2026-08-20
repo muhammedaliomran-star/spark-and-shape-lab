@@ -239,6 +239,10 @@ interface DBState {
   returnItems: ReturnItem[];
   branches: Branch[];
   paymentVouchers: PaymentVoucher[];
+  carriers: ShipmentCarrier[];
+  zones: ShippingZone[];
+  shipments: Shipment[];
+
   loading: boolean;
   addBranch: (b: Omit<Branch, "id" | "createdAt">) => Promise<void>;
   updateBranch: (id: string, patch: Partial<Branch>) => Promise<void>;
