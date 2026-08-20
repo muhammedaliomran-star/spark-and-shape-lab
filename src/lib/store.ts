@@ -452,6 +452,10 @@ export function useDB(): DBState {
     ...cache, 
     loading, 
     refresh,
+    carriers: cache.carriers,
+    zones: cache.zones,
+    shipments: cache.shipments,
+
     addBranch: db.addBranch,
     updateBranch: db.updateBranch,
     removeBranch: db.removeBranch,
