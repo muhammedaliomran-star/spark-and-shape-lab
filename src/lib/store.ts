@@ -207,6 +207,22 @@ interface DBState {
   removeBranch: (id: string) => Promise<void>;
   addPaymentVoucher: (v: Omit<PaymentVoucher, "id" | "createdAt">) => Promise<void>;
   removePaymentVoucher: (id: string) => Promise<void>;
+  
+  // Purchases management
+  addPurchase: (p: Omit<Purchase, "id" | "createdAt" | "user_id"> & { items: Omit<PurchaseItem, "id" | "purchase_id" | "user_id">[] }) => Promise<void>;
+  removePurchase: (id: string) => Promise<void>;
+  
+  // Reports
+  getFinancialReport: (start: Date, end: Date) => Promise<{
+    sales: number;
+    purchases: number;
+    expenses: number;
+    grossProfit: number;
+    netProfit: number;
+    tax: number;
+    returns: number;
+  }>;
+  
   refresh: () => Promise<void>;
 }
 
@@ -974,6 +990,95 @@ export const db = {
     const { error } = await supabase.from("return_records").delete().eq("id", id);
     if (error) throw error;
     await fetchAll();
+  },
+  async addPurchase(p: any) {
+    const user_id = await uid();
+    const { data: purchase, error } = await supabase.from("purchases").insert({
+      user_id,
+      supplier_id: p.supplierId,
+      date: p.date,
+      total: p.total,
+      paid: p.paid,
+      payment_type: p.paymentType,
+      status: p.status,
+      notes: p.notes,
+    }).select("id").single();
+    if (error) throw error;
+    if (purchase && p.items.length > 0) {
+      const items = p.items.map((it: any) => ({
+        user_id,
+        purchase_id: purchase.id,
+        name: it.name,
+        quantity: it.quantity,
+        unit_cost: it.unitCost,
+        total: it.total,
+      }));
+      const { error: err2 } = await supabase.from("purchase_items").insert(items);
+      if (err2) throw err2;
+      
+      // Update stock/warehouse items
+      for (const it of p.items) {
+        const { data: existing } = await supabase
+          .from("stock_items")
+          .select("id, quantity")
+          .eq("user_id", user_id)
+          .eq("name", it.name)
+          .maybeSingle();
+        
+        if (existing) {
+          await supabase.from("stock_items").update({
+            quantity: Number(existing.quantity) + Number(it.quantity),
+            unit_cost: it.unitCost,
+          }).eq("id", existing.id);
+        } else {
+          await supabase.from("stock_items").insert({
+            user_id,
+            name: it.name,
+            quantity: it.quantity,
+            unit_cost: it.unitCost,
+            sale_price: it.unitCost * 1.25, // Default 25% margin
+            category: "general",
+          });
+        }
+      }
+    }
+    await fetchAll();
+  },
+  async removePurchase(id: string) {
+    const { error } = await supabase.from("purchases").delete().eq("id", id);
+    if (error) throw error;
+    await fetchAll();
+  },
+  async getFinancialReport(start: Date, end: Date) {
+    const s = start.toISOString();
+    const e = end.toISOString();
+    
+    const [sales, purchases, expenses, returns] = await Promise.all([
+      supabase.from("invoices").select("total, tax_amount").gte("created_at", s).lte("created_at", e),
+      supabase.from("purchases").select("total").gte("created_at", s).lte("created_at", e),
+      supabase.from("expenses").select("amount").gte("date", s).lte("date", e),
+      supabase.from("return_records").select("total_amount").gte("created_at", s).lte("created_at", e),
+    ]);
+    
+    const totalSales = (sales.data ?? []).reduce((acc, curr) => acc + (curr.total || 0), 0);
+    const totalTax = (sales.data ?? []).reduce((acc, curr) => acc + (curr.tax_amount || 0), 0);
+    const totalPurchases = (purchases.data ?? []).reduce((acc, curr) => acc + (curr.total || 0), 0);
+    const totalExpenses = (expenses.data ?? []).reduce((acc, curr) => acc + (curr.amount || 0), 0);
+    const totalReturns = (returns.data ?? []).reduce((acc, curr) => acc + (curr.total_amount || 0), 0);
+    
+    const netSales = totalSales - totalTax - totalReturns;
+    const grossProfit = netSales * 0.25; 
+    const netProfit = grossProfit - totalExpenses;
+    
+    return {
+      sales: totalSales,
+      purchases: totalPurchases,
+      expenses: totalExpenses,
+      grossProfit,
+      netProfit,
+      tax: totalTax,
+      returns: totalReturns,
+    };
   },
 };
 
