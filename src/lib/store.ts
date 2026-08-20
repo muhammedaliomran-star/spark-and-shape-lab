@@ -278,12 +278,17 @@ let cache: {
   returnItems: ReturnItem[];
   branches: Branch[];
   paymentVouchers: PaymentVoucher[];
+  carriers: ShipmentCarrier[];
+  zones: ShippingZone[];
+  shipments: Shipment[];
 } = {
   customers: [], invoices: [], payments: [], expenses: [], invoiceItems: [],
   suppliers: [], purchases: [], purchaseItems: [], supplierPayments: [], stockItems: [], warehouseItems: [],
   returns: [], returnItems: [],
   branches: [], paymentVouchers: [],
+  carriers: [], zones: [], shipments: [],
 };
+
 let loading = true;
 let loaded = false;
 
