@@ -16,9 +16,10 @@ const nav = [
   { to: "/daily", label: "اليومية", icon: CalendarDays },
   { to: "/customers", label: "العملاء", icon: Users },
   { to: "/invoices", label: "الفواتير", icon: FileText },
+  { to: "/shipping", label: "الشحن", icon: Truck },
   { to: "/purchases", label: "المشتريات", icon: Truck },
-  { to: "/suppliers", label: "الموردين", icon: Truck },
-  { to: "/inventory", label: "المنتجات", icon: Package },
+  { to: "/suppliers", label: "الموردين", icon: Users },
+
   { to: "/warehouse", label: "المخزن", icon: Warehouse },
   { to: "/branches", label: "الفروع", icon: GitBranch },
   { to: "/returns", label: "المرتجعات", icon: Undo2 },
