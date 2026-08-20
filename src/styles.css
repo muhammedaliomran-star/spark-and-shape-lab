@@ -237,6 +237,11 @@
     radial-gradient(58rem 38rem at 86% -12%, hsl(160 84% 42% / 0.26), transparent 62%),
     radial-gradient(44rem 34rem at 4% 12%, hsl(186 78% 46% / 0.14), transparent 62%),
     radial-gradient(52rem 40rem at 48% 112%, hsl(160 70% 38% / 0.18), transparent 66%);
+
+  /* Impeccable style inspiration tokens */
+  --imp-bg-strong: hsla(166, 20%, 7%, 0.8);
+  --imp-border-light: hsla(0, 0%, 100%, 0.08);
+  --imp-glow: 0 0 40px -10px hsla(160, 84%, 39%, 0.3);
 }
 
 
@@ -388,21 +393,25 @@
 /* --- Surface plate: بديل موحّد للبطاقات المسطّحة ------------- */
 @utility plate {
   border-radius: 1.4rem;
-  background: linear-gradient(165deg, hsl(var(--card)), hsl(var(--card) / 0.82));
+  background: linear-gradient(165deg, var(--imp-bg-strong), hsl(var(--card) / 0.6));
+  backdrop-filter: blur(12px);
   box-shadow:
-    inset 0 1px 1px hsl(0 0% 100% / 0.075),
+    inset 0 1px 1px var(--imp-border-light),
     inset 0 0 0 1px hsl(0 0% 100% / 0.05),
     0 20px 50px -26px hsl(240 20% 2% / 0.7);
   transition:
-    transform 0.7s var(--ease-fluid),
-    box-shadow 0.7s var(--ease-fluid);
+    transform 0.5s var(--ease-fluid),
+    box-shadow 0.5s var(--ease-fluid),
+    background-color 0.5s var(--ease-fluid);
   
   &:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px) scale(1.01);
+    background: linear-gradient(165deg, hsl(var(--card) / 0.9), hsl(var(--card) / 0.7));
     box-shadow:
-      inset 0 1px 1px hsl(0 0% 100% / 0.1),
+      inset 0 1px 1px hsl(0 0% 100% / 0.12),
       0 20px 60px -20px hsl(240 20% 2% / 0.8),
-      0 0 0 1px hsl(var(--primary) / 0.1);
+      var(--imp-glow),
+      0 0 0 1px hsl(var(--primary) / 0.2);
   }
 }
 
