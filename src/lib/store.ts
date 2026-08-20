@@ -1113,7 +1113,47 @@ export const db = {
     if (error) throw error;
     await fetchAll();
   },
+  // Shipping
+  async addCarrier(c: Omit<ShipmentCarrier, "id" | "createdAt">) {
+    const user_id = await uid();
+    const { error } = await (supabase.from as any)("shipping_carriers").insert({
+      user_id, name: c.name, contact_person: c.contactPerson, phone: c.phone,
+      email: c.email, base_cost: c.baseCost, active: c.active
+    });
+    if (error) throw error;
+    await fetchAll();
+  },
+  async updateCarrier(id: string, patch: Partial<ShipmentCarrier>) {
+    const upd: any = {};
+    if (patch.name !== undefined) upd.name = patch.name;
+    if (patch.contactPerson !== undefined) upd.contact_person = patch.contactPerson;
+    if (patch.phone !== undefined) upd.phone = patch.phone;
+    if (patch.email !== undefined) upd.email = patch.email;
+    if (patch.baseCost !== undefined) upd.base_cost = patch.baseCost;
+    if (patch.active !== undefined) upd.active = patch.active;
+    const { error } = await (supabase.from as any)("shipping_carriers").update(upd).eq("id", id);
+    if (error) throw error;
+    await fetchAll();
+  },
+  async addShipment(s: Omit<Shipment, "id" | "createdAt">) {
+    const user_id = await uid();
+    const { error } = await (supabase.from as any)("shipments").insert({
+      user_id, invoice_id: s.invoiceId, carrier_id: s.carrierId, zone_id: s.zoneId,
+      tracking_number: s.trackingNumber, status: s.status,
+      recipient_name: s.recipientName, recipient_phone: s.recipientPhone,
+      delivery_address: s.deliveryAddress, actual_delivery_date: s.actualDeliveryDate,
+      notes: s.notes
+    });
+    if (error) throw error;
+    await fetchAll();
+  },
+  async updateShipmentStatus(id: string, status: ShipmentStatus) {
+    const { error } = await (supabase.from as any)("shipments").update({ status }).eq("id", id);
+    if (error) throw error;
+    await fetchAll();
+  },
 };
+
 
 
 export const WAREHOUSE_SEASONS: { value: WarehouseSeason; label: string }[] = [
