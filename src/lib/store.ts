@@ -266,7 +266,14 @@ interface DBState {
   }>;
   
   refresh: () => Promise<void>;
+  
+  // Shipping
+  addCarrier: (c: Omit<ShipmentCarrier, "id" | "createdAt">) => Promise<void>;
+  updateCarrier: (id: string, patch: Partial<ShipmentCarrier>) => Promise<void>;
+  addShipment: (s: Omit<Shipment, "id" | "createdAt">) => Promise<void>;
+  updateShipmentStatus: (id: string, status: ShipmentStatus) => Promise<void>;
 }
+
 
 const listeners = new Set<() => void>();
 let cache: {
