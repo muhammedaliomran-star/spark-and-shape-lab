@@ -304,7 +304,7 @@ async function fetchAll() {
     notify();
     return;
   }
-  const [c, i, p, e, ii, s, pu, pi, sp, st, wh, rr, ri, br, pv] = await Promise.all([
+  const [c, i, p, e, ii, s, pu, pi, sp, st, wh, rr, ri, br, pv, sc, sz, sh] = await Promise.all([
     supabase.from("customers").select("*").order("name"),
     supabase.from("invoices").select("*").order("created_at", { ascending: false }),
     supabase.from("payments").select("*"),
@@ -320,7 +320,11 @@ async function fetchAll() {
     supabase.from("return_items").select("*").order("created_at"),
     (supabase.from as any)("branches").select("*").order("name"),
     (supabase.from as any)("payment_vouchers").select("*").order("voucher_date", { ascending: false }),
+    (supabase.from as any)("shipping_carriers").select("*").order("name"),
+    (supabase.from as any)("shipping_zones").select("*").order("name"),
+    (supabase.from as any)("shipments").select("*").order("created_at", { ascending: false }),
   ]);
+
   cache = {
     customers: (c.data ?? []).map((r: any) => ({
       id: r.id, name: r.name, phone: r.phone, rating: r.rating,
