@@ -1,7 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Truck, Search, Plus, MapPin, Building2, PackageCheck, Clock, History } from 'lucide-react';
 import { useState } from 'react';
-import { useDB } from '@/lib/store';
+import { useDB, db, ShipmentStatus } from '@/lib/store';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+
 import { BezelCard } from '@/components/BezelCard';
 import { Reveal } from '@/components/Reveal';
 import { Button } from '@/components/ui/button';
