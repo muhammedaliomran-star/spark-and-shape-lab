@@ -60,7 +60,7 @@ export function SiteFooter() {
                 <span className="block text-[10px] font-medium uppercase tracking-[0.3em] text-muted-foreground">
                   sejelly
                 </span>
-                <h2 className="text-display text-4xl font-extrabold text-primary">سِجلّي</h2>
+                <h2 className="text-display text-4xl font-extrabold">سِجلّي</h2>
                 <p className="max-w-xs text-lg leading-relaxed text-muted-foreground">
                   دفتر محلّك بالكامل في مكان واحد — فواتير، أقساط، مخزن وتقارير،
                   محسوبة بالمليم.
@@ -69,10 +69,10 @@ export function SiteFooter() {
 
               <Link
                 to="/auth"
-                className="group inline-flex items-center gap-4 rounded-full bg-primary p-2 ps-6 font-bold text-primary-foreground transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.02] active:scale-[0.96]"
+                className="group inline-flex items-center gap-4 rounded-full bg-foreground/[0.05] p-2 ps-6 font-bold text-foreground ring-1 ring-inset ring-[var(--hairline)] transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.02] active:scale-[0.96]"
               >
                 <span className="text-lg">ابدأ مجانًا</span>
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-background text-primary transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:-rotate-45">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-background text-muted-foreground transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:-rotate-45">
                   <ArrowUpLeft className="h-5 w-5" strokeWidth={2} />
                 </span>
               </Link>
@@ -82,7 +82,7 @@ export function SiteFooter() {
             <div className="grid grid-cols-2 gap-6 sm:gap-8 lg:col-span-4">
               {LINKS.map((col) => (
                 <nav key={col.title} aria-label={col.title} className="min-w-0 space-y-5 sm:space-y-6">
-                  <h3 className="border-s-2 border-primary ps-3 text-sm font-bold tracking-[0.12em] text-foreground">
+                  <h3 className="border-s-2 border-foreground/25 ps-3 text-sm font-bold tracking-[0.12em] text-foreground">
                     {col.title}
                   </h3>
                   <ul className="space-y-3.5 sm:space-y-4">
@@ -90,7 +90,7 @@ export function SiteFooter() {
                       <li key={it.label}>
                         <FooterLink
                           href={it.href}
-                          className="inline-block text-muted-foreground transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-x-0.5 hover:text-primary"
+                          className="inline-block text-muted-foreground transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-x-0.5 hover:text-foreground"
                         >
                           {it.label}
                         </FooterLink>
@@ -118,7 +118,7 @@ export function SiteFooter() {
                       01066830834
                     </span>
                   </span>
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/item:text-primary">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/item:text-foreground">
                     <Phone className="h-4.5 w-4.5" strokeWidth={1.5} />
                   </span>
                 </a>
@@ -133,7 +133,7 @@ export function SiteFooter() {
                       muhammedaliomran@gmail.com
                     </span>
                   </span>
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/item:text-primary">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/item:text-foreground">
                     <Mail className="h-4.5 w-4.5" strokeWidth={1.5} />
                   </span>
                 </a>
@@ -148,7 +148,7 @@ export function SiteFooter() {
                   <span className="flex min-w-0 items-center gap-2.5">
                     <span className="truncate font-medium text-foreground/85">دعم واتساب 24/7</span>
                   </span>
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-primary">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground">
                     <MessageCircle className="h-4.5 w-4.5" strokeWidth={1.5} />
                   </span>
                 </a>
@@ -181,7 +181,7 @@ export function SiteFooter() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="صفحة فيسبوك المطوّر devmohamedomran — تُفتح في تبويب جديد"
-                className="inline-flex items-center gap-1.5 align-middle font-bold text-primary transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:underline hover:opacity-80"
+                className="inline-flex items-center gap-1.5 align-middle font-bold text-muted-foreground transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:text-foreground hover:underline"
               >
                 <Facebook className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                 <span dir="ltr">devmohamedomran</span>

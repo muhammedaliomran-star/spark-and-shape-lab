@@ -44,14 +44,14 @@ export function ThemeToggle({ className }: { className?: string }) {
         <Moon
           strokeWidth={1.5}
           className={cn(
-            "absolute h-[18px] w-[18px] text-primary transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
+            "absolute h-[18px] w-[18px] text-foreground transition-[transform,opacity] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
             isDark ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-50 opacity-0",
           )}
         />
         <Sun
           strokeWidth={1.5}
           className={cn(
-            "absolute h-[18px] w-[18px] text-muted-foreground transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
+            "absolute h-[18px] w-[18px] text-muted-foreground transition-[transform,opacity] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
             isDark ? "rotate-90 scale-50 opacity-0" : "rotate-0 scale-100 opacity-100",
           )}
         />

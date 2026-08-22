@@ -108,7 +108,7 @@ function Landing() {
       {/* ── nav ─────────────────────────────────────────── */}
       <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-5">
         <nav className="glass flex w-full max-w-4xl items-center justify-between gap-6 rounded-full py-2 pe-2 ps-6">
-          <span className="text-display text-xl font-extrabold tracking-tight text-primary">سِجلّي</span>
+          <span className="text-display text-xl font-extrabold tracking-tight">سِجلّي</span>
           <div className="hidden items-center gap-7 md:flex">
             {NAV.map((n) => (
               <a
@@ -147,7 +147,7 @@ function Landing() {
 
         <div className="relative mx-auto w-full max-w-6xl px-6 pb-24 pt-32">
           <Reveal className="max-w-2xl">
-            <span className="eyebrow mb-6">نظام إدارة الفواتير والأقساط</span>
+            <span className="mb-6 block text-[11px] font-bold tracking-[0.2em] text-muted-foreground">نظام إدارة الفواتير والأقساط</span>
             <h1 className="text-hero">
               دفترك كله.
               <br />
@@ -187,7 +187,7 @@ function Landing() {
             <span>أسيوط</span>
             <span>الإسكندرية</span>
           </div>
-          <div className="mx-auto mt-7 h-px w-24 bg-primary/60" />
+          <div className="mx-auto mt-7 h-px w-24 bg-foreground/25" />
         </Reveal>
       </section>
 
@@ -195,7 +195,7 @@ function Landing() {
       <section id="features" className="scroll-mt-20 py-32">
         <div className="mx-auto grid max-w-6xl gap-14 px-6 lg:grid-cols-[1fr_2fr] lg:items-center">
           <Reveal>
-            <span className="mb-4 block text-[11px] font-bold tracking-[0.2em] text-primary">المميزات</span>
+            <span className="mb-4 block text-[11px] font-bold tracking-[0.2em] text-muted-foreground">المميزات</span>
             <h2 className="text-title">
               مصمم لطريقة
               <br />
@@ -203,7 +203,7 @@ function Landing() {
             </h2>
             <a
               href="#showcase"
-              className="mt-7 inline-flex items-center gap-2 border-b border-primary pb-1 text-sm text-primary"
+              className="mt-7 inline-flex items-center gap-2 border-b border-foreground/25 pb-1 text-sm font-semibold transition-colors duration-500 hover:border-foreground"
             >
               استكشف النظام
               <ArrowLeft className="h-4 w-4" />
@@ -217,7 +217,7 @@ function Landing() {
                 delay={i * 70}
                 className="plate group p-8 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1"
               >
-                <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/20 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105">
+                <span className="grid h-11 w-11 place-items-center rounded-2xl bg-foreground/[0.04] text-foreground ring-1 ring-inset ring-foreground/[0.08] transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105">
                   <f.icon className="h-5 w-5" strokeWidth={1.5} />
                 </span>
                 <h3 className="mt-6 text-[17px] font-bold tracking-[-0.01em]">{f.title}</h3>
@@ -246,21 +246,20 @@ function Landing() {
         </Reveal>
 
         <Reveal delay={120} className="mx-auto mt-16 max-w-5xl px-6">
-          <div className="bezel-shell">
-            <div className="bezel-core p-7 sm:p-9">
-              <div className="grid gap-7 text-right sm:grid-cols-3 sm:gap-0 sm:[&>*+*]:border-s sm:[&>*+*]:border-[var(--hairline)] sm:[&>*+*]:ps-8">
-                {[
-                  { k: "إجمالي التحصيل", v: "١٢٨٬٥٤٠" },
-                  { k: "أقساط مستحقة", v: "٢٤" },
-                  { k: "عملاء نشطون", v: "٣٤٢" },
-                ].map((s) => (
-                  <div key={s.k}>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{s.k}</p>
-                    <p className="text-numeric mt-2.5 text-[1.75rem] font-extrabold leading-none">{s.v}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-8 border-t border-[var(--hairline)] pt-6">
+          <div className="rounded-[1.75rem] bg-card/60 p-6 ring-1 ring-inset ring-[var(--hairline)] sm:p-9">
+            <div className="grid gap-7 text-right sm:grid-cols-3 sm:gap-0 sm:[&>*+*]:border-s sm:[&>*+*]:border-[var(--hairline)] sm:[&>*+*]:ps-8">
+              {[
+                { k: "إجمالي التحصيل", v: "١٢٨٬٥٤٠" },
+                { k: "أقساط مستحقة", v: "٢٤" },
+                { k: "عملاء نشطون", v: "٣٤٢" },
+              ].map((s) => (
+                <div key={s.k}>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{s.k}</p>
+                  <p className="text-numeric mt-2.5 text-[1.75rem] font-extrabold leading-none">{s.v}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 border-t border-[var(--hairline)] pt-6">
                 <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">آخر الفواتير</p>
                 <div>
                   {[
@@ -280,7 +279,6 @@ function Landing() {
                 </div>
               </div>
             </div>
-          </div>
         </Reveal>
       </section>
 
@@ -296,14 +294,13 @@ function Landing() {
               height={1200}
               className="absolute inset-0 h-full w-full object-cover opacity-60 mix-blend-luminosity"
             />
-            <div className="absolute inset-0 bg-primary/20 mix-blend-color" />
             <div className="absolute inset-0 bg-gradient-to-l from-transparent to-background/60" />
           </div>
 
           <div className="flex items-center px-6 py-24 lg:px-16">
             <div className="w-full max-w-lg">
               <Reveal>
-                <span className="mb-4 block text-[11px] font-bold tracking-[0.2em] text-primary">لمين النظام</span>
+                <span className="mb-4 block text-[11px] font-bold tracking-[0.2em] text-muted-foreground">لمين النظام</span>
                 <h2 className="text-title">
                   للتاجر اللي بيبيع
                   <br />
@@ -329,7 +326,7 @@ function Landing() {
               <Reveal delay={240}>
                 <Link
                   to="/auth"
-                  className="press mt-10 inline-block rounded-full bg-primary/10 px-6 py-2.5 text-sm font-semibold text-primary ring-1 ring-inset ring-primary/25 hover:bg-primary/16"
+                  className="press mt-10 inline-block rounded-full bg-foreground/[0.05] px-6 py-2.5 text-sm font-semibold text-foreground ring-1 ring-inset ring-[var(--hairline)] hover:bg-foreground/[0.09]"
                 >
                   جرّبه على محلك
                 </Link>
@@ -357,7 +354,7 @@ function Landing() {
           <Reveal className="relative order-1 lg:order-2">
             <span
               aria-hidden
-              className="absolute -top-8 right-0 select-none text-[9rem] font-extrabold leading-none text-primary/20"
+              className="absolute -top-8 right-0 select-none text-[9rem] font-extrabold leading-none text-foreground/[0.08]"
             >
               ”
             </span>
@@ -375,7 +372,7 @@ function Landing() {
       {/* ── 7. pricing ──────────────────────────────────── */}
       <section id="pricing" className="scroll-mt-20 py-32">
         <Reveal className="mx-auto max-w-6xl px-6 text-center">
-          <span className="mb-4 block text-[11px] font-bold tracking-[0.2em] text-primary">الأسعار</span>
+          <span className="mb-4 block text-[11px] font-bold tracking-[0.2em] text-muted-foreground">الأسعار</span>
           <h2 className="text-title">
             اختر الخطة اللي تناسب محلك
           </h2>
@@ -406,7 +403,7 @@ function Landing() {
               <ul className="space-y-3">
                 {p.features.map((f) => (
                   <li key={f} className="flex items-center gap-2.5 text-sm">
-                    <Check className="h-4 w-4 shrink-0 text-primary" />
+                    <Check className="h-4 w-4 shrink-0 text-foreground/60" strokeWidth={2.25} />
                     <span className="text-muted-foreground">{f}</span>
                   </li>
                 ))}
