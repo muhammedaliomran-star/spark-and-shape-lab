@@ -51,20 +51,13 @@ export function SiteFooter() {
 
   return (
     <footer dir="rtl" className="relative px-3 pb-8 pt-12 sm:px-8 sm:pt-16">
-      <div className="relative mx-auto w-full max-w-7xl overflow-hidden rounded-[2.5rem] border border-border/40 bg-card/70 shadow-[0_30px_80px_-40px_hsl(240_20%_2%/0.8)]">
-        {/* soft emerald bloom */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -end-24 -top-24 h-[500px] w-[500px] rounded-full opacity-70 blur-[120px]"
-          style={{ background: "hsl(var(--primary) / 0.10)" }}
-        />
-
+      <div className="relative mx-auto w-full max-w-7xl overflow-hidden rounded-[2.5rem] border border-border/50 bg-card/70">
         <div className="relative px-5 pb-8 pt-10 sm:px-8 sm:pt-14 md:px-12 md:pt-16">
           <div className="grid grid-cols-1 items-start gap-10 sm:gap-12 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
             {/* brand */}
             <div className="space-y-7 md:col-span-2 lg:col-span-4">
               <div className="space-y-4">
-                <span className="inline-flex items-center rounded-full border border-border/70 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                <span className="block text-[10px] font-medium uppercase tracking-[0.3em] text-muted-foreground">
                   sejelly
                 </span>
                 <h2 className="text-display text-4xl font-extrabold text-primary">سِجلّي</h2>
@@ -76,7 +69,7 @@ export function SiteFooter() {
 
               <Link
                 to="/auth"
-                className="group inline-flex items-center gap-4 rounded-full bg-primary p-2 ps-6 font-bold text-primary-foreground shadow-[0_18px_45px_-20px_hsl(var(--primary)/0.6)] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.02] active:scale-[0.96]"
+                className="group inline-flex items-center gap-4 rounded-full bg-primary p-2 ps-6 font-bold text-primary-foreground transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.02] active:scale-[0.96]"
               >
                 <span className="text-lg">ابدأ مجانًا</span>
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-background text-primary transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:-rotate-45">
@@ -108,59 +101,57 @@ export function SiteFooter() {
               ))}
             </div>
 
-            {/* contact card — gradient hairline + core */}
+            {/* contact */}
             <div className="min-w-0 lg:col-span-4">
-              <div className="rounded-[1.75rem] bg-[linear-gradient(150deg,hsl(var(--border)),transparent)] p-px">
-                <div className="space-y-5 rounded-[calc(1.75rem-1px)] bg-background/70 p-6 shadow-[inset_0_1px_1px_hsl(0_0%_100%/0.05)]">
-                  <span className="block text-xs font-medium text-muted-foreground">
-                    تواصل معنا
+              <span className="block text-xs font-medium text-muted-foreground">
+                تواصل معنا
+              </span>
+
+              <div className="mt-1">
+                <a
+                  href="tel:+201066830834"
+                  aria-label="اتصل بنا على الرقم 01066830834"
+                  className="group/item flex items-center justify-between gap-3 border-b border-border/40 py-4 sm:gap-4"
+                >
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <span className="truncate font-medium text-foreground/85" dir="ltr">
+                      01066830834
+                    </span>
                   </span>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/item:text-primary">
+                    <Phone className="h-4.5 w-4.5" strokeWidth={1.5} />
+                  </span>
+                </a>
 
-                  <a
-                    href="tel:+201066830834"
-                    aria-label="اتصل بنا على الرقم 01066830834"
-                    className="group/item flex items-center justify-between gap-3 sm:gap-4"
-                  >
-                    <span className="flex min-w-0 items-center gap-2.5">
-                      <span className="truncate font-medium text-foreground/85" dir="ltr">
-                        01066830834
-                      </span>
+                <a
+                  href="mailto:muhammedaliomran@gmail.com"
+                  aria-label="راسلنا على البريد الإلكتروني muhammedaliomran@gmail.com"
+                  className="group/item flex items-center justify-between gap-3 border-b border-border/40 py-4 sm:gap-4"
+                >
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <span className="truncate text-sm font-medium text-foreground/85 sm:text-base" dir="ltr">
+                      muhammedaliomran@gmail.com
                     </span>
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-muted/40 text-muted-foreground transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/item:border-primary group-hover/item:text-primary">
-                      <Phone className="h-4.5 w-4.5" strokeWidth={1.5} />
-                    </span>
-                  </a>
+                  </span>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/item:text-primary">
+                    <Mail className="h-4.5 w-4.5" strokeWidth={1.5} />
+                  </span>
+                </a>
 
-                  <a
-                    href="mailto:muhammedaliomran@gmail.com"
-                    aria-label="راسلنا على البريد الإلكتروني muhammedaliomran@gmail.com"
-                    className="group/item flex items-center justify-between gap-3 sm:gap-4"
-                  >
-                    <span className="flex min-w-0 items-center gap-2.5">
-                      <span className="truncate text-sm font-medium text-foreground/85 sm:text-base" dir="ltr">
-                        muhammedaliomran@gmail.com
-                      </span>
-                    </span>
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-muted/40 text-muted-foreground transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/item:border-primary group-hover/item:text-primary">
-                      <Mail className="h-4.5 w-4.5" strokeWidth={1.5} />
-                    </span>
-                  </a>
-
-                  <a
-                    href="https://wa.me/201066830834"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="تواصل معنا على واتساب على الرقم 01066830834"
-                    className="group/item flex items-center justify-between gap-3 sm:gap-4"
-                  >
-                    <span className="flex min-w-0 items-center gap-2.5">
-                      <span className="truncate font-medium text-foreground/85">دعم واتساب 24/7</span>
-                    </span>
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-muted/40 text-primary">
-                      <MessageCircle className="h-4.5 w-4.5" strokeWidth={1.5} />
-                    </span>
-                  </a>
-                </div>
+                <a
+                  href="https://wa.me/201066830834"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="تواصل معنا على واتساب على الرقم 01066830834"
+                  className="group/item flex items-center justify-between gap-3 py-4 sm:gap-4"
+                >
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <span className="truncate font-medium text-foreground/85">دعم واتساب 24/7</span>
+                  </span>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-primary">
+                    <MessageCircle className="h-4.5 w-4.5" strokeWidth={1.5} />
+                  </span>
+                </a>
               </div>
             </div>
           </div>
@@ -170,12 +161,12 @@ export function SiteFooter() {
             <p className="text-sm text-muted-foreground">
               © {year} سِجلّي — كل الحقوق محفوظة.
             </p>
-            <p className="flex items-center gap-2 rounded-full border border-primary/15 bg-primary/[0.06] px-3 py-1">
+            <p className="flex items-center gap-2.5">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
               </span>
-              <span className="text-xs font-medium text-primary">
+              <span className="text-xs text-muted-foreground">
                 كل البيانات متزامنة ومحفوظة لحظيًا
               </span>
             </p>

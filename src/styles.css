@@ -178,8 +178,8 @@
   .privacy-clear { filter: blur(0); transition: filter .4s ease; }
 
   .action-btn { transition: transform .18s ease, box-shadow .25s ease, background-color .2s ease, color .2s ease; }
-  .action-btn:hover { transform: scale(1.15); box-shadow: 0 0 12px hsl(var(--primary) / 0.45); }
-  .action-btn.danger:hover { box-shadow: 0 0 12px hsl(var(--destructive) / 0.5); }
+  .action-btn:hover { transform: scale(1.15); box-shadow: 0 6px 16px -8px hsl(165 40% 1% / 0.6); }
+  .action-btn.danger:hover { box-shadow: 0 6px 16px -8px hsl(165 40% 1% / 0.6); }
 
   .row-hover { transition: background-color .25s ease, transform .18s ease; }
   .row-hover:hover { background-color: hsl(var(--primary) / 0.06); }
@@ -241,18 +241,17 @@
   --space-8: 4rem;
 
   --hairline: hsl(0 0% 100% / 0.07);
-  --shadow-ambient: 0 28px 70px -28px hsl(165 40% 1% / 0.85), 0 10px 24px -14px hsl(165 40% 1% / 0.6);
+  --shadow-ambient: 0 18px 44px -26px hsl(165 40% 1% / 0.75), 0 8px 20px -14px hsl(165 40% 1% / 0.55);
   --shadow-soft: 0 2px 4px -2px hsl(165 40% 1% / 0.5), 0 12px 32px -18px hsl(165 40% 1% / 0.65);
-  --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.2), 0 20px 50px -22px hsl(var(--primary) / 0.4);
+  --shadow-glow: 0 2px 4px -2px hsl(165 40% 1% / 0.5), 0 14px 30px -18px hsl(165 40% 1% / 0.6);
   --gradient-mesh:
-    radial-gradient(58rem 38rem at 86% -12%, hsl(160 84% 42% / 0.26), transparent 62%),
-    radial-gradient(44rem 34rem at 4% 12%, hsl(186 78% 46% / 0.14), transparent 62%),
-    radial-gradient(52rem 40rem at 48% 112%, hsl(160 70% 38% / 0.18), transparent 66%);
+    radial-gradient(58rem 38rem at 86% -12%, hsl(160 70% 36% / 0.14), transparent 62%),
+    radial-gradient(52rem 40rem at 48% 112%, hsl(160 64% 34% / 0.1), transparent 66%);
 
   /* Impeccable style inspiration tokens */
   --imp-bg-strong: hsla(166, 20%, 7%, 0.8);
   --imp-border-light: hsla(0, 0%, 100%, 0.08);
-  --imp-glow: 0 0 40px -10px hsla(160, 84%, 39%, 0.3);
+  --imp-glow: 0 16px 36px -22px hsla(165, 40%, 1%, 0.6);
 }
 
 
@@ -273,7 +272,6 @@
   background: linear-gradient(160deg, hsl(0 0% 100% / 0.08), hsl(0 0% 100% / 0.02));
   backdrop-filter: blur(8px);
   box-shadow:
-    inset 0 1px 0 hsl(0 0% 100% / 0.1),
     0 0 0 1px hsl(0 0% 100% / 0.05),
     var(--shadow-ambient);
   transition:
@@ -292,10 +290,9 @@
 
 @utility bezel-lift {
   &:hover {
-    transform: translateY(-4px) scale(1.005);
+    transform: translateY(-4px);
     box-shadow:
-      inset 0 1px 0 hsl(0 0% 100% / 0.15),
-      var(--imp-glow),
+      0 0 0 1px hsl(0 0% 100% / 0.08),
       var(--shadow-ambient);
   }
 }
@@ -332,7 +329,7 @@
   width: 2rem;
   height: 2rem;
   border-radius: 9999px;
-  background: hsl(240 10% 8% / 0.16);
+  background: hsl(165 40% 1% / 0.16);
   transition: transform 0.45s var(--ease-fluid);
   .group:hover & {
     transform: translateX(-3px) scale(1.06);
@@ -409,43 +406,42 @@
   backdrop-filter: blur(12px);
   box-shadow:
     inset 0 1px 1px var(--imp-border-light),
-    inset 0 0 0 1px hsl(0 0% 100% / 0.05),
-    0 20px 50px -26px hsl(240 20% 2% / 0.7);
+    0 0 0 1px hsl(0 0% 100% / 0.05),
+    0 10px 28px -20px hsl(165 40% 1% / 0.55);
   transition:
     transform 0.5s var(--ease-fluid),
     box-shadow 0.5s var(--ease-fluid),
     background-color 0.5s var(--ease-fluid);
-  
+
   &:hover {
-    transform: translateY(-4px) scale(1.01);
+    transform: translateY(-4px);
     background: linear-gradient(165deg, hsl(var(--card) / 0.9), hsl(var(--card) / 0.7));
     box-shadow:
       inset 0 1px 1px hsl(0 0% 100% / 0.12),
-      0 20px 60px -20px hsl(240 20% 2% / 0.8),
-      var(--imp-glow),
-      0 0 0 1px hsl(var(--primary) / 0.2);
+      0 0 0 1px hsl(0 0% 100% / 0.08),
+      0 16px 36px -22px hsl(165 40% 1% / 0.65);
   }
 }
 
 @utility plate-accent {
   box-shadow:
     inset 0 1px 1px hsl(0 0% 100% / 0.075),
-    inset 0 0 0 1px hsl(var(--primary) / 0.28),
-    0 20px 50px -26px hsl(var(--primary) / 0.4);
+    0 0 0 1px hsl(var(--primary) / 0.35),
+    0 10px 28px -20px hsl(165 40% 1% / 0.55);
 }
 
 @utility plate-danger {
   box-shadow:
     inset 0 1px 1px hsl(0 0% 100% / 0.075),
-    inset 0 0 0 1px hsl(var(--danger) / 0.3),
-    0 20px 50px -26px hsl(var(--danger) / 0.35);
+    0 0 0 1px hsl(var(--danger) / 0.35),
+    0 10px 28px -20px hsl(165 40% 1% / 0.55);
 }
 
 @utility plate-warning {
   box-shadow:
     inset 0 1px 1px hsl(0 0% 100% / 0.075),
-    inset 0 0 0 1px hsl(var(--warning) / 0.3),
-    0 20px 50px -26px hsl(var(--warning) / 0.35);
+    0 0 0 1px hsl(var(--warning) / 0.35),
+    0 10px 28px -20px hsl(165 40% 1% / 0.55);
 }
 
 /* Horizontal mobile nav strip: hide the scrollbar but keep scrolling. */
@@ -468,7 +464,6 @@
     linear-gradient(hsl(var(--background) / 0.82), hsl(var(--background) / 0.82));
   backdrop-filter: blur(28px) saturate(150%);
   box-shadow:
-    inset 0 1px 0 hsl(0 0% 100% / 0.08),
     0 0 0 1px var(--hairline),
     var(--shadow-soft);
 }
@@ -478,7 +473,6 @@
   background: linear-gradient(165deg, hsl(var(--card) / 0.72), hsl(var(--card) / 0.5));
   backdrop-filter: blur(22px) saturate(140%);
   box-shadow:
-    inset 0 1px 1px hsl(0 0% 100% / 0.07),
     0 0 0 1px var(--hairline),
     var(--shadow-soft);
 }

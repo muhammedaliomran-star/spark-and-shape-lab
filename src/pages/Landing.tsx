@@ -195,7 +195,7 @@ function Landing() {
       <section id="features" className="scroll-mt-20 py-32">
         <div className="mx-auto grid max-w-6xl gap-14 px-6 lg:grid-cols-[1fr_2fr] lg:items-center">
           <Reveal>
-            <span className="eyebrow mb-4">المميزات</span>
+            <span className="mb-4 block text-[11px] font-bold tracking-[0.2em] text-primary">المميزات</span>
             <h2 className="text-title">
               مصمم لطريقة
               <br />
@@ -215,7 +215,7 @@ function Landing() {
               <Reveal
                 key={f.title}
                 delay={i * 70}
-                className="plate group p-8 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:plate-accent"
+                className="plate group p-8 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1"
               >
                 <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/20 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105">
                   <f.icon className="h-5 w-5" strokeWidth={1.5} />
@@ -240,7 +240,6 @@ function Landing() {
         }}
       >
         <Reveal className="mx-auto max-w-6xl px-6 text-center">
-          <span className="eyebrow mb-4">نظرة شاملة</span>
           <h2 className="text-title mx-auto max-w-xl">
             كل حركة في محلك، مسجّلة ومحسوبة.
           </h2>
@@ -248,38 +247,38 @@ function Landing() {
 
         <Reveal delay={120} className="mx-auto mt-16 max-w-5xl px-6">
           <div className="bezel-shell">
-            <div className="bezel-core p-3">
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[
-                { k: "إجمالي التحصيل", v: "١٢٨٬٥٤٠" },
-                { k: "أقساط مستحقة", v: "٢٤" },
-                { k: "عملاء نشطون", v: "٣٤٢" },
-              ].map((s) => (
-                <div key={s.k} className="rounded-[1.1rem] bg-background/50 p-5 text-right hairline">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{s.k}</p>
-                  <p className="text-numeric mt-2.5 text-[1.75rem] font-extrabold leading-none text-primary">{s.v}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 rounded-[1.1rem] bg-background/50 p-5 hairline">
-              <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">آخر الفواتير</p>
-              <div className="space-y-1.5">
+            <div className="bezel-core p-7 sm:p-9">
+              <div className="grid gap-7 text-right sm:grid-cols-3 sm:gap-0 sm:[&>*+*]:border-s sm:[&>*+*]:border-[var(--hairline)] sm:[&>*+*]:ps-8">
                 {[
-                  ["محمود عبد المنعم", "مكتمل", "١٬٢٥٠"],
-                  ["سارة محمد", "قسط مستحق", "٨٥٠"],
-                  ["خالد السبيعي", "جارٍ السداد", "٢٬٣٠٠"],
-                ].map(([n, st, amt]) => (
-                  <div
-                    key={n}
-                    className="row-hover flex items-center justify-between rounded-xl bg-card/70 px-4 py-3 text-sm hairline"
-                  >
-                    <span className="font-medium">{n}</span>
-                    <span className="text-xs text-muted-foreground">{st}</span>
-                    <span className="font-bold text-primary">{amt}</span>
+                  { k: "إجمالي التحصيل", v: "١٢٨٬٥٤٠" },
+                  { k: "أقساط مستحقة", v: "٢٤" },
+                  { k: "عملاء نشطون", v: "٣٤٢" },
+                ].map((s) => (
+                  <div key={s.k}>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{s.k}</p>
+                    <p className="text-numeric mt-2.5 text-[1.75rem] font-extrabold leading-none">{s.v}</p>
                   </div>
                 ))}
               </div>
-            </div>
+              <div className="mt-8 border-t border-[var(--hairline)] pt-6">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">آخر الفواتير</p>
+                <div>
+                  {[
+                    ["محمود عبد المنعم", "مكتمل", "١٬٢٥٠"],
+                    ["سارة محمد", "قسط مستحق", "٨٥٠"],
+                    ["خالد السبيعي", "جارٍ السداد", "٢٬٣٠٠"],
+                  ].map(([n, st, amt]) => (
+                    <div
+                      key={n}
+                      className="row-hover flex items-center justify-between gap-3 py-3 text-sm"
+                    >
+                      <span className="font-medium">{n}</span>
+                      <span className="text-xs text-muted-foreground">{st}</span>
+                      <span className="font-bold tabular-nums">{amt}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </Reveal>
@@ -304,7 +303,7 @@ function Landing() {
           <div className="flex items-center px-6 py-24 lg:px-16">
             <div className="w-full max-w-lg">
               <Reveal>
-                <span className="eyebrow mb-4">لمين النظام</span>
+                <span className="mb-4 block text-[11px] font-bold tracking-[0.2em] text-primary">لمين النظام</span>
                 <h2 className="text-title">
                   للتاجر اللي بيبيع
                   <br />
@@ -376,7 +375,7 @@ function Landing() {
       {/* ── 7. pricing ──────────────────────────────────── */}
       <section id="pricing" className="scroll-mt-20 py-32">
         <Reveal className="mx-auto max-w-6xl px-6 text-center">
-          <span className="eyebrow mb-4">الأسعار</span>
+          <span className="mb-4 block text-[11px] font-bold tracking-[0.2em] text-primary">الأسعار</span>
           <h2 className="text-title">
             اختر الخطة اللي تناسب محلك
           </h2>
@@ -394,7 +393,9 @@ function Landing() {
               }
             >
               {p.featured && (
-                <span className="eyebrow absolute -top-3 start-9">الأكثر اختيارًا</span>
+                <span className="absolute -top-3 start-9 rounded-full bg-primary px-3 py-1 text-[10px] font-bold tracking-[0.08em] text-primary-foreground">
+                  الأكثر اختيارًا
+                </span>
               )}
               <h3 className="text-[17px] font-bold tracking-[-0.01em]">{p.name}</h3>
               <p className="mt-5 flex items-baseline gap-2">
@@ -414,7 +415,7 @@ function Landing() {
                 to="/auth"
                 className={
                   p.featured
-                    ? "press mt-9 block rounded-full bg-primary py-3 text-center text-sm font-bold text-primary-foreground hover:shadow-[var(--shadow-glow)]"
+                    ? "press mt-9 block rounded-full bg-primary py-3 text-center text-sm font-bold text-primary-foreground hover:brightness-110"
                     : "press mt-9 block rounded-full bg-foreground/[0.05] py-3 text-center text-sm font-semibold ring-1 ring-inset ring-[var(--hairline)] hover:bg-foreground/[0.09]"
                 }
               >
@@ -445,7 +446,6 @@ function Landing() {
         />
 
         <Reveal className="relative mx-auto max-w-2xl px-6 py-36 text-center">
-          <span className="eyebrow mb-5">خطوتك الجاية</span>
           <h2 className="text-title">
             اقفل الدفتر الورقي النهاردة.
           </h2>
