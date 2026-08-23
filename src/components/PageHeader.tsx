@@ -21,7 +21,7 @@ export function PageHeader({
         className="pointer-events-none absolute -top-16 right-0 -z-10 h-48 w-[26rem] max-w-full rounded-full bg-primary/12 blur-[80px]"
       />
       <div className="order-1 min-w-0 text-right">
-        {eyebrow && <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-3 py-1 text-xs font-bold tracking-[0.06em] text-muted-foreground ring-1 ring-border">{eyebrow}</span>}
+        {eyebrow && <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-3 py-1 text-xs font-medium tracking-[0.03em] text-muted-foreground ring-1 ring-border">{eyebrow}</span>}
         <h1 className="text-title flex w-full items-center justify-start gap-3 text-right text-foreground">
           <span className="truncate">{title}</span>
           {icon && <span className="shrink-0 opacity-90">{icon}</span>}

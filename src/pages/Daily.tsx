@@ -416,7 +416,7 @@ function DailyPage() {
       <div className="mt-8 grid gap-4 pb-24 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:pb-8">
         <Reveal>
           <BezelCard variant="flat" innerClassName="p-0 overflow-hidden">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 px-6 py-6 sm:px-8">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 p-6 sm:p-8">
               <span className="order-2 rounded-full bg-foreground/[0.06] px-3 py-1 text-[11px] font-semibold text-muted-foreground ring-1 ring-inset ring-[var(--hairline)]">
                 {rangeLabel}
               </span>
@@ -430,14 +430,14 @@ function DailyPage() {
             <table className="w-full min-w-[46rem] text-right text-sm">
               <thead>
                 <tr className="border-b border-[var(--hairline)] text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                  <th className="px-5 py-4 font-bold">رقم</th>
-                  <th className="px-5 py-4 font-bold">الوقت</th>
-                  <th className="px-5 py-4 font-bold">العميل</th>
-                  <th className="px-5 py-4 font-bold">الإجمالي</th>
-                  <th className="px-5 py-4 font-bold">مدفوع</th>
-                  <th className="px-5 py-4 font-bold">متبقي</th>
-                  <th className="px-5 py-4 font-bold">نوع</th>
-                  <th className="px-5 py-4 font-bold">الحالة</th>
+                  <th className="px-6 py-4 font-bold">رقم</th>
+                  <th className="px-6 py-4 font-bold">الوقت</th>
+                  <th className="px-6 py-4 font-bold">العميل</th>
+                  <th className="px-6 py-4 font-bold">الإجمالي</th>
+                  <th className="px-6 py-4 font-bold">مدفوع</th>
+                  <th className="px-6 py-4 font-bold">متبقي</th>
+                  <th className="px-6 py-4 font-bold">نوع</th>
+                  <th className="px-6 py-4 font-bold">الحالة</th>
                 </tr>
               </thead>
               <tbody>
@@ -501,14 +501,14 @@ function DailyPage() {
             <span className="text-numeric text-[11px] text-muted-foreground" dir="ltr">{from} — {to}</span>
             <h2 className="text-lg font-bold text-foreground">نبذة الفترة</h2>
           </div>
-          <div className="grid grid-cols-2 divide-x divide-x-reverse divide-border/40 overflow-hidden rounded-2xl border border-border/30">
-            <div className="p-4 text-right">
+          <div className="grid grid-cols-2 divide-x divide-x-reverse divide-border/30">
+            <div className="py-3 pe-4 text-right">
               <MetricLabel>مصروفات الفترة</MetricLabel>
               <div className={cn("text-numeric mt-2 text-xl font-extrabold text-warning", masked && "privacy-blur")}>
                 {money(stats.periodExpenses)}
               </div>
             </div>
-            <div className="p-4 text-right">
+            <div className="py-3 ps-4 text-right">
               <MetricLabel>الصافي</MetricLabel>
               <div className={cn("text-numeric mt-2 text-xl font-extrabold", stats.net >= 0 ? "text-success" : "text-danger", masked && "privacy-blur")}>
                 {money(stats.net)}
