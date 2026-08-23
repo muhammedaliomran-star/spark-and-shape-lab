@@ -147,7 +147,7 @@ function Landing() {
 
         <div className="relative mx-auto w-full max-w-6xl px-6 pb-24 pt-32">
           <Reveal className="max-w-2xl">
-            <span className="mb-6 block text-[11px] font-bold tracking-[0.2em] text-muted-foreground">نظام إدارة الفواتير والأقساط</span>
+            <span className="mb-6 block text-xs font-semibold tracking-[0.14em] text-muted-foreground">نظام إدارة الفواتير والأقساط</span>
             <h1 className="text-hero">
               دفترك كله.
               <br />
@@ -195,7 +195,7 @@ function Landing() {
       <section id="features" className="scroll-mt-20 py-32">
         <div className="mx-auto grid max-w-6xl gap-14 px-6 lg:grid-cols-[1fr_2fr] lg:items-center">
           <Reveal>
-            <span className="mb-4 block text-[11px] font-bold tracking-[0.2em] text-muted-foreground">المميزات</span>
+            <span className="mb-4 block text-xs font-semibold tracking-[0.14em] text-muted-foreground">المميزات</span>
             <h2 className="text-title">
               مصمم لطريقة
               <br />
@@ -300,7 +300,7 @@ function Landing() {
           <div className="flex items-center px-6 py-24 lg:px-16">
             <div className="w-full max-w-lg">
               <Reveal>
-                <span className="mb-4 block text-[11px] font-bold tracking-[0.2em] text-muted-foreground">لمين النظام</span>
+                <span className="mb-4 block text-xs font-semibold tracking-[0.14em] text-muted-foreground">لمين النظام</span>
                 <h2 className="text-title">
                   للتاجر اللي بيبيع
                   <br />
@@ -372,7 +372,7 @@ function Landing() {
       {/* ── 7. pricing ──────────────────────────────────── */}
       <section id="pricing" className="scroll-mt-20 py-32">
         <Reveal className="mx-auto max-w-6xl px-6 text-center">
-          <span className="mb-4 block text-[11px] font-bold tracking-[0.2em] text-muted-foreground">الأسعار</span>
+          <span className="mb-4 block text-xs font-semibold tracking-[0.14em] text-muted-foreground">الأسعار</span>
           <h2 className="text-title">
             اختر الخطة اللي تناسب محلك
           </h2>
