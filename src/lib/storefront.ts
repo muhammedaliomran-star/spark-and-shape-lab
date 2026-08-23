@@ -21,6 +21,14 @@ export interface Storefront {
   is_published: boolean;
 }
 
+export interface StorefrontCategory {
+  id: string;
+  storefront_id: string;
+  name: string;
+  slug: string;
+  sort_order: number;
+}
+
 export interface StorefrontProduct {
   id: string;
   storefront_id: string;
@@ -37,6 +45,25 @@ export interface StorefrontProduct {
   sort_order: number;
   is_published: boolean;
   available_quantity?: number;
+}
+
+export interface ShippingOption {
+  id: string;
+  name: string;
+  delivery_cost: number;
+  estimated_days: number;
+  carrier_name: string;
+}
+
+export interface StorefrontNotification {
+  id: string;
+  user_id: string;
+  order_id: string | null;
+  event_id: string | null;
+  title: string;
+  body: string;
+  read_at: string | null;
+  created_at: string;
 }
 
 export interface StoreOrder {
@@ -133,7 +160,8 @@ export async function updateStoreOrderStatus(orderId: string, status: Exclude<St
 
 export interface PublicStorefrontData {
   storefront: Omit<Storefront, "owner_id" | "branch_id" | "is_published">;
-  categories: any[];
+  categories: StorefrontCategory[];
+  shippingOptions: ShippingOption[];
   products: StorefrontProduct[];
 }
 
@@ -141,10 +169,15 @@ export async function getPublicStorefront(slug: string): Promise<PublicStorefron
   const { data, error } = await storefrontDb.rpc("get_public_storefront", { p_slug: slug.toLowerCase() });
   if (error) throw error;
   if (!data) return null;
-  return { storefront: data.storefront as PublicStorefrontData["storefront"], categories: data.categories ?? [], products: (data.products ?? []).map(mapProduct) };
+  return {
+    storefront: data.storefront as PublicStorefrontData["storefront"],
+    categories: (data.categories ?? []) as StorefrontCategory[],
+    shippingOptions: (data.shipping_options ?? []).map((value: any) => ({ id: value.id, name: value.name, delivery_cost: asNumber(value.delivery_cost), estimated_days: asNumber(value.estimated_days), carrier_name: value.carrier_name ?? "" })) as ShippingOption[],
+    products: (data.products ?? []).map(mapProduct),
+  };
 }
 
-export async function submitStoreOrder(input: { storefrontId: string; customerName: string; customerPhone: string; deliveryAddress: string; deliveryArea?: string; notes?: string; orderType: OrderType; items: Array<{ productId: string; quantity: number }> }) {
+export async function submitStoreOrder(input: { storefrontId: string; customerName: string; customerPhone: string; deliveryAddress: string; deliveryArea?: string; notes?: string; orderType: OrderType; shippingZoneId?: string; items: Array<{ productId: string; quantity: number }> }) {
   const { data, error } = await storefrontDb.rpc("submit_store_order", {
     p_storefront_id: input.storefrontId,
     p_customer_name: input.customerName,
@@ -153,10 +186,87 @@ export async function submitStoreOrder(input: { storefrontId: string; customerNa
     p_delivery_area: input.deliveryArea ?? null,
     p_notes: input.notes ?? null,
     p_order_type: input.orderType,
+    p_shipping_zone_id: input.shippingZoneId ?? null,
     p_items: input.items.map((item) => ({ product_id: item.productId, quantity: item.quantity })),
   });
   if (error) throw error;
-  return data as { id: string; public_number: string; status: StoreOrderStatus };
+  return data as { id: string; public_number: string; status: StoreOrderStatus; shipping_fee: number; total: number };
+}
+
+export interface PublicOrderStatus {
+  id: string;
+  public_number: string;
+  status: StoreOrderStatus;
+  total: number;
+  items: Array<{ title: string; quantity: number }>;
+}
+
+export async function getPublicOrderStatus(publicNumber: string, customerPhone: string): Promise<PublicOrderStatus | null> {
+  const { data, error } = await storefrontDb.rpc("get_public_order_status", {
+    p_public_number: publicNumber.trim(),
+    p_customer_phone: customerPhone.trim(),
+  });
+  if (error) throw error;
+  if (!data) return null;
+  return {
+    id: data.id ?? "",
+    public_number: data.public_number,
+    status: data.status,
+    total: asNumber(data.total),
+    items: (data.items ?? []).map((item: any) => ({ title: item.title, quantity: asNumber(item.quantity) })),
+  };
+}
+
+export async function getStorefrontCategories(storefrontId: string) {
+  const { data, error } = await storefrontDb.from("storefront_categories").select("*").eq("storefront_id", storefrontId).order("sort_order").order("name");
+  if (error) throw error;
+  return (data ?? []) as StorefrontCategory[];
+}
+
+export async function saveStorefrontCategory(input: Pick<StorefrontCategory, "storefront_id" | "name" | "sort_order"> & { id?: string }) {
+  const payload = { storefront_id: input.storefront_id, name: input.name.trim(), slug: storefrontSlug(input.name), sort_order: input.sort_order ?? 0, updated_at: new Date().toISOString() };
+  const query = input.id
+    ? storefrontDb.from("storefront_categories").update(payload).eq("id", input.id).select().single()
+    : storefrontDb.from("storefront_categories").insert(payload).select().single();
+  const { data, error } = await query;
+  if (error) throw error;
+  return data as StorefrontCategory;
+}
+
+export function storefrontProductReady(product: Pick<StorefrontProduct, "title" | "display_price" | "is_published">, stockQuantity: number): string | null {
+  if (!product.title.trim()) return "اكتب عنوان المنتج";
+  if (!Number.isFinite(product.display_price) || product.display_price < 0) return "اكتب سعر صحيح";
+  if (product.is_published && stockQuantity <= 0) return "المخزون خلص، مينفعش تنشر المنتج";
+  return null;
+}
+
+export async function uploadStorefrontProductImage(file: File): Promise<string> {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  if (!userData.user) throw new Error("سجل الدخول أولًا");
+  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const path = `${userData.user.id}/${crypto.randomUUID()}.${extension}`;
+  const { error: uploadError } = await supabase.storage.from("storefront-product-images").upload(path, file, { cacheControl: "3600", upsert: false });
+  if (uploadError) throw uploadError;
+  const { data: publicUrl } = supabase.storage.from("storefront-product-images").getPublicUrl(path);
+  return publicUrl.publicUrl;
+}
+
+export async function getStorefrontNotifications(): Promise<StorefrontNotification[]> {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  if (!userData.user) return [];
+  const { data, error } = await storefrontDb.from("storefront_notifications").select("*").eq("user_id", userData.user.id).order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as StorefrontNotification[];
+}
+
+export async function markStorefrontNotificationRead(id: string) {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  if (!userData.user) throw new Error("سجل الدخول أولًا");
+  const { error } = await storefrontDb.from("storefront_notifications").update({ read_at: new Date().toISOString() }).eq("id", id).eq("user_id", userData.user.id);
+  if (error) throw error;
 }
 
 export function storefrontSlug(value: string) {
