@@ -29,7 +29,7 @@ export function QuickActionsFab() {
           onClick={() => setOpen((v) => !v)}
           aria-label="إجراء سريع"
           className={cn(
-            "w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl shadow-primary/40 grid place-items-center transition-all duration-300 hover:scale-110 animate-fab-spring",
+            "w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-2xl shadow-primary/40 grid place-items-center transition-[transform,box-shadow] duration-300 hover:scale-110 animate-fab-spring",
             open && "rotate-45"
           )}
         >
@@ -73,7 +73,7 @@ function FabItem({ label, icon, onClick, delay }: { label: string; icon: React.R
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 pl-2 pr-3 py-2 rounded-full bg-card border border-primary/30 text-foreground shadow-lg hover:border-primary hover:bg-primary/10 transition-all animate-[slide-up_0.25s_ease-out_both]"
+      className="flex items-center gap-2 pl-2 pr-3 py-2 rounded-full bg-card border border-primary/30 text-foreground shadow-lg hover:border-primary hover:bg-primary/10 transition-[background-color,border-color,transform] animate-[slide-up_0.25s_ease-out_both]"
       style={{ animationDelay: `${delay}ms` }}
     >
       <span className="w-8 h-8 rounded-full bg-primary/15 text-primary grid place-items-center">{icon}</span>

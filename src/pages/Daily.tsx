@@ -426,7 +426,7 @@ function DailyPage() {
               </div>
             </div>
 
-          <div className="no-scrollbar overflow-x-auto border-t border-[var(--hairline)]">
+          <div className="no-scrollbar overflow-x-auto border-t border-[var(--hairline)] px-2 sm:px-3">
             <table className="w-full min-w-[46rem] text-right text-sm">
               <thead>
                 <tr className="border-b border-[var(--hairline)] text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
