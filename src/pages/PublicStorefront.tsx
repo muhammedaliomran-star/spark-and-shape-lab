@@ -19,7 +19,10 @@ export default function PublicStorefront({ slug }: { slug: string }) {
 
   useEffect(() => { getPublicStorefront(slug).then(setData).finally(() => setLoading(false)); }, [slug]);
   const products = useMemo(() => (data?.products ?? []).filter((item) => item.title.includes(query) || (item.description ?? "").includes(query)), [data, query]);
-  const add = (product: StorefrontProduct) => setCart((current) => { const line = current.find((item) => item.product.id === product.id); return line ? current.map((item) => item.product.id === product.id ? { ...item, quantity: Math.min(item.quantity + 1, product.available_quantity ?? item.quantity + 1) } : item) : [...current, { product, quantity: 1 }]; });
+  const add = (product: StorefrontProduct) => {
+    if ((product.available_quantity ?? 0) < 1) return;
+    setCart((current) => { const line = current.find((item) => item.product.id === product.id); return line ? current.map((item) => item.product.id === product.id ? { ...item, quantity: Math.min(item.quantity + 1, product.available_quantity ?? item.quantity + 1) } : item) : [...current, { product, quantity: 1 }]; });
+  };
   const setQuantity = (productId: string, quantity: number) => setCart((current) => quantity < 1 ? current.filter((item) => item.product.id !== productId) : current.map((item) => item.product.id === productId ? { ...item, quantity: Math.min(quantity, item.product.available_quantity ?? quantity) } : item));
   const total = cart.reduce((sum, line) => sum + line.product.display_price * line.quantity, 0);
 

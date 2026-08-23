@@ -1,25 +1,42 @@
 -- Storefront MVP: public catalogue + reviewed orders, isolated from internal accounting data.
 
-create type public.store_order_status as enum (
-  'submitted', 'under_review', 'needs_info', 'accepted', 'invoiced', 'shipped',
-  'delivered', 'rejected', 'cancelled', 'expired'
+-- This migration may be applied to projects where the earlier shipping migration
+-- was not run, so every shipping dependency is created defensively here.
+do $$ begin
+  create type public.store_order_status as enum ('submitted', 'under_review', 'needs_info', 'accepted', 'invoiced', 'shipped', 'delivered', 'rejected', 'cancelled', 'expired');
+exception when duplicate_object then null; end $$;
+do $$ begin create type public.store_order_type as enum ('cash_on_delivery', 'installment_request'); exception when duplicate_object then null; end $$;
+do $$ begin create type public.stock_reservation_status as enum ('active', 'released', 'consumed', 'expired'); exception when duplicate_object then null; end $$;
+do $$ begin create type public.shipment_status as enum ('pending', 'processing', 'shipped', 'delivered', 'returned', 'cancelled'); exception when duplicate_object then null; end $$;
+
+create table if not exists public.shipping_carriers (
+  id uuid primary key default gen_random_uuid(), name text not null, contact_person text, phone text, email text,
+  base_cost numeric(12,2) default 0, active boolean default true, created_at timestamptz default now()
 );
-
-create type public.store_order_type as enum ('cash_on_delivery', 'installment_request');
-create type public.stock_reservation_status as enum ('active', 'released', 'consumed', 'expired');
-
--- Shipping was introduced before account ownership was enforced. Store-created
--- shipments must be owned by the storefront account and never be publicly readable.
+create table if not exists public.shipping_zones (
+  id uuid primary key default gen_random_uuid(), name text not null,
+  carrier_id uuid references public.shipping_carriers(id) on delete cascade,
+  delivery_cost numeric(12,2) default 0, estimated_days integer default 2, created_at timestamptz default now()
+);
+create table if not exists public.shipments (
+  id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id) on delete cascade,
+  invoice_id uuid references public.invoices(id) on delete cascade,
+  carrier_id uuid references public.shipping_carriers(id), zone_id uuid references public.shipping_zones(id),
+  tracking_number text unique, status public.shipment_status default 'pending', recipient_name text, recipient_phone text,
+  delivery_address text, actual_delivery_date timestamptz, notes text, created_at timestamptz default now()
+);
 alter table public.shipments add column if not exists user_id uuid references auth.users(id) on delete cascade;
-drop policy if exists "Allow authenticated full access to shipments" on public.shipments;
-drop policy if exists "Owners manage shipments" on public.shipments;
-create policy "Owners manage shipments" on public.shipments for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+grant select, insert, update, delete on public.shipments to authenticated;
+grant all on public.shipments to service_role;
+alter table public.shipments enable row level security;
+do $$ begin
+  create policy "Storefront owners manage shipments" on public.shipments for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+exception when duplicate_object then null; end $$;
 
-create table public.storefronts (
+create table if not exists public.storefronts (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null unique references auth.users(id) on delete cascade,
-  branch_id uuid references public.branches(id) on delete set null,
+  branch_id uuid,
   slug text not null unique check (slug ~ '^[a-z0-9-]{3,48}$'),
   name text not null check (char_length(name) between 2 and 100),
   phone text,
@@ -32,7 +49,7 @@ create table public.storefronts (
   updated_at timestamptz not null default now()
 );
 
-create table public.storefront_categories (
+create table if not exists public.storefront_categories (
   id uuid primary key default gen_random_uuid(),
   storefront_id uuid not null references public.storefronts(id) on delete cascade,
   name text not null check (char_length(name) between 1 and 60),
@@ -41,7 +58,7 @@ create table public.storefront_categories (
   unique (storefront_id, slug)
 );
 
-create table public.storefront_products (
+create table if not exists public.storefront_products (
   id uuid primary key default gen_random_uuid(),
   storefront_id uuid not null references public.storefronts(id) on delete cascade,
   stock_item_id uuid not null references public.stock_items(id) on delete restrict,
@@ -66,7 +83,7 @@ create table public.storefront_products (
   )
 );
 
-create table public.store_orders (
+create table if not exists public.store_orders (
   id uuid primary key default gen_random_uuid(),
   public_number text not null unique default upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 8)),
   storefront_id uuid not null references public.storefronts(id) on delete restrict,
@@ -86,7 +103,7 @@ create table public.store_orders (
   updated_at timestamptz not null default now()
 );
 
-create table public.store_order_items (
+create table if not exists public.store_order_items (
   id uuid primary key default gen_random_uuid(),
   order_id uuid not null references public.store_orders(id) on delete cascade,
   storefront_product_id uuid references public.storefront_products(id) on delete set null,
@@ -98,7 +115,7 @@ create table public.store_order_items (
   product_snapshot jsonb not null default '{}'::jsonb
 );
 
-create table public.stock_reservations (
+create table if not exists public.stock_reservations (
   id uuid primary key default gen_random_uuid(),
   stock_item_id uuid not null references public.stock_items(id) on delete restrict,
   order_id uuid not null references public.store_orders(id) on delete cascade,
@@ -110,7 +127,7 @@ create table public.stock_reservations (
   unique (order_id, stock_item_id)
 );
 
-create table public.store_order_events (
+create table if not exists public.store_order_events (
   id uuid primary key default gen_random_uuid(),
   order_id uuid not null references public.store_orders(id) on delete cascade,
   actor_user_id uuid references auth.users(id) on delete set null,
@@ -119,9 +136,9 @@ create table public.store_order_events (
   created_at timestamptz not null default now()
 );
 
-create index storefront_products_public_idx on public.storefront_products (storefront_id, is_published, sort_order);
-create index store_orders_storefront_status_idx on public.store_orders (storefront_id, status, created_at desc);
-create index stock_reservations_active_idx on public.stock_reservations (stock_item_id, status, expires_at);
+create index if not exists storefront_products_public_idx on public.storefront_products (storefront_id, is_published, sort_order);
+create index if not exists store_orders_storefront_status_idx on public.store_orders (storefront_id, status, created_at desc);
+create index if not exists stock_reservations_active_idx on public.stock_reservations (stock_item_id, status, expires_at);
 
 alter table public.storefronts enable row level security;
 alter table public.storefront_categories enable row level security;
@@ -131,21 +148,28 @@ alter table public.store_order_items enable row level security;
 alter table public.stock_reservations enable row level security;
 alter table public.store_order_events enable row level security;
 
+drop policy if exists "Owners manage storefronts" on public.storefronts;
 create policy "Owners manage storefronts" on public.storefronts for all to authenticated
   using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+drop policy if exists "Owners manage storefront categories" on public.storefront_categories;
 create policy "Owners manage storefront categories" on public.storefront_categories for all to authenticated
   using (exists (select 1 from public.storefronts s where s.id = storefront_id and s.owner_id = auth.uid()))
   with check (exists (select 1 from public.storefronts s where s.id = storefront_id and s.owner_id = auth.uid()));
+drop policy if exists "Owners manage storefront products" on public.storefront_products;
 create policy "Owners manage storefront products" on public.storefront_products for all to authenticated
   using (exists (select 1 from public.storefronts s where s.id = storefront_id and s.owner_id = auth.uid()))
   with check (exists (select 1 from public.storefronts s where s.id = storefront_id and s.owner_id = auth.uid()));
+drop policy if exists "Owners manage storefront orders" on public.store_orders;
 create policy "Owners manage storefront orders" on public.store_orders for all to authenticated
   using (exists (select 1 from public.storefronts s where s.id = storefront_id and s.owner_id = auth.uid()))
   with check (exists (select 1 from public.storefronts s where s.id = storefront_id and s.owner_id = auth.uid()));
+drop policy if exists "Owners read storefront order items" on public.store_order_items;
 create policy "Owners read storefront order items" on public.store_order_items for select to authenticated
   using (exists (select 1 from public.store_orders o join public.storefronts s on s.id = o.storefront_id where o.id = order_id and s.owner_id = auth.uid()));
+drop policy if exists "Owners read storefront reservations" on public.stock_reservations;
 create policy "Owners read storefront reservations" on public.stock_reservations for select to authenticated
   using (exists (select 1 from public.store_orders o join public.storefronts s on s.id = o.storefront_id where o.id = order_id and s.owner_id = auth.uid()));
+drop policy if exists "Owners read storefront events" on public.store_order_events;
 create policy "Owners read storefront events" on public.store_order_events for select to authenticated
   using (exists (select 1 from public.store_orders o join public.storefronts s on s.id = o.storefront_id where o.id = order_id and s.owner_id = auth.uid()));
 
@@ -154,7 +178,7 @@ returns jsonb language sql stable security definer set search_path = public as $
   select jsonb_build_object(
     'storefront', jsonb_build_object('id', s.id, 'slug', s.slug, 'name', s.name, 'phone', s.phone, 'whatsapp_phone', s.whatsapp_phone, 'logo_url', s.logo_url, 'description', s.description, 'shipping_policy', s.shipping_policy),
     'categories', coalesce((select jsonb_agg(jsonb_build_object('id', c.id, 'name', c.name, 'slug', c.slug, 'sort_order', c.sort_order) order by c.sort_order, c.name) from storefront_categories c where c.storefront_id = s.id), '[]'::jsonb),
-    'products', coalesce((select jsonb_agg(jsonb_build_object('id', p.id, 'slug', p.slug, 'title', p.title, 'description', p.description, 'images', p.images, 'display_price', p.display_price, 'show_installments', p.show_installments, 'down_payment_from', p.down_payment_from, 'monthly_payment_from', p.monthly_payment_from, 'category_id', p.category_id, 'available_quantity', greatest(si.quantity - coalesce((select sum(r.quantity) from stock_reservations r where r.stock_item_id = si.id and r.status = 'active' and r.expires_at > now()), 0), 0)) order by p.sort_order, p.title) from storefront_products p join stock_items si on si.id = p.stock_item_id where p.storefront_id = s.id and p.is_published and si.quantity > 0), '[]'::jsonb)
+    'products', coalesce((select jsonb_agg(jsonb_build_object('id', p.id, 'slug', p.slug, 'title', p.title, 'description', p.description, 'images', p.images, 'display_price', p.display_price, 'show_installments', p.show_installments, 'down_payment_from', p.down_payment_from, 'monthly_payment_from', p.monthly_payment_from, 'category_id', p.category_id, 'available_quantity', greatest(si.quantity - coalesce((select sum(r.quantity) from stock_reservations r where r.stock_item_id = si.id and r.status = 'active' and r.expires_at > now()), 0), 0)) order by p.sort_order, p.title) from storefront_products p join stock_items si on si.id = p.stock_item_id where p.storefront_id = s.id and p.is_published and (si.quantity - coalesce((select sum(r.quantity) from stock_reservations r where r.stock_item_id = si.id and r.status = 'active' and r.expires_at > now()), 0)) > 0), '[]'::jsonb)
   ) from storefronts s where s.slug = lower(p_slug) and s.is_published;
 $$;
 

@@ -32,6 +32,8 @@ import { Route as SuppliersRouteImport } from './routes/suppliers'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WarehouseRouteImport } from './routes/warehouse'
+import { Route as StorefrontRouteImport } from './routes/storefront'
+import { Route as ShopSlugRouteImport } from './routes/shop.$slug'
 import { Route as InventoryNewRouteImport } from './routes/inventory_.new'
 import { Route as InvoicesNewRouteImport } from './routes/invoices_.new'
 import { Route as PurchasesIndexRouteImport } from './routes/purchases/index'
@@ -153,6 +155,16 @@ const WarehouseRoute = WarehouseRouteImport.update({
   path: '/warehouse',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StorefrontRoute = StorefrontRouteImport.update({
+  id: '/storefront',
+  path: '/storefront',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShopSlugRoute = ShopSlugRouteImport.update({
+  id: '/shop/$slug',
+  path: '/shop/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InventoryNewRoute = InventoryNewRouteImport.update({
   id: '/inventory_/new',
   path: '/inventory/new',
@@ -203,6 +215,8 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/warehouse': typeof WarehouseRoute
+  '/storefront': typeof StorefrontRoute
+  '/shop/$slug': typeof ShopSlugRoute
   '/inventory/new': typeof InventoryNewRoute
   '/invoices/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
@@ -232,6 +246,8 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/warehouse': typeof WarehouseRoute
+  '/storefront': typeof StorefrontRoute
+  '/shop/$slug': typeof ShopSlugRoute
   '/inventory/new': typeof InventoryNewRoute
   '/invoices/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
@@ -263,6 +279,8 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/warehouse': typeof WarehouseRoute
+  '/storefront': typeof StorefrontRoute
+  '/shop/$slug': typeof ShopSlugRoute
   '/inventory_/new': typeof InventoryNewRoute
   '/invoices_/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
@@ -295,6 +313,8 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/warehouse'
+    | '/storefront'
+    | '/shop/$slug'
     | '/inventory/new'
     | '/invoices/new'
     | '/purchases/new'
@@ -324,6 +344,8 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/warehouse'
+    | '/storefront'
+    | '/shop/$slug'
     | '/inventory/new'
     | '/invoices/new'
     | '/purchases/new'
@@ -354,6 +376,8 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/warehouse'
+    | '/storefront'
+    | '/shop/$slug'
     | '/inventory_/new'
     | '/invoices_/new'
     | '/purchases/new'
@@ -385,6 +409,8 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   WarehouseRoute: typeof WarehouseRoute
+  StorefrontRoute: typeof StorefrontRoute
+  ShopSlugRoute: typeof ShopSlugRoute
   InventoryNewRoute: typeof InventoryNewRoute
   InvoicesNewRoute: typeof InvoicesNewRoute
   PurchasesNewRoute: typeof PurchasesNewRoute
@@ -547,7 +573,7 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/warehouse': {
+  '/warehouse': {
       id: '/warehouse'
       path: '/warehouse'
       fullPath: '/warehouse'
@@ -589,6 +615,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportsIndexRouteImport
       parentRoute: typeof ReportsRoute
     }
+    '/storefront': {
+      id: '/storefront'
+      path: '/storefront'
+      fullPath: '/storefront'
+      preLoaderRoute: typeof StorefrontRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shop/$slug': {
+      id: '/shop/$slug'
+      path: '/shop/$slug'
+      fullPath: '/shop/$slug'
+      preLoaderRoute: typeof ShopSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -627,6 +667,8 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   WarehouseRoute: WarehouseRoute,
+  StorefrontRoute: StorefrontRoute,
+  ShopSlugRoute: ShopSlugRoute,
   InventoryNewRoute: InventoryNewRoute,
   InvoicesNewRoute: InvoicesNewRoute,
   PurchasesNewRoute: PurchasesNewRoute,
