@@ -21,6 +21,7 @@ import { Route as ExpensesRouteImport } from './routes/expenses'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as InvoicesRouteImport } from './routes/invoices'
 import { Route as LandingRouteImport } from './routes/landing'
+import { Route as OrderTrackingRouteImport } from './routes/order-tracking'
 import { Route as PaymentsRouteImport } from './routes/payments'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReportsRouteImport } from './routes/reports'
@@ -98,6 +99,11 @@ const InvoicesRoute = InvoicesRouteImport.update({
 const LandingRoute = LandingRouteImport.update({
   id: '/landing',
   path: '/landing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrderTrackingRoute = OrderTrackingRouteImport.update({
+  id: '/order-tracking',
+  path: '/order-tracking',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaymentsRoute = PaymentsRouteImport.update({
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/inventory': typeof InventoryRoute
   '/invoices': typeof InvoicesRoute
   '/landing': typeof LandingRoute
+  '/order-tracking': typeof OrderTrackingRoute
   '/payments': typeof PaymentsRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRouteWithChildren
@@ -236,6 +243,7 @@ export interface FileRoutesByTo {
   '/inventory': typeof InventoryRoute
   '/invoices': typeof InvoicesRoute
   '/landing': typeof LandingRoute
+  '/order-tracking': typeof OrderTrackingRoute
   '/payments': typeof PaymentsRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -268,6 +276,7 @@ export interface FileRoutesById {
   '/inventory': typeof InventoryRoute
   '/invoices': typeof InvoicesRoute
   '/landing': typeof LandingRoute
+  '/order-tracking': typeof OrderTrackingRoute
   '/payments': typeof PaymentsRoute
   '/privacy': typeof PrivacyRoute
   '/reports': typeof ReportsRouteWithChildren
@@ -302,6 +311,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/invoices'
     | '/landing'
+    | '/order-tracking'
     | '/payments'
     | '/privacy'
     | '/reports'
@@ -334,6 +344,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/invoices'
     | '/landing'
+    | '/order-tracking'
     | '/payments'
     | '/privacy'
     | '/reset-password'
@@ -365,6 +376,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/invoices'
     | '/landing'
+    | '/order-tracking'
     | '/payments'
     | '/privacy'
     | '/reports'
@@ -398,6 +410,7 @@ export interface RootRouteChildren {
   InventoryRoute: typeof InventoryRoute
   InvoicesRoute: typeof InvoicesRoute
   LandingRoute: typeof LandingRoute
+  OrderTrackingRoute: typeof OrderTrackingRoute
   PaymentsRoute: typeof PaymentsRoute
   PrivacyRoute: typeof PrivacyRoute
   ReportsRoute: typeof ReportsRouteWithChildren
@@ -501,6 +514,13 @@ declare module '@tanstack/react-router' {
       path: '/landing'
       fullPath: '/landing'
       preLoaderRoute: typeof LandingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/order-tracking': {
+      id: '/order-tracking'
+      path: '/order-tracking'
+      fullPath: '/order-tracking'
+      preLoaderRoute: typeof OrderTrackingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/payments': {
@@ -656,6 +676,7 @@ const rootRouteChildren: RootRouteChildren = {
   InventoryRoute: InventoryRoute,
   InvoicesRoute: InvoicesRoute,
   LandingRoute: LandingRoute,
+  OrderTrackingRoute: OrderTrackingRoute,
   PaymentsRoute: PaymentsRoute,
   PrivacyRoute: PrivacyRoute,
   ReportsRoute: ReportsRouteWithChildren,
