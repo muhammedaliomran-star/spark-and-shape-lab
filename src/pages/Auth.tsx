@@ -91,7 +91,7 @@ function AuthPage() {
       <div className="flex items-center justify-center p-6 sm:p-10 order-2 lg:order-1">
         <div className="glass-panel w-full max-w-md rounded-[2rem] p-7 sm:p-9 animate-[fade-in_0.6s_cubic-bezier(0.32,0.72,0,1)]">
         <div className="mb-8">
-          <a href="/landing" className="text-display text-2xl font-extrabold tracking-tight text-primary">سِجلّي</a>
+          <a href="/landing" className="text-display text-2xl font-extrabold tracking-tight text-foreground">سِجلّي</a>
           <h1 className="text-title mt-6">
             {mode === "signin" ? "أهلاً بعودتك." : "افتح دفترك الجديد."}
           </h1>
@@ -101,14 +101,14 @@ function AuthPage() {
         </div>
 
 
-        <div className="mb-6 flex rounded-full bg-foreground/[0.05] p-1 ring-1 ring-inset ring-[var(--hairline)]">
+        <div className="mb-6 flex rounded-full bg-foreground/[0.04] p-1">
           <button
             onClick={() => setMode("signin")}
-            className={`flex-1 py-2 text-sm rounded-full transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${mode === "signin" ? "bg-primary font-bold text-primary-foreground shadow-[0_10px_26px_-14px_hsl(var(--primary)/0.9)]" : "text-muted-foreground"}`}
+            className={`flex-1 py-2 text-sm rounded-full transition-[background-color,color,box-shadow,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${mode === "signin" ? "bg-primary font-bold text-primary-foreground shadow-[0_4px_12px_-6px_hsl(0_0%_0%/0.45)]" : "text-muted-foreground"}`}
           >تسجيل الدخول</button>
           <button
             onClick={() => setMode("signup")}
-            className={`flex-1 py-2 text-sm rounded-full transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${mode === "signup" ? "bg-primary font-bold text-primary-foreground shadow-[0_10px_26px_-14px_hsl(var(--primary)/0.9)]" : "text-muted-foreground"}`}
+            className={`flex-1 py-2 text-sm rounded-full transition-[background-color,color,box-shadow,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${mode === "signup" ? "bg-primary font-bold text-primary-foreground shadow-[0_4px_12px_-6px_hsl(0_0%_0%/0.45)]" : "text-muted-foreground"}`}
           >إنشاء حساب</button>
         </div>
 
@@ -125,7 +125,7 @@ function AuthPage() {
                   type="button"
                   onClick={forgotPassword}
                   disabled={busy}
-                  className="text-xs font-semibold text-primary transition-opacity hover:opacity-70 disabled:opacity-40"
+                  className="text-xs font-semibold text-foreground/70 transition-colors hover:text-foreground disabled:opacity-40"
                 >
                   نسيت كلمة السر؟
                 </button>
@@ -195,7 +195,7 @@ function AuthPage() {
         <div className="absolute inset-0 bg-gradient-to-l from-background via-background/25 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
         <div className="absolute bottom-12 right-12 left-12 max-w-md">
-          <p className="text-xs uppercase tracking-[0.25em] text-primary mb-4">من الورق للنظام</p>
+          <p className="text-xs font-semibold tracking-[0.14em] text-foreground/60 mb-4">من الورق للنظام</p>
           <p className="text-2xl sm:text-3xl font-bold leading-snug text-foreground">
             كل قسط، كل صنف، كل مصروف — محسوب بالمليم.
           </p>
