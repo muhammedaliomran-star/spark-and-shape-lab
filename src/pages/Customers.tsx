@@ -1,3 +1,4 @@
+import { BezelCard } from "@/components/BezelCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Users } from "lucide-react";
 import { PageTransition } from "@/components/PageTransition";
@@ -69,12 +70,12 @@ export default function Page() { return (<AppShell><PageTransition><CustomersPag
 type FilterTab = "all" | "installment" | "cash" | "overdue" | "bajah" | "settled";
 
 const FILTERS: { value: FilterTab; label: string; activeCls: string }[] = [
-  { value: "all", label: "الكل", activeCls: "bg-primary text-primary-foreground shadow-[0_12px_30px_-14px_hsl(var(--primary)/0.9)]" },
-  { value: "installment", label: "عملاء قسط", activeCls: "bg-primary text-primary-foreground shadow-[0_12px_30px_-14px_hsl(var(--primary)/0.9)]" },
-  { value: "cash", label: "عملاء فوري", activeCls: "bg-success text-success-foreground shadow-[0_12px_30px_-14px_hsl(var(--success)/0.9)]" },
-  { value: "overdue", label: "المتأخرون", activeCls: "bg-warning text-warning-foreground shadow-[0_12px_30px_-14px_hsl(var(--warning)/0.9)]" },
-  { value: "bajah", label: "عملاء بجحين", activeCls: "bg-danger text-danger-foreground shadow-[0_12px_30px_-14px_hsl(var(--danger)/0.9)]" },
-  { value: "settled", label: "الخالصون", activeCls: "bg-success text-success-foreground shadow-[0_12px_30px_-14px_hsl(var(--success)/0.9)]" },
+  { value: "all", label: "الكل", activeCls: "bg-primary text-primary-foreground shadow-[0_4px_12px_-6px_hsl(0_0%_0%/0.45)]" },
+  { value: "installment", label: "عملاء قسط", activeCls: "bg-foreground text-background shadow-[0_4px_12px_-6px_hsl(0_0%_0%/0.4)]" },
+  { value: "cash", label: "عملاء فوري", activeCls: "bg-foreground text-background shadow-[0_4px_12px_-6px_hsl(0_0%_0%/0.4)]" },
+  { value: "overdue", label: "المتأخرون", activeCls: "bg-foreground text-background shadow-[0_4px_12px_-6px_hsl(0_0%_0%/0.4)]" },
+  { value: "bajah", label: "عملاء بجحين", activeCls: "bg-foreground text-background shadow-[0_4px_12px_-6px_hsl(0_0%_0%/0.4)]" },
+  { value: "settled", label: "الخالصون", activeCls: "bg-foreground text-background shadow-[0_4px_12px_-6px_hsl(0_0%_0%/0.4)]" },
 ];
 
 function SortChip({ label, active, dir, onClick }: { label: string; active: boolean; dir: SortDir; onClick: () => void }) {
@@ -290,49 +291,41 @@ function CustomersPage() {
       {/* ===== Bento: KPI + بحث + فلاتر ===== */}
       <Reveal className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-12">
         {/* البطاقة الكبيرة */}
-        <div className="bezel-shell bezel-lift md:col-span-7">
-          <div className="bezel-core flex h-full flex-col justify-between gap-6 p-6 md:p-7">
+        <BezelCard variant="flat" className="md:col-span-7 flex h-full flex-col justify-between gap-6 p-6 md:p-7">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
               <div className="min-w-0">
-                <span className="eyebrow">Outstanding</span>
+                <span className="mb-1 inline-flex items-center rounded-full bg-foreground/[0.06] px-3 py-1 text-[11px] font-bold tracking-[0.06em] text-muted-foreground ring-1 ring-border">Outstanding</span>
                 <div className="mt-3 text-xs font-medium text-muted-foreground">إجمالي الديون بالخارج</div>
-                <div className={cn("text-numeric mt-1.5 text-4xl font-extrabold leading-none text-primary md:text-5xl", privacy && "privacy-blur")}>
+                <div className={cn("text-numeric mt-1.5 text-4xl font-extrabold leading-none text-foreground md:text-5xl", privacy && "privacy-blur")}>
                   {fmt(debtStats.totalDebt)}
                   <span className="ms-2 align-middle text-base font-bold text-muted-foreground">ج.م</span>
                 </div>
               </div>
               <div
                 className={cn(
-                  "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold",
-                  debtStats.trendPct >= 0
-                    ? "bg-success/12 text-success ring-1 ring-success/25"
-                    : "bg-danger/12 text-danger ring-1 ring-danger/25",
+                  "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold bg-foreground/[0.06] text-muted-foreground ring-1 ring-border",
                 )}
               >
                 {debtStats.trendPct >= 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
                 {debtStats.trendPct >= 0 ? "تحصيل" : "تراجع"} {Math.abs(debtStats.trendPct)}٪
               </div>
             </div>
-            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-primary/70" />
               موزعة على {debtStats.debtors} عميل من إجمالي {counts.all}
             </div>
-          </div>
-        </div>
+          </BezelCard>
 
         {/* عمود مصغّر */}
         <div className="grid gap-4 md:col-span-5">
-          <div className="bezel-shell bezel-lift">
-            <div className="bezel-core p-6">
+          <BezelCard variant="flat" className="p-6">
               <div className="text-xs font-medium text-muted-foreground">محصّل هذا الأسبوع</div>
               <div className={cn("text-numeric mt-1.5 text-3xl font-extrabold leading-none text-success", privacy && "privacy-blur")}>
                 {fmt(debtStats.thisWeek)}
                 <span className="ms-2 align-middle text-sm font-bold text-muted-foreground">ج.م</span>
               </div>
-            </div>
-          </div>
-          <div className="bezel-shell bezel-lift">
-            <div className="bezel-core grid grid-cols-2 gap-4 p-6">
+          </BezelCard>
+          <BezelCard variant="flat" className="grid grid-cols-2 gap-4 p-6">
               <div>
                 <div className="text-xs font-medium text-muted-foreground">متأخرون</div>
                 <div className="text-numeric mt-1 text-2xl font-extrabold leading-none text-warning">{counts.overdue}</div>
@@ -341,15 +334,13 @@ function CustomersPage() {
                 <div className="text-xs font-medium text-muted-foreground">خالصون</div>
                 <div className="text-numeric mt-1 text-2xl font-extrabold leading-none text-success">{counts.settled}</div>
               </div>
-            </div>
-          </div>
+          </BezelCard>
         </div>
       </Reveal>
 
       {/* شريط التحكّم: فلاتر + بحث */}
       <Reveal delay={80} className="sticky-search-bar mb-8">
-        <div className="bezel-shell">
-          <div className="bezel-core grid grid-cols-1 gap-3 p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <BezelCard variant="flat" className="grid grid-cols-1 gap-3 p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
             <div className="relative min-w-0">
               <Search className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -387,8 +378,7 @@ function CustomersPage() {
                 );
               })}
             </div>
-          </div>
-        </div>
+          </BezelCard>
       </Reveal>
 
       {/* ===== قائمة العملاء: صفوف-بطاقات ===== */}
@@ -398,20 +388,17 @@ function CustomersPage() {
             <SortChip label="الاسم" active={sortKey === "name"} dir={sortDir} onClick={() => toggleSort("name")} />
             <SortChip label="الديون" active={sortKey === "balance"} dir={sortDir} onClick={() => toggleSort("balance")} />
           </div>
-          <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{list.length} / {counts.all}</div>
+          <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{list.length} / {counts.all}</div>
         </div>
 
         {list.length === 0 ? (
-          <div className="bezel-shell">
-            <div className="bezel-core px-6 py-10">
+          <BezelCard variant="flat" className="px-6 py-10">
               <EmptyState
                 icon={Users}
                 title="لا يوجد عملاء بعد."
                 hint="أضف أول عميل وابدأ تسجيل فواتيره وأقساطه من مكان واحد."
                 action={<CustomerDialog trigger={<Button className="gap-2"><Plus className="h-4 w-4" /> إضافة أول عميل</Button>} />}
-              />
-            </div>
-          </div>
+          </BezelCard>
         ) : (
           <ScrollArea className="max-h-[64vh]">
             <div className="flex flex-col gap-3 pl-1">
