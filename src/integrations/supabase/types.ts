@@ -418,6 +418,150 @@ export type Database = {
           },
         ]
       }
+      shipments: {
+        Row: {
+          actual_delivery_date: string | null
+          carrier_id: string | null
+          created_at: string | null
+          delivery_address: string | null
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          recipient_name: string | null
+          recipient_phone: string | null
+          status: Database["public"]["Enums"]["shipment_status"] | null
+          tracking_number: string | null
+          user_id: string | null
+          zone_id: string | null
+        }
+        Insert: {
+          actual_delivery_date?: string | null
+          carrier_id?: string | null
+          created_at?: string | null
+          delivery_address?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          status?: Database["public"]["Enums"]["shipment_status"] | null
+          tracking_number?: string | null
+          user_id?: string | null
+          zone_id?: string | null
+        }
+        Update: {
+          actual_delivery_date?: string | null
+          carrier_id?: string | null
+          created_at?: string | null
+          delivery_address?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
+          status?: Database["public"]["Enums"]["shipment_status"] | null
+          tracking_number?: string | null
+          user_id?: string | null
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipments_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_carriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipments_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shipping_carriers: {
+        Row: {
+          active: boolean | null
+          base_cost: number | null
+          contact_person: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          base_cost?: number | null
+          contact_person?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          base_cost?: number | null
+          contact_person?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      shipping_zones: {
+        Row: {
+          carrier_id: string | null
+          created_at: string | null
+          delivery_cost: number | null
+          estimated_days: number | null
+          id: string
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          carrier_id?: string | null
+          created_at?: string | null
+          delivery_cost?: number | null
+          estimated_days?: number | null
+          id?: string
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          carrier_id?: string | null
+          created_at?: string | null
+          delivery_cost?: number | null
+          estimated_days?: number | null
+          id?: string
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_zones_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_carriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_settings: {
         Row: {
           address: string
@@ -559,6 +703,616 @@ export type Database = {
           size?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      stock_reservations: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          order_id: string
+          quantity: number
+          released_at: string | null
+          status: Database["public"]["Enums"]["stock_reservation_status"]
+          stock_item_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          order_id: string
+          quantity: number
+          released_at?: string | null
+          status?: Database["public"]["Enums"]["stock_reservation_status"]
+          stock_item_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          order_id?: string
+          quantity?: number
+          released_at?: string | null
+          status?: Database["public"]["Enums"]["stock_reservation_status"]
+          stock_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_reservations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "store_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_reservations_stock_item_id_fkey"
+            columns: ["stock_item_id"]
+            isOneToOne: false
+            referencedRelation: "stock_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_order_events: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          order_id: string
+          payload: Json
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          order_id: string
+          payload?: Json
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          order_id?: string
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "store_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_order_items: {
+        Row: {
+          id: string
+          line_total: number
+          order_id: string
+          product_snapshot: Json
+          product_title: string
+          quantity: number
+          stock_item_id: string | null
+          storefront_product_id: string | null
+          unit_price: number
+        }
+        Insert: {
+          id?: string
+          line_total: number
+          order_id: string
+          product_snapshot?: Json
+          product_title: string
+          quantity: number
+          stock_item_id?: string | null
+          storefront_product_id?: string | null
+          unit_price: number
+        }
+        Update: {
+          id?: string
+          line_total?: number
+          order_id?: string
+          product_snapshot?: Json
+          product_title?: string
+          quantity?: number
+          stock_item_id?: string | null
+          storefront_product_id?: string | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "store_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_order_items_stock_item_id_fkey"
+            columns: ["stock_item_id"]
+            isOneToOne: false
+            referencedRelation: "stock_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_order_items_storefront_product_id_fkey"
+            columns: ["storefront_product_id"]
+            isOneToOne: false
+            referencedRelation: "storefront_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_orders: {
+        Row: {
+          cancelled_at: string | null
+          coupon_id: string | null
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          delivery_address: string
+          delivery_area: string | null
+          discount_amount: number
+          expires_at: string | null
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          order_type: Database["public"]["Enums"]["store_order_type"]
+          public_number: string
+          reservation_expires_at: string | null
+          shipping_fee: number
+          status: Database["public"]["Enums"]["store_order_status"]
+          status_reason: string | null
+          storefront_id: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          coupon_id?: string | null
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          delivery_address: string
+          delivery_area?: string | null
+          discount_amount?: number
+          expires_at?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          order_type: Database["public"]["Enums"]["store_order_type"]
+          public_number?: string
+          reservation_expires_at?: string | null
+          shipping_fee?: number
+          status?: Database["public"]["Enums"]["store_order_status"]
+          status_reason?: string | null
+          storefront_id: string
+          subtotal: number
+          total: number
+          updated_at?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          coupon_id?: string | null
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          delivery_address?: string
+          delivery_area?: string | null
+          discount_amount?: number
+          expires_at?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          order_type?: Database["public"]["Enums"]["store_order_type"]
+          public_number?: string
+          reservation_expires_at?: string | null
+          shipping_fee?: number
+          status?: Database["public"]["Enums"]["store_order_status"]
+          status_reason?: string | null
+          storefront_id?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "storefront_coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_orders_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: true
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_orders_storefront_id_fkey"
+            columns: ["storefront_id"]
+            isOneToOne: false
+            referencedRelation: "storefronts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_analytics_events: {
+        Row: {
+          event_name: string
+          id: string
+          occurred_at: string
+          product_id: string | null
+          source: string | null
+          storefront_id: string
+        }
+        Insert: {
+          event_name: string
+          id?: string
+          occurred_at?: string
+          product_id?: string | null
+          source?: string | null
+          storefront_id: string
+        }
+        Update: {
+          event_name?: string
+          id?: string
+          occurred_at?: string
+          product_id?: string | null
+          source?: string | null
+          storefront_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_analytics_events_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "storefront_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storefront_analytics_events_storefront_id_fkey"
+            columns: ["storefront_id"]
+            isOneToOne: false
+            referencedRelation: "storefronts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_categories: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          sort_order: number
+          storefront_id: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number
+          storefront_id: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+          storefront_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_categories_storefront_id_fkey"
+            columns: ["storefront_id"]
+            isOneToOne: false
+            referencedRelation: "storefronts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          ends_at: string | null
+          id: string
+          max_uses: number | null
+          minimum_order: number
+          starts_at: string
+          storefront_id: string
+          used_count: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          discount_type: string
+          discount_value: number
+          ends_at?: string | null
+          id?: string
+          max_uses?: number | null
+          minimum_order?: number
+          starts_at?: string
+          storefront_id: string
+          used_count?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          ends_at?: string | null
+          id?: string
+          max_uses?: number | null
+          minimum_order?: number
+          starts_at?: string
+          storefront_id?: string
+          used_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_coupons_storefront_id_fkey"
+            columns: ["storefront_id"]
+            isOneToOne: false
+            referencedRelation: "storefronts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_domains: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          status: string
+          storefront_id: string
+          updated_at: string
+          verification_token: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          status?: string
+          storefront_id: string
+          updated_at?: string
+          verification_token?: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          status?: string
+          storefront_id?: string
+          updated_at?: string
+          verification_token?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_domains_storefront_id_fkey"
+            columns: ["storefront_id"]
+            isOneToOne: false
+            referencedRelation: "storefronts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_feature_flags: {
+        Row: {
+          enabled: boolean
+          flag: string
+          storefront_id: string
+          updated_at: string
+        }
+        Insert: {
+          enabled?: boolean
+          flag: string
+          storefront_id: string
+          updated_at?: string
+        }
+        Update: {
+          enabled?: boolean
+          flag?: string
+          storefront_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_feature_flags_storefront_id_fkey"
+            columns: ["storefront_id"]
+            isOneToOne: false
+            referencedRelation: "storefronts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_notifications: {
+        Row: {
+          body: string
+          created_at: string
+          event_id: string | null
+          id: string
+          order_id: string | null
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          order_id?: string | null
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          order_id?: string | null
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_notifications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "store_order_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storefront_notifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "store_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefront_products: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          display_price: number
+          down_payment_from: number | null
+          id: string
+          images: Json
+          is_published: boolean
+          monthly_payment_from: number | null
+          show_installments: boolean
+          slug: string
+          sort_order: number
+          stock_item_id: string
+          storefront_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          display_price: number
+          down_payment_from?: number | null
+          id?: string
+          images?: Json
+          is_published?: boolean
+          monthly_payment_from?: number | null
+          show_installments?: boolean
+          slug: string
+          sort_order?: number
+          stock_item_id: string
+          storefront_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          display_price?: number
+          down_payment_from?: number | null
+          id?: string
+          images?: Json
+          is_published?: boolean
+          monthly_payment_from?: number | null
+          show_installments?: boolean
+          slug?: string
+          sort_order?: number
+          stock_item_id?: string
+          storefront_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "storefront_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storefront_products_stock_item_id_fkey"
+            columns: ["stock_item_id"]
+            isOneToOne: false
+            referencedRelation: "stock_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "storefront_products_storefront_id_fkey"
+            columns: ["storefront_id"]
+            isOneToOne: false
+            referencedRelation: "storefronts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      storefronts: {
+        Row: {
+          branch_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_published: boolean
+          logo_url: string | null
+          name: string
+          owner_id: string
+          phone: string | null
+          shipping_policy: string | null
+          slug: string
+          updated_at: string
+          whatsapp_phone: string | null
+        }
+        Insert: {
+          branch_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          logo_url?: string | null
+          name: string
+          owner_id: string
+          phone?: string | null
+          shipping_policy?: string | null
+          slug: string
+          updated_at?: string
+          whatsapp_phone?: string | null
+        }
+        Update: {
+          branch_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          logo_url?: string | null
+          name?: string
+          owner_id?: string
+          phone?: string | null
+          shipping_policy?: string | null
+          slug?: string
+          updated_at?: string
+          whatsapp_phone?: string | null
         }
         Relationships: []
       }
@@ -731,12 +1485,120 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_store_order: {
+        Args: { p_order_id: string }
+        Returns: {
+          cancelled_at: string | null
+          coupon_id: string | null
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          delivery_address: string
+          delivery_area: string | null
+          discount_amount: number
+          expires_at: string | null
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          order_type: Database["public"]["Enums"]["store_order_type"]
+          public_number: string
+          reservation_expires_at: string | null
+          shipping_fee: number
+          status: Database["public"]["Enums"]["store_order_status"]
+          status_reason: string | null
+          storefront_id: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "store_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      cancel_store_order: {
+        Args: { p_order_id: string; p_reason?: string }
+        Returns: {
+          cancelled_at: string | null
+          coupon_id: string | null
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          delivery_address: string
+          delivery_area: string | null
+          discount_amount: number
+          expires_at: string | null
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          order_type: Database["public"]["Enums"]["store_order_type"]
+          public_number: string
+          reservation_expires_at: string | null
+          shipping_fee: number
+          status: Database["public"]["Enums"]["store_order_status"]
+          status_reason: string | null
+          storefront_id: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "store_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      expire_storefront_reservations: { Args: never; Returns: number }
+      get_public_order_status: {
+        Args: { p_customer_phone: string; p_public_number: string }
+        Returns: Json
+      }
+      get_public_storefront: { Args: { p_slug: string }; Returns: Json }
+      get_storefront_analytics_summary: {
+        Args: { p_from?: string; p_storefront_id: string }
+        Returns: Json
+      }
+      get_storefront_feature_flag: {
+        Args: { p_flag: string; p_storefront_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      invoice_store_order: { Args: { p_order_id: string }; Returns: Json }
+      record_storefront_event: {
+        Args: {
+          p_event_name: string
+          p_product_id?: string
+          p_source?: string
+          p_storefront_id: string
+        }
+        Returns: undefined
+      }
+      redeem_storefront_coupon: {
+        Args: { p_coupon_id: string; p_order_id: string }
+        Returns: number
+      }
+      submit_store_order: {
+        Args: {
+          p_customer_name: string
+          p_customer_phone: string
+          p_delivery_address: string
+          p_delivery_area: string
+          p_items: Json
+          p_notes: string
+          p_order_type: Database["public"]["Enums"]["store_order_type"]
+          p_shipping_zone_id?: string
+          p_storefront_id: string
+        }
+        Returns: Json
       }
       team_directory: {
         Args: never
@@ -748,9 +1610,70 @@ export type Database = {
           user_id: string
         }[]
       }
+      update_store_order_status: {
+        Args: {
+          p_order_id: string
+          p_reason?: string
+          p_status: Database["public"]["Enums"]["store_order_status"]
+        }
+        Returns: {
+          cancelled_at: string | null
+          coupon_id: string | null
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          delivery_address: string
+          delivery_area: string | null
+          discount_amount: number
+          expires_at: string | null
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          order_type: Database["public"]["Enums"]["store_order_type"]
+          public_number: string
+          reservation_expires_at: string | null
+          shipping_fee: number
+          status: Database["public"]["Enums"]["store_order_status"]
+          status_reason: string | null
+          storefront_id: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "store_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      validate_storefront_coupon: {
+        Args: { p_code: string; p_storefront_id: string; p_subtotal: number }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "owner" | "manager" | "seller"
+      shipment_status:
+        | "pending"
+        | "processing"
+        | "shipped"
+        | "delivered"
+        | "returned"
+        | "cancelled"
+      stock_reservation_status: "active" | "released" | "consumed" | "expired"
+      store_order_status:
+        | "submitted"
+        | "under_review"
+        | "needs_info"
+        | "accepted"
+        | "invoiced"
+        | "shipped"
+        | "delivered"
+        | "rejected"
+        | "cancelled"
+        | "expired"
+      store_order_type: "cash_on_delivery" | "installment_request"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -879,6 +1802,28 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "manager", "seller"],
+      shipment_status: [
+        "pending",
+        "processing",
+        "shipped",
+        "delivered",
+        "returned",
+        "cancelled",
+      ],
+      stock_reservation_status: ["active", "released", "consumed", "expired"],
+      store_order_status: [
+        "submitted",
+        "under_review",
+        "needs_info",
+        "accepted",
+        "invoiced",
+        "shipped",
+        "delivered",
+        "rejected",
+        "cancelled",
+        "expired",
+      ],
+      store_order_type: ["cash_on_delivery", "installment_request"],
     },
   },
 } as const
