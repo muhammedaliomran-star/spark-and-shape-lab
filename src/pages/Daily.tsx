@@ -415,7 +415,7 @@ function DailyPage() {
       {/* الحركة + النبذة */}
       <div className="mt-8 grid gap-4 pb-24 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:pb-8">
         <Reveal>
-          <BezelCard variant="flat" innerClassName="p-0 overflow-hidden">
+          <BezelCard variant="flat" innerClassName="overflow-hidden p-1.5">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 p-6 sm:p-8">
               <span className="order-2 rounded-full bg-foreground/[0.06] px-4 py-1.5 text-[11px] font-semibold text-muted-foreground ring-1 ring-inset ring-[var(--hairline)]">
                 {rangeLabel}
@@ -430,14 +430,14 @@ function DailyPage() {
             <table className="w-full min-w-[46rem] text-right text-sm">
               <thead>
                 <tr className="border-b border-[var(--hairline)] text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                  <th className="px-6 py-5 font-bold">رقم</th>
-                  <th className="px-6 py-5 font-bold">الوقت</th>
-                  <th className="px-6 py-5 font-bold">العميل</th>
-                  <th className="px-6 py-5 font-bold">الإجمالي</th>
-                  <th className="px-6 py-5 font-bold">مدفوع</th>
-                  <th className="px-6 py-5 font-bold">متبقي</th>
-                  <th className="px-6 py-5 font-bold">نوع</th>
-                  <th className="px-6 py-5 font-bold">الحالة</th>
+                  <th className="px-6 py-6 font-bold">رقم</th>
+                  <th className="px-6 py-6 font-bold">الوقت</th>
+                  <th className="px-6 py-6 font-bold">العميل</th>
+                  <th className="px-6 py-6 font-bold">الإجمالي</th>
+                  <th className="px-6 py-6 font-bold">مدفوع</th>
+                  <th className="px-6 py-6 font-bold">متبقي</th>
+                  <th className="px-6 py-6 font-bold">نوع</th>
+                  <th className="px-6 py-6 font-bold">الحالة</th>
                 </tr>
               </thead>
               <tbody>
