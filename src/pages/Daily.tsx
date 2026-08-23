@@ -280,11 +280,11 @@ function DailyPage() {
 
       {/* فلترة */}
       <Reveal className="sticky-search-bar mb-8">
-        <BezelCard innerClassName="p-5 sm:p-6">
+        <BezelCard variant="flat" innerClassName="p-5 sm:p-6">
           <div className="mb-5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
             <div className="order-2 flex min-w-0 items-center justify-end gap-2">
               <span className="truncate text-sm font-bold text-foreground">فلترة اليومية</span>
-              <Search className="h-4 w-4 shrink-0 text-primary" />
+              <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
             </div>
             {filtersActive && (
               <button
@@ -415,8 +415,8 @@ function DailyPage() {
       {/* الحركة + النبذة */}
       <div className="mt-8 grid gap-4 pb-24 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:pb-8">
         <Reveal>
-          <BezelCard innerClassName="p-0 overflow-hidden">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 p-5 sm:p-6">
+          <BezelCard variant="flat" innerClassName="p-0 overflow-hidden">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 p-6 sm:p-8">
               <span className="order-2 rounded-full bg-foreground/[0.06] px-3 py-1 text-[11px] font-semibold text-muted-foreground ring-1 ring-inset ring-[var(--hairline)]">
                 {rangeLabel}
               </span>
@@ -495,20 +495,20 @@ function DailyPage() {
         </Reveal>
 
         <Reveal delay={90}>
-        <BezelCard innerClassName="flex flex-col gap-5 p-5 sm:p-6">
+        <BezelCard variant="flat" innerClassName="flex flex-col gap-5 p-5 sm:p-6">
 
           <div className="flex items-start justify-between gap-3">
             <span className="text-numeric text-[11px] text-muted-foreground" dir="ltr">{from} — {to}</span>
             <h2 className="text-lg font-bold text-foreground">نبذة الفترة</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl bg-foreground/[0.03] p-4 text-right ring-1 ring-inset ring-[var(--hairline)]">
+            <div className="rounded-2xl border border-border/40 p-4 text-right bg-transparent">
               <MetricLabel>مصروفات الفترة</MetricLabel>
               <div className={cn("text-numeric mt-2 text-xl font-extrabold text-warning", masked && "privacy-blur")}>
                 {money(stats.periodExpenses)}
               </div>
             </div>
-            <div className="rounded-2xl bg-foreground/[0.03] p-4 text-right ring-1 ring-inset ring-[var(--hairline)]">
+            <div className="rounded-2xl border border-border/40 p-4 text-right bg-transparent">
               <MetricLabel>الصافي</MetricLabel>
               <div className={cn("text-numeric mt-2 text-xl font-extrabold", stats.net >= 0 ? "text-success" : "text-danger", masked && "privacy-blur")}>
                 {money(stats.net)}
@@ -518,7 +518,7 @@ function DailyPage() {
 
           <div className="border-t border-[var(--hairline)] pt-4">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] text-muted-foreground">تُحفَظ محليًا حسب التاريخ</span>
+              <span className="text-[11px] font-medium text-muted-foreground">تُحفَظ محليًا حسب التاريخ</span>
               <h3 className="text-sm font-bold text-foreground">ملاحظة اليوم</h3>
             </div>
             <Textarea

@@ -42,7 +42,7 @@ export function EmptyState({ icon: Icon, title, hint, action, compact }: Props) 
           <circle cx="60" cy="60" r="52" stroke="currentColor" strokeWidth="1" strokeDasharray="3 7" opacity="0.35" />
         </svg>
         <span className="absolute inset-0 grid place-items-center">
-          <span className="grid place-items-center w-11 h-11 rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/25 shadow-[0_18px_40px_-22px_hsl(var(--primary)/0.55)]">
+          <span className="grid place-items-center w-11 h-11 rounded-2xl bg-foreground/[0.06] text-muted-foreground ring-1 ring-border">
             <Icon className="w-5 h-5" strokeWidth={1.75} />
           </span>
         </span>
