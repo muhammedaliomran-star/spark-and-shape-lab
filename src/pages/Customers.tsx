@@ -393,11 +393,20 @@ function CustomersPage() {
 
         {list.length === 0 ? (
           <BezelCard variant="flat" className="px-6 py-10">
-              <EmptyState
-                icon={Users}
-                title="لا يوجد عملاء بعد."
-                hint="أضف أول عميل وابدأ تسجيل فواتيره وأقساطه من مكان واحد."
-                action={<CustomerDialog trigger={<Button className="gap-2"><Plus className="h-4 w-4" /> إضافة أول عميل</Button>} />}
+            <EmptyState
+              icon={Users}
+              title="لا يوجد عملاء بعد."
+              hint="أضف أول عميل وابدأ تسجيل فواتيره وأقساطه من مكان واحد."
+              action={
+                <CustomerDialog
+                  trigger={
+                    <Button className="gap-2">
+                      <Plus className="h-4 w-4" /> إضافة أول عميل
+                    </Button>
+                  }
+                />
+              }
+            />
           </BezelCard>
         ) : (
           <ScrollArea className="max-h-[64vh]">
