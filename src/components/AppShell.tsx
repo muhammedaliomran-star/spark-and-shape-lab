@@ -102,7 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
         <div className="mt-0 flex shrink-0 flex-col gap-2 border-t border-[var(--hairline)] pt-3">
           <UserChip />
-          <div className="flex items-center justify-between gap-2 rounded-full bg-foreground/[0.02] px-3 py-1.5 border border-border/40">
+          <div className="flex items-center justify-between gap-2 px-2 py-1.5">
             <span className="text-xs text-muted-foreground">وضع الليل / النهار</span>
             <ThemeToggle className="h-9 w-9" />
           </div>
