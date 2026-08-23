@@ -16,15 +16,15 @@ export function UserAvatar({ size = 36, className = "" }: { size?: number; class
     <span
       style={px}
       className={cn(
-        "relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-primary/12 ring-1 ring-[var(--hairline)]",
-        "shadow-[inset_0_1px_1px_hsl(0_0%_100%/0.14)]",
+        "relative grid shrink-0 place-items-center overflow-hidden rounded-full bg-foreground/[0.06] ring-1 ring-border",
+        "shadow-[inset_0_1px_1px_hsl(0_0%_100%/0.08)]",
         className,
       )}
     >
       {avatar ? (
         <img src={avatar} alt="" width={size} height={size} className="h-full w-full object-cover" />
       ) : (
-        <span className="text-[11px] font-semibold tracking-wide text-primary" dir="ltr">
+        <span className="text-[11px] font-semibold tracking-wide text-muted-foreground" dir="ltr">
           {initials(label, user?.email)}
         </span>
       )}
@@ -37,7 +37,7 @@ export function UserChip({ className = "" }: { className?: string }) {
 
   if (loading) {
     return (
-      <div className={cn("rounded-full bg-foreground/[0.04] p-1.5 ring-1 ring-[var(--hairline)]", className)}>
+      <div className={cn("flex items-center gap-2.5 rounded-full px-2 py-1.5", className)}>
         <div className="flex items-center gap-2.5 rounded-full px-2 py-1.5">
           <span className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-foreground/10" />
           <span className="flex-1 space-y-1.5">
@@ -54,20 +54,17 @@ export function UserChip({ className = "" }: { className?: string }) {
   return (
     <div
       className={cn(
-        "rounded-full bg-foreground/[0.04] p-1.5 ring-1 ring-[var(--hairline)]",
-        "transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
+        "flex items-center gap-2.5 rounded-full px-2 py-1.5",
+        "transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
         className,
       )}
     >
-      <div className="flex items-center gap-2.5 rounded-full px-2 py-1.5">
-        <UserAvatar />
-        <span className="min-w-0 flex-1 text-right">
-          <span className="block truncate text-sm font-semibold leading-tight">
-            {label || "حسابي"}
-          </span>
+      <UserAvatar />
+      <span className="min-w-0 flex-1 text-right">
+        <span className="block truncate text-sm font-semibold leading-tight">
+          {label || "حسابي"}
         </span>
-      </div>
-
+      </span>
     </div>
   );
 }

@@ -648,7 +648,7 @@ export function Dashboard() {
         <section>
           <SectionHead
             title="توصيات ذكية"
-            icon={<Sparkles className="h-5 w-5 text-primary" />}
+            icon={<Sparkles className="h-5 w-5 text-muted-foreground" />}
             aside={<span className="text-[11px] text-muted-foreground">تحديث لحظي</span>}
           />
           <div className="grid gap-3 sm:grid-cols-2">
@@ -969,7 +969,7 @@ export function Dashboard() {
             }
           />
           {atRiskCustomers.length === 0 ? (
-            <div className="rounded-2xl bg-foreground/[0.03] px-6 py-12 text-center border border-border/50">
+            <div className="py-14 text-center">
               <p className="text-sm font-bold text-foreground/80">مفيش عملاء متأخرين</p>
               <p className="mt-1.5 text-xs text-muted-foreground">
                 كل الأرصدة المستحقة في ميعادها.
@@ -1060,7 +1060,7 @@ export function Dashboard() {
               }
             />
             {dueToday.length === 0 ? (
-              <div className="grid flex-1 place-items-center rounded-2xl bg-foreground/[0.03] py-12 text-center ring-1 ring-border/70">
+              <div className="grid flex-1 place-items-center py-14 text-center">
                 <div>
                   <p className="text-sm font-bold text-foreground/80">مفيش أقساط مستحقة النهاردة</p>
                   <p className="mt-1.5 text-xs text-muted-foreground">
@@ -1068,7 +1068,7 @@ export function Dashboard() {
                   </p>
                   <Link
                     to="/alerts"
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3.5 py-1.5 text-xs font-bold text-primary ring-1 ring-primary/25 transition hover:bg-primary/20 active:scale-[0.98]"
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-3.5 py-1.5 text-xs font-bold text-foreground ring-1 ring-border transition-[background-color,transform] hover:bg-foreground/[0.10] active:scale-[0.98]"
                   >
                     افتح المنبه <ArrowLeft className="h-3.5 w-3.5" />
                   </Link>
@@ -1173,7 +1173,7 @@ function QuickLink({
   return (
     <Link
       to={to as never}
-      className="group grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-2xl bg-foreground/[0.03] p-3.5 ring-1 ring-border/70 transition-all duration-500 hover:bg-foreground/[0.06] active:scale-[0.99]"
+      className="group grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 rounded-xl border border-transparent p-3.5 transition-[background-color,transform] duration-500 hover:bg-foreground/[0.04] hover:border-border/40 active:scale-[0.99]"
       style={{ transitionTimingFunction: "var(--ease-fluid)" }}
     >
       <ArrowLeft className="h-4 w-4 shrink-0 text-muted-foreground/60 transition-transform duration-500 group-hover:-translate-x-1" />
