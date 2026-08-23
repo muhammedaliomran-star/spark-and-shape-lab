@@ -63,7 +63,7 @@ export default function Page() {
   );
 }
 
-const EMERALD = "oklch(0.72 0.17 162)";
+const EMERALD = "oklch(0.68 0.11 162)";
 const DANGER = "oklch(0.65 0.18 28)";
 const WARNING = "oklch(0.75 0.16 70)";
 const MUTED = "oklch(0.55 0.01 270)";
@@ -600,7 +600,7 @@ export function Dashboard() {
 
         {/* شريط عريض هادي: العملاء */}
         <Reveal delay={340}>
-          <BezelCard
+          <BezelCard variant="flat"
             className="mt-4 bezel-lift"
             innerClassName="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-6 p-5 sm:p-6 md:grid-cols-[auto_minmax(0,1fr)_auto]"
           >
@@ -634,7 +634,7 @@ export function Dashboard() {
               </span>
               <Link
                 to="/customers"
-                className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3.5 py-1.5 text-[11px] font-bold text-primary ring-1 ring-primary/25 transition hover:bg-primary/20 active:scale-[0.98]"
+                className="inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-3.5 py-1.5 text-[11px] font-bold text-foreground ring-1 ring-border transition-[background-color,color,transform] hover:bg-foreground/[0.10] active:scale-[0.98]"
               >
                 إدارة العملاء <ArrowLeft className="h-3.5 w-3.5" />
               </Link>
@@ -667,14 +667,14 @@ export function Dashboard() {
                 <div
                   key={i}
                   className={cn(
-                    "group/insight relative overflow-hidden rounded-[1.5rem] bg-foreground/[0.035] p-5 pe-6 text-right text-sm font-medium leading-relaxed ring-1 ring-border/60 shadow-[inset_0_1px_0_hsl(0_0%_100%/0.04)] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:bg-foreground/[0.06] hover:ring-border",
+                    "group/insight relative overflow-hidden rounded-[1.5rem] bg-foreground/[0.02] p-5 pe-6 text-right text-sm font-medium leading-relaxed border border-border/50 shadow-[inset_0_1px_0_hsl(0_0%_100%/0.04)] transition-[transform,background-color,border-color] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:bg-foreground/[0.04] hover:border-border",
                     spans && "sm:col-span-2",
                   )}
                   style={{ transitionDelay: `${i * 40}ms` }}
                 >
                   <span
                     className={cn(
-                      "absolute inset-y-4 end-0 w-[3px] rounded-full opacity-70 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/insight:inset-y-3 group-hover/insight:opacity-100",
+                      "absolute inset-y-4 end-0 w-[3px] rounded-full opacity-70 transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/insight:inset-y-3 group-hover/insight:opacity-100",
                       rail,
                     )}
                   />
@@ -689,7 +689,7 @@ export function Dashboard() {
       {/* ============ الشارتات ============ */}
       <section className="mb-14 grid gap-4 lg:grid-cols-3">
         <Reveal className="h-full lg:col-span-2" delay={0}>
-          <BezelCard className="h-full" innerClassName="flex h-full flex-col p-6 sm:p-8">
+          <BezelCard variant="flat" className="h-full" innerClassName="flex h-full flex-col p-6 sm:p-8">
             <SectionHead
               title="اتجاه التحصيلات"
               icon={<TrendingUp className="h-5 w-5 text-success" />}
@@ -796,7 +796,7 @@ export function Dashboard() {
         </Reveal>
 
         <Reveal className="h-full" delay={90}>
-          <BezelCard className="h-full" innerClassName="flex h-full flex-col p-6 sm:p-8">
+          <BezelCard variant="flat" className="h-full" innerClassName="flex h-full flex-col p-6 sm:p-8">
             <SectionHead
               title="حالة الديون"
               aside={
@@ -851,14 +851,14 @@ export function Dashboard() {
 
       {/* ============ مصروفات الشهر ============ */}
       <Reveal className="mb-14 block">
-        <BezelCard innerClassName="p-6 sm:p-8">
+        <BezelCard variant="flat" innerClassName="p-6 sm:p-8">
           <SectionHead
             title="توزيع مصروفات الشهر"
             icon={<Receipt className="h-5 w-5 text-muted-foreground" />}
             aside={
               <Link
                 to="/expenses"
-                className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3.5 py-1.5 text-[11px] font-bold text-primary ring-1 ring-primary/25 transition hover:bg-primary/20 active:scale-[0.98]"
+                className="inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-3.5 py-1.5 text-[11px] font-bold text-foreground ring-1 ring-border transition-[background-color,color,transform] hover:bg-foreground/[0.10] active:scale-[0.98]"
               >
                 إدارة المصروفات <ArrowLeft className="h-3.5 w-3.5" />
               </Link>
@@ -955,7 +955,7 @@ export function Dashboard() {
 
       {/* ============ عملاء بحاجة لمتابعة ============ */}
       <Reveal className="mb-14 block">
-        <BezelCard innerClassName="p-6 sm:p-8">
+        <BezelCard variant="flat" innerClassName="p-6 sm:p-8">
           <SectionHead
             title="عملاء بحاجة لمتابعة"
             icon={<AlertTriangle className="h-5 w-5 text-danger" />}
@@ -969,7 +969,7 @@ export function Dashboard() {
             }
           />
           {atRiskCustomers.length === 0 ? (
-            <div className="rounded-2xl bg-foreground/[0.03] py-10 text-center ring-1 ring-border/70">
+            <div className="rounded-2xl bg-foreground/[0.03] px-6 py-12 text-center border border-border/50">
               <p className="text-sm font-bold text-foreground/80">مفيش عملاء متأخرين</p>
               <p className="mt-1.5 text-xs text-muted-foreground">
                 كل الأرصدة المستحقة في ميعادها.
@@ -1041,7 +1041,7 @@ export function Dashboard() {
       {/* ============ مستحق اليوم + روابط ============ */}
       <section className="grid gap-4 lg:grid-cols-3">
         <Reveal className="h-full lg:col-span-2" delay={0}>
-          <BezelCard className="h-full" innerClassName="flex h-full flex-col p-6 sm:p-8">
+          <BezelCard variant="flat" className="h-full" innerClassName="flex h-full flex-col p-6 sm:p-8">
             <SectionHead
               title="يستحق التحصيل اليوم"
               icon={<CalendarCheck className="h-5 w-5 text-warning" />}
@@ -1125,7 +1125,7 @@ export function Dashboard() {
         </Reveal>
 
         <Reveal className="h-full" delay={90}>
-          <BezelCard className="h-full" innerClassName="h-full p-6 sm:p-8">
+          <BezelCard variant="flat" className="h-full" innerClassName="h-full p-6 sm:p-8">
             <SectionHead title="روابط سريعة" />
             <div className="space-y-2.5">
               <QuickLink

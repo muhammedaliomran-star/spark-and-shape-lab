@@ -76,7 +76,7 @@ export function ChartEmpty({
         {ctaLabel && ctaTo && (
           <Link
             to={ctaTo as never}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-4 py-2 text-xs font-bold text-primary ring-1 ring-primary/25 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/20 hover:ring-primary/40 active:scale-[0.98]"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-4 py-2 text-xs font-bold text-foreground ring-1 ring-border transition-[background-color,color,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.10] active:scale-[0.98]"
           >
             {ctaLabel}
             <ArrowLeft className="h-3.5 w-3.5" />

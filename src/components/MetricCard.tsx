@@ -65,7 +65,8 @@ export function MetricCard({
 }) {
   return (
     <BezelCard
-      className={cn("bezel-lift", className)}
+      variant="flat"
+      className={cn("transition-[transform,box-shadow] duration-500 hover:-translate-y-0.5", className)}
       innerClassName={cn(
         "relative flex flex-col overflow-hidden",
         hero ? "gap-6 p-7 sm:p-9" : "gap-4 p-5",

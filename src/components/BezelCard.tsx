@@ -8,10 +8,26 @@ import { cn } from "@/lib/utils";
  */
 export const BezelCard = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { innerClassName?: string }
->(({ className, innerClassName, children, ...props }, ref) => (
-  <div ref={ref} className={cn("bezel-shell", className)} {...props}>
-    <div className={cn("bezel-core", innerClassName)}>{children}</div>
-  </div>
-));
+  React.HTMLAttributes<HTMLDivElement> & { innerClassName?: string; variant?: "bezel" | "flat" }
+>(({ className, innerClassName, children, variant = "bezel", ...props }, ref) => {
+  if (variant === "flat") {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "rounded-[1.75rem] bg-card/70 ring-1 ring-inset ring-[var(--hairline)] shadow-[0_10px_28px_-20px_hsl(165_40%_1%/0.45)]",
+          className,
+        )}
+        {...props}
+      >
+        <div className={cn(innerClassName)}>{children}</div>
+      </div>
+    );
+  }
+  return (
+    <div ref={ref} className={cn("bezel-shell", className)} {...props}>
+      <div className={cn("bezel-core", innerClassName)}>{children}</div>
+    </div>
+  );
+});
 BezelCard.displayName = "BezelCard";

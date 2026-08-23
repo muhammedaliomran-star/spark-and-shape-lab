@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "@/lib/router-compat";
 import type { ReactNode } from "react";
 import { LogOut, Undo2, Wallet, GitBranch, Banknote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutGrid, Users, FileText, Bell, Receipt, Truck, Package, BarChart3, Settings, CalendarDays, Warehouse } from "lucide-react";
+import { LayoutGrid, Users, FileText, Bell, Receipt, Truck, Package, BarChart3, Settings, CalendarDays, Warehouse, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDB, lowStockCount, useShopSettings, isDueSoonOrOverdue } from "@/lib/store";
 import { UserChip } from "@/components/UserChip";
@@ -21,6 +21,7 @@ const nav = [
   { to: "/suppliers", label: "الموردين", icon: Users },
 
   { to: "/warehouse", label: "المخزن", icon: Warehouse },
+  { to: "/storefront", label: "المتجر الإلكتروني", icon: Store },
   { to: "/branches", label: "الفروع", icon: GitBranch },
   { to: "/returns", label: "المرتجعات", icon: Undo2 },
   { to: "/cashbox", label: "الصندوق", icon: Wallet },
@@ -64,8 +65,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             <img src={logoMark} alt="" width={28} height={28} className="h-7 w-7 object-contain" />
           </span>
           <div>
-            <div className="text-display text-2xl font-bold leading-none text-primary">سِجلّي</div>
-            <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.24em] text-muted-foreground">Segilly</div>
+            <div className="text-display text-2xl font-bold leading-none text-foreground">سِجلّي</div>
+            <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/85">Segilly</div>
           </div>
         </div>
         <nav className="stagger no-scrollbar -mx-1 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-1">
@@ -80,7 +81,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className={cn(
                   "group relative flex items-center justify-between gap-2 rounded-full px-4 py-2.5 text-sm transition-[transform,box-shadow,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
                   active
-                    ? "bg-primary font-semibold text-primary-foreground shadow-[0_14px_34px_-16px_hsl(var(--primary)/0.95)]"
+                    ? "bg-primary font-semibold text-primary-foreground shadow-[0_4px_12px_-6px_hsl(0_0%_0%/0.45)]"
                     : "text-sidebar-foreground/65 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground hover:translate-x-[-3px] hover:shadow-[inset_0_0_0_1px_var(--hairline)]"
                 )}
               >
@@ -101,11 +102,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
         <div className="mt-0 flex shrink-0 flex-col gap-2 border-t border-[var(--hairline)] pt-3">
           <UserChip />
-          <div className="flex items-center justify-between gap-2 rounded-full bg-foreground/[0.03] px-3 py-1.5 ring-1 ring-inset ring-[var(--hairline)]">
+          <div className="flex items-center justify-between gap-2 rounded-full bg-foreground/[0.02] px-3 py-1.5 border border-border/40">
             <span className="text-xs text-muted-foreground">وضع الليل / النهار</span>
             <ThemeToggle className="h-9 w-9" />
           </div>
-          <button onClick={signOut} className="press flex items-center justify-between gap-2 rounded-full px-4 py-2.5 text-sm text-muted-foreground transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-destructive/10 hover:text-destructive">
+          <button onClick={signOut} className="press flex items-center justify-between gap-2 rounded-full px-4 py-2.5 text-sm text-muted-foreground transition-[background-color,color,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-destructive/10 hover:text-destructive">
             <span>تسجيل الخروج</span>
             <LogOut className="h-4 w-4" />
           </button>
