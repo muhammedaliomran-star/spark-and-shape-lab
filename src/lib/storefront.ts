@@ -131,11 +131,17 @@ export async function updateStoreOrderStatus(orderId: string, status: Exclude<St
   if (error) throw error;
 }
 
-export async function getPublicStorefront(slug: string) {
+export interface PublicStorefrontData {
+  storefront: Omit<Storefront, "owner_id" | "branch_id" | "is_published">;
+  categories: any[];
+  products: StorefrontProduct[];
+}
+
+export async function getPublicStorefront(slug: string): Promise<PublicStorefrontData | null> {
   const { data, error } = await storefrontDb.rpc("get_public_storefront", { p_slug: slug.toLowerCase() });
   if (error) throw error;
   if (!data) return null;
-  return { storefront: data.storefront as Omit<Storefront, "owner_id" | "branch_id" | "is_published">, categories: data.categories ?? [], products: (data.products ?? []).map(mapProduct) };
+  return { storefront: data.storefront as PublicStorefrontData["storefront"], categories: data.categories ?? [], products: (data.products ?? []).map(mapProduct) };
 }
 
 export async function submitStoreOrder(input: { storefrontId: string; customerName: string; customerPhone: string; deliveryAddress: string; deliveryArea?: string; notes?: string; orderType: OrderType; items: Array<{ productId: string; quantity: number }> }) {
