@@ -159,6 +159,32 @@ export async function submitStoreOrder(input: { storefrontId: string; customerNa
   return data as { id: string; public_number: string; status: StoreOrderStatus };
 }
 
+export interface PublicOrderStatus {
+  id: string;
+  public_number: string;
+  status: StoreOrderStatus;
+  total: number;
+  items: Array<{ title: string; quantity: number }>;
+}
+
+export async function getPublicOrderStatus(publicNumber: string, customerPhone: string): Promise<PublicOrderStatus | null> {
+  const { data, error } = await storefrontDb
+    .from("store_orders")
+    .select("id, public_number, status, total, store_order_items(product_title, quantity)")
+    .eq("public_number", publicNumber.trim())
+    .eq("customer_phone", customerPhone.trim())
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return {
+    id: data.id,
+    public_number: data.public_number,
+    status: data.status,
+    total: asNumber(data.total),
+    items: (data.store_order_items ?? []).map((item: any) => ({ title: item.product_title, quantity: asNumber(item.quantity) })),
+  };
+}
+
 export function storefrontSlug(value: string) {
   return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 48);
 }
