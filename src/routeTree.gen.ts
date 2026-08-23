@@ -28,17 +28,17 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ShippingRouteImport } from './routes/shipping'
+import { Route as StorefrontRouteImport } from './routes/storefront'
 import { Route as SuppliersRouteImport } from './routes/suppliers'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WarehouseRouteImport } from './routes/warehouse'
-import { Route as StorefrontRouteImport } from './routes/storefront'
-import { Route as ShopSlugRouteImport } from './routes/shop.$slug'
 import { Route as InventoryNewRouteImport } from './routes/inventory_.new'
 import { Route as InvoicesNewRouteImport } from './routes/invoices_.new'
 import { Route as PurchasesIndexRouteImport } from './routes/purchases/index'
 import { Route as PurchasesNewRouteImport } from './routes/purchases/new'
 import { Route as ReportsIndexRouteImport } from './routes/reports/index'
+import { Route as ShopSlugRouteImport } from './routes/shop.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -135,6 +135,11 @@ const ShippingRoute = ShippingRouteImport.update({
   path: '/shipping',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StorefrontRoute = StorefrontRouteImport.update({
+  id: '/storefront',
+  path: '/storefront',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SuppliersRoute = SuppliersRouteImport.update({
   id: '/suppliers',
   path: '/suppliers',
@@ -153,16 +158,6 @@ const TermsRoute = TermsRouteImport.update({
 const WarehouseRoute = WarehouseRouteImport.update({
   id: '/warehouse',
   path: '/warehouse',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StorefrontRoute = StorefrontRouteImport.update({
-  id: '/storefront',
-  path: '/storefront',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ShopSlugRoute = ShopSlugRouteImport.update({
-  id: '/shop/$slug',
-  path: '/shop/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InventoryNewRoute = InventoryNewRouteImport.update({
@@ -190,6 +185,11 @@ const ReportsIndexRoute = ReportsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ReportsRoute,
 } as any)
+const ShopSlugRoute = ShopSlugRouteImport.update({
+  id: '/shop/$slug',
+  path: '/shop/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -211,15 +211,15 @@ export interface FileRoutesByFullPath {
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
   '/shipping': typeof ShippingRoute
+  '/storefront': typeof StorefrontRoute
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/warehouse': typeof WarehouseRoute
-  '/storefront': typeof StorefrontRoute
-  '/shop/$slug': typeof ShopSlugRoute
   '/inventory/new': typeof InventoryNewRoute
   '/invoices/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
+  '/shop/$slug': typeof ShopSlugRoute
   '/purchases/': typeof PurchasesIndexRoute
   '/reports/': typeof ReportsIndexRoute
 }
@@ -242,15 +242,15 @@ export interface FileRoutesByTo {
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
   '/shipping': typeof ShippingRoute
+  '/storefront': typeof StorefrontRoute
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/warehouse': typeof WarehouseRoute
-  '/storefront': typeof StorefrontRoute
-  '/shop/$slug': typeof ShopSlugRoute
   '/inventory/new': typeof InventoryNewRoute
   '/invoices/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
+  '/shop/$slug': typeof ShopSlugRoute
   '/purchases': typeof PurchasesIndexRoute
   '/reports': typeof ReportsIndexRoute
 }
@@ -275,15 +275,15 @@ export interface FileRoutesById {
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
   '/shipping': typeof ShippingRoute
+  '/storefront': typeof StorefrontRoute
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/warehouse': typeof WarehouseRoute
-  '/storefront': typeof StorefrontRoute
-  '/shop/$slug': typeof ShopSlugRoute
   '/inventory_/new': typeof InventoryNewRoute
   '/invoices_/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
+  '/shop/$slug': typeof ShopSlugRoute
   '/purchases/': typeof PurchasesIndexRoute
   '/reports/': typeof ReportsIndexRoute
 }
@@ -309,15 +309,15 @@ export interface FileRouteTypes {
     | '/returns'
     | '/settings'
     | '/shipping'
+    | '/storefront'
     | '/suppliers'
     | '/support'
     | '/terms'
     | '/warehouse'
-    | '/storefront'
-    | '/shop/$slug'
     | '/inventory/new'
     | '/invoices/new'
     | '/purchases/new'
+    | '/shop/$slug'
     | '/purchases/'
     | '/reports/'
   fileRoutesByTo: FileRoutesByTo
@@ -340,15 +340,15 @@ export interface FileRouteTypes {
     | '/returns'
     | '/settings'
     | '/shipping'
+    | '/storefront'
     | '/suppliers'
     | '/support'
     | '/terms'
     | '/warehouse'
-    | '/storefront'
-    | '/shop/$slug'
     | '/inventory/new'
     | '/invoices/new'
     | '/purchases/new'
+    | '/shop/$slug'
     | '/purchases'
     | '/reports'
   id:
@@ -372,15 +372,15 @@ export interface FileRouteTypes {
     | '/returns'
     | '/settings'
     | '/shipping'
+    | '/storefront'
     | '/suppliers'
     | '/support'
     | '/terms'
     | '/warehouse'
-    | '/storefront'
-    | '/shop/$slug'
     | '/inventory_/new'
     | '/invoices_/new'
     | '/purchases/new'
+    | '/shop/$slug'
     | '/purchases/'
     | '/reports/'
   fileRoutesById: FileRoutesById
@@ -405,15 +405,15 @@ export interface RootRouteChildren {
   ReturnsRoute: typeof ReturnsRoute
   SettingsRoute: typeof SettingsRoute
   ShippingRoute: typeof ShippingRoute
+  StorefrontRoute: typeof StorefrontRoute
   SuppliersRoute: typeof SuppliersRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   WarehouseRoute: typeof WarehouseRoute
-  StorefrontRoute: typeof StorefrontRoute
-  ShopSlugRoute: typeof ShopSlugRoute
   InventoryNewRoute: typeof InventoryNewRoute
   InvoicesNewRoute: typeof InvoicesNewRoute
   PurchasesNewRoute: typeof PurchasesNewRoute
+  ShopSlugRoute: typeof ShopSlugRoute
   PurchasesIndexRoute: typeof PurchasesIndexRoute
 }
 
@@ -552,6 +552,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShippingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/storefront': {
+      id: '/storefront'
+      path: '/storefront'
+      fullPath: '/storefront'
+      preLoaderRoute: typeof StorefrontRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/suppliers': {
       id: '/suppliers'
       path: '/suppliers'
@@ -573,7 +580,7 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
-  '/warehouse': {
+    '/warehouse': {
       id: '/warehouse'
       path: '/warehouse'
       fullPath: '/warehouse'
@@ -614,13 +621,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/reports/'
       preLoaderRoute: typeof ReportsIndexRouteImport
       parentRoute: typeof ReportsRoute
-    }
-    '/storefront': {
-      id: '/storefront'
-      path: '/storefront'
-      fullPath: '/storefront'
-      preLoaderRoute: typeof StorefrontRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/shop/$slug': {
       id: '/shop/$slug'
@@ -663,15 +663,15 @@ const rootRouteChildren: RootRouteChildren = {
   ReturnsRoute: ReturnsRoute,
   SettingsRoute: SettingsRoute,
   ShippingRoute: ShippingRoute,
+  StorefrontRoute: StorefrontRoute,
   SuppliersRoute: SuppliersRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   WarehouseRoute: WarehouseRoute,
-  StorefrontRoute: StorefrontRoute,
-  ShopSlugRoute: ShopSlugRoute,
   InventoryNewRoute: InventoryNewRoute,
   InvoicesNewRoute: InvoicesNewRoute,
   PurchasesNewRoute: PurchasesNewRoute,
+  ShopSlugRoute: ShopSlugRoute,
   PurchasesIndexRoute: PurchasesIndexRoute,
 }
 export const routeTree = rootRouteImport
