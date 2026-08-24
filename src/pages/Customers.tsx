@@ -1516,7 +1516,7 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
                 transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
-                className="space-y-3 rounded-2xl border border-border/40 p-3 bg-transparent"
+                className="space-y-3 border-t border-border/30 pt-4"
               >
                 <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
                   <CreditCard className="h-3.5 w-3.5" /> إعدادات التقسيط
@@ -1551,7 +1551,7 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
                 transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
-                className="flex items-start gap-2 rounded-2xl border border-border/30 p-3 text-[12px] leading-relaxed text-muted-foreground bg-transparent"
+                className="flex items-start gap-2 border-t border-border/30 pt-4 text-[12px] leading-relaxed text-muted-foreground"
               >
                 <Banknote className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                 <span>عميل فوري: يدفع كامل المبلغ عند الشراء، فلا حاجة ليوم قسط أو سقف مديونية.</span>
@@ -1640,7 +1640,7 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
                       </button>
                     ))}
                   </div>
-                  <div className={cn("mt-2 flex items-start gap-2 rounded-xl border border-border/30 bg-foreground/[0.02] px-3 py-2 text-xs text-muted-foreground")}>
+                  <div className={cn("mt-2 flex items-start gap-2 text-xs text-muted-foreground ps-1")}>
                     <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground" />
                     <span className="text-right flex-1">{tip.text}</span>
                   </div>
@@ -1656,7 +1656,7 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
           </AnimatePresence>
 
           {/* Freeze */}
-          <div className="rounded-2xl border border-border/30 p-3 bg-transparent">
+          <div className="border-t border-border/30 pt-4">
             <div className="flex items-center justify-between">
               <Switch checked={frozen} onCheckedChange={setFrozen} />
               <div className="text-right flex items-center gap-1.5">
