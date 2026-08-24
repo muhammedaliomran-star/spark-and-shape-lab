@@ -367,13 +367,13 @@ function NewInvoicePage() {
                 type="button"
                 onClick={() => setStep(s.n)}
                 className={cn(
-                  "flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-                  step === s.n ? "bg-primary/15 text-primary ring-1 ring-primary/40" : "text-muted-foreground hover:bg-foreground/[0.05]",
+                  "flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                  step === s.n ? "bg-foreground text-background" : "text-muted-foreground hover:bg-foreground/[0.05]",
                 )}
               >
                 <span className={cn(
                   "grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] font-black",
-                  step === s.n ? "bg-primary text-black" : "bg-foreground/10",
+                  step === s.n ? "bg-background text-foreground" : "bg-foreground/10",
                 )}>{s.n}</span>
                 <span className="truncate">{s.label}</span>
               </button>
@@ -384,8 +384,7 @@ function NewInvoicePage() {
           <div className="space-y-4">
           {/* العميل */}
 
-          <div className="plate rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
-            <div className="space-y-2 rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+          <div className="rounded-[1.75rem] border border-border/30 p-5 space-y-2">
               <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">العميل</Label>
               <Select
                 value={customerId}
@@ -431,7 +430,6 @@ function NewInvoicePage() {
                 </div>
               )}
             </div>
-          </div>
 
           {blocked && (
             <div className="rounded-2xl border-2 border-danger/40 bg-danger/10 p-3 text-sm text-danger flex items-start gap-2 animate-[scale-in_0.2s_ease-out]">
@@ -441,8 +439,7 @@ function NewInvoicePage() {
           )}
 
           {/* نوع الفاتورة */}
-          <div className="plate rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
-            <div className="space-y-3 rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+          <div className="rounded-[1.75rem] border border-border/30 p-5 space-y-3">
               <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">نوع الفاتورة</Label>
               <div className="grid grid-cols-2 gap-1.5 rounded-2xl bg-foreground/[0.04] p-1.5">
                 {([
@@ -467,9 +464,9 @@ function NewInvoicePage() {
                       }}
                       aria-pressed={active}
                       className={cn(
-                        "relative flex flex-col items-center justify-center rounded-2xl p-4 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                        "relative flex flex-col items-center justify-center rounded-2xl p-4 transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
                         active
-                          ? "bg-primary/20 text-primary ring-2 ring-primary/50 shadow-lg shadow-primary/10"
+                          ? "bg-foreground text-background"
                           : "bg-white/[0.03] text-muted-foreground hover:bg-white/[0.06]",
                         locked && "cursor-not-allowed opacity-40 hover:bg-transparent",
                       )}
@@ -487,8 +484,6 @@ function NewInvoicePage() {
                     : "تم ضبط النوع تلقائيًا حسب تسجيل العميل «قسط» — تقدر تحوّله لبيع فوري لو سدّد كامل المبلغ."}
                 </p>
               )}
-          </div>
-          </div>
           </div>
           )}
 
