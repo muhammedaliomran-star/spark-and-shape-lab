@@ -485,6 +485,7 @@ function NewInvoicePage() {
                 </p>
               )}
           </div>
+          </div>
           )}
 
           {step === 2 && (
