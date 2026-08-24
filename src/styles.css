@@ -600,7 +600,7 @@
   100% { transform: translateX(200%); }
 }
 
-/* إصلاح حركة الأكورديون: لا تستخدم height (خاصية تخطيط) — استخدم grid/opacity */
+/* إصلاح حركة الأكورديون: لا تستخدم height (خاصية تخطيط) — استخدم transform/opacity فقط */
 @keyframes accordion-down {
   from { opacity: 0; transform: scaleY(0.96); }
   to { opacity: 1; transform: scaleY(1); }
@@ -609,8 +609,8 @@
   from { opacity: 1; transform: scaleY(1); }
   to { opacity: 0; transform: scaleY(0.96); }
 }
-.animate-accordion-down { animation: accordion-down 0.22s var(--ease-fluid); transform-origin: top; }
-.animate-accordion-up { animation: accordion-up 0.2s var(--ease-fluid); transform-origin: top; }
+.animate-accordion-down { animation: accordion-down 0.22s var(--ease-fluid) !important; transform-origin: top; height: auto !important; }
+.animate-accordion-up { animation: accordion-up 0.2s var(--ease-fluid) !important; transform-origin: top; height: auto !important; }
 
 /* إخفاء شارة "Made with Lovable" نهائياً */
 #lovable-badge,

@@ -560,11 +560,12 @@ function HistoryDialog({ customer, onClose, invoices, payments, items, blurCls, 
                       <AnimatePresence initial={false}>
                         {isOpen && (
                           <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
                             transition={{ duration: 0.25, ease: "easeOut" }}
                             style={{ overflow: "hidden" }}
+                            className="origin-top"
                           >
                             <div className="bg-foreground/[0.03] px-3 pb-3 pt-1">
                               {invItems.length === 0 ? (
@@ -818,11 +819,12 @@ function EditInvoiceDialog({ inv, onClose }: { inv: Invoice | null; onClose: () 
               {products.map((p, idx) => (
                 <motion.div
                   key={p.id}
-                  initial={{ opacity: 0, height: 0, y: -8 }}
-                  animate={{ opacity: 1, height: "auto", y: 0 }}
-                  exit={{ opacity: 0, height: 0, y: -8 }}
+                  initial={{ opacity: 0, scale: 0.98, y: -8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98, y: -8 }}
                   transition={{ duration: 0.25, ease: "easeOut" }}
                   style={{ overflow: "hidden" }}
+                  className="origin-top"
                 >
                   <div className="rounded-2xl hairline bg-foreground/[0.03] p-3 space-y-2">
                     <div className="flex items-center justify-between">
@@ -861,7 +863,7 @@ function EditInvoiceDialog({ inv, onClose }: { inv: Invoice | null; onClose: () 
 
           <AnimatePresence initial={false}>
             {!isCash && (
-              <motion.div key="inst" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} style={{ overflow: "hidden" }}>
+              <motion.div key="inst" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.3 }} style={{ overflow: "hidden" }} className="origin-top">
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label>القسط الشهري (ج.م)</Label><Input type="number" value={monthly} onChange={(e) => setMonthly(e.target.value)} className={blurCls} /></div>
                   <div>

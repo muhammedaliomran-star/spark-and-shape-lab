@@ -688,11 +688,12 @@ export function NewPurchaseDialog({
               {items.map((p, idx) => (
                 <motion.div
                   key={p.id}
-                  initial={{ opacity: 0, height: 0, y: -8 }}
-                  animate={{ opacity: 1, height: "auto", y: 0 }}
-                  exit={{ opacity: 0, height: 0, y: -8 }}
+                  initial={{ opacity: 0, scale: 0.98, y: -8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98, y: -8 }}
                   transition={{ duration: 0.25, ease: "easeOut" }}
                   style={{ overflow: "hidden" }}
+                  className="origin-top"
                 >
                   <div className="rounded-2xl hairline bg-foreground/[0.03] p-3 space-y-2">
                     <div className="flex items-center justify-between">
