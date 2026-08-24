@@ -85,7 +85,7 @@ function SortChip({ label, active, dir, onClick }: { label: string; active: bool
       onClick={onClick}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] transition-[transform,color,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97]",
-        active ? "bg-primary/12 text-primary ring-1 ring-primary/25" : "text-muted-foreground hover:text-foreground",
+        active ? "bg-foreground text-background ring-1 ring-border" : "text-muted-foreground hover:text-foreground",
       )}
     >
       {label}
@@ -1421,7 +1421,7 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
             <Label>الاسم</Label>
             <div className="flex items-center gap-3">
               <Avatar className="h-11 w-11 hairline">
-                <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                <AvatarFallback className="bg-foreground/[0.06] text-muted-foreground font-bold ring-1 ring-border">
                   {initials || <User className="w-5 h-5" />}
                 </AvatarFallback>
               </Avatar>
@@ -1471,11 +1471,9 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
                     }}
                     aria-pressed={active}
                     className={cn(
-                      "rounded-[1.1rem] px-4 py-3 text-center transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]",
+                      "rounded-[1.1rem] px-4 py-3 text-center transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]",
                       active
-                        ? opt.key === "cash"
-                          ? "bg-success/15 text-success shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)] ring-1 ring-success/40"
-                          : "bg-primary/15 text-primary shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)] ring-1 ring-primary/40"
+                        ? "bg-foreground text-background ring-1 ring-border"
                         : "text-muted-foreground hover:bg-foreground/[0.04]",
                     )}
                   >
@@ -1518,9 +1516,9 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
                 transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
-                className="space-y-3 rounded-2xl bg-primary/[0.05] p-3 ring-1 ring-primary/15"
+                className="space-y-3 rounded-2xl border border-border/40 p-3 bg-transparent"
               >
-                <div className="flex items-center gap-1.5 text-[11px] font-bold text-primary">
+                <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
                   <CreditCard className="h-3.5 w-3.5" /> إعدادات التقسيط
                 </div>
                 <div>
@@ -1553,9 +1551,9 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
                 transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
-                className="flex items-start gap-2 rounded-2xl bg-success/[0.06] p-3 text-[12px] leading-relaxed text-muted-foreground ring-1 ring-success/20"
+                className="flex items-start gap-2 rounded-2xl border border-border/30 p-3 text-[12px] leading-relaxed text-muted-foreground bg-transparent"
               >
-                <Banknote className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                <Banknote className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                 <span>عميل فوري: يدفع كامل المبلغ عند الشراء، فلا حاجة ليوم قسط أو سقف مديونية.</span>
               </motion.div>
             )}
@@ -1594,10 +1592,10 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
             {customerType === "installment" && (
               <motion.div
                 key="rating-section"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-4 overflow-hidden"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                className="space-y-4 overflow-hidden origin-top"
               >
                 {/* Status tabs */}
                 <div>
@@ -1642,8 +1640,8 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
                       </button>
                     ))}
                   </div>
-                  <div className={cn("mt-2 flex items-start gap-2 rounded-xl border px-3 py-2 text-xs", tip.cls)}>
-                    <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  <div className={cn("mt-2 flex items-start gap-2 rounded-xl border border-border/30 bg-foreground/[0.02] px-3 py-2 text-xs text-muted-foreground")}>
+                    <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground" />
                     <span className="text-right flex-1">{tip.text}</span>
                   </div>
                 </div>
@@ -1658,7 +1656,7 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
           </AnimatePresence>
 
           {/* Freeze */}
-          <div className="rounded-2xl hairline p-3">
+          <div className="rounded-2xl border border-border/30 p-3 bg-transparent">
             <div className="flex items-center justify-between">
               <Switch checked={frozen} onCheckedChange={setFrozen} />
               <div className="text-right flex items-center gap-1.5">
