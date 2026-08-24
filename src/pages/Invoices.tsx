@@ -343,6 +343,7 @@ function InvoicesPage() {
                   icon={Receipt}
                   title={tab === "active" ? "لا توجد فواتير نشطة." : tab === "overdue" ? "لا توجد فواتير متأخرة." : "لا توجد فواتير."}
                   hint={tab === "active" ? "كل الفواتير مسددة بالكامل." : tab === "overdue" ? "لا توجد مديونيات متأخرة حالياً." : "سجّل أول فاتورة وابدأ تتبع التحصيلات."}
+                />
             </BezelCard>
           ) : (
             list.map((inv, idx) => {
