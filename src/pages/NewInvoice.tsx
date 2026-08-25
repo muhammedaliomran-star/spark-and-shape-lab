@@ -981,6 +981,7 @@ function NewInvoicePage() {
                 </div>
                 </div>
           </div>
+            </div>
           )}
 
 
