@@ -981,6 +981,7 @@ function NewInvoicePage() {
                 </div>
                 </div>
           </div>
+            </div>
           )}
 
 
@@ -1043,6 +1044,7 @@ function NewInvoicePage() {
                   </span>
                   <span className="text-xs font-bold text-primary">ج.م</span>
                 </div>
+              </div>
           </div>
 
           {/* الإجراءات */}
