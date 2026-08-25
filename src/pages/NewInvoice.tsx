@@ -493,16 +493,16 @@ function NewInvoicePage() {
 
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <Button type="button" size="sm" variant="outline" onClick={addProduct} className="gap-1.5 rounded-full border-primary/40 px-4 text-primary transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/10 active:scale-[0.98]">
+                <Button type="button" size="sm" variant="outline" onClick={addProduct} className="gap-1.5 rounded-full border-primary/40 px-4 text-primary transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/10 active:scale-[0.98]">
                   <Plus className="w-4 h-4" /> إضافة منتج آخر
                 </Button>
-                <Button type="button" size="sm" variant="outline" onClick={() => setScanOpen(true)} className="gap-1.5 rounded-full border-success/40 px-4 text-success transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-success/10 active:scale-[0.98]">
+                <Button type="button" size="sm" variant="outline" onClick={() => setScanOpen(true)} className="gap-1.5 rounded-full border-success/40 px-4 text-success transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-success/10 active:scale-[0.98]">
                   <ScanLine className="w-4 h-4" /> مسح باركود
                 </Button>
               </div>
               <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">المنتجات ({products.length})</Label>
             </div>
-            <div className="plate max-h-[52vh] space-y-2 overflow-y-auto rounded-[1.5rem] border border-white/5 bg-white/[0.02] p-2 custom-scrollbar">
+            <div className="max-h-[52vh] space-y-2 overflow-y-auto rounded-[1.75rem] border border-border/30 p-5 custom-scrollbar">
               <AnimatePresence initial={false}>
                 {products.map((p, idx) => {
                   const s = p.stockId ? data.stockItems.find((x) => x.id === p.stockId) : undefined;
@@ -574,8 +574,7 @@ function NewInvoicePage() {
             </div>
 
             {/* الخصم والضريبة */}
-            <div className="plate rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-1.5">
-              <div className="space-y-3 rounded-[calc(1.75rem-0.375rem)] bg-background/50 p-4">
+            <div className="rounded-[1.75rem] border border-border/30 p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className={cn("text-xs font-bold", discountValue > 0 ? "text-primary" : "text-muted-foreground/50")}>
                     − {fmt(discountValue)} ج.م
@@ -669,7 +668,6 @@ function NewInvoicePage() {
                     </div>
                   </div>
                 </div>
-              </div>
             </div>
 
           </div>
@@ -677,8 +675,7 @@ function NewInvoicePage() {
 
           {step === 3 && (
             <div className="space-y-4">
-              <div className="plate rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
-                <div className="space-y-6 rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+              <div className="rounded-[1.75rem] border border-border/30 p-5 space-y-6">
                   <div className="flex items-center justify-between gap-3">
                     <Badge className="gap-1.5 border border-primary/40 bg-primary/15 px-3 py-1 text-primary">
                       <Truck className="h-3.5 w-3.5" /> تفاصيل الشحن
@@ -736,17 +733,14 @@ function NewInvoicePage() {
                       className="h-11 rounded-2xl border-white/10 bg-white/[0.04]"
                     />
                   </div>
-                </div>
               </div>
             </div>
-          )}
+           )}
 
           {step === 4 && (
             <div className="space-y-4">
 
-          <div className="plate rounded-[1.75rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
-
-            <div className="rounded-[calc(1.75rem-0.375rem)] bg-background/60 p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+          <div className="rounded-[1.75rem] border border-border/30 p-5">
               <AnimatePresence mode="wait" initial={false}>
                 {isCashMode ? (
                   <motion.div
@@ -923,11 +917,10 @@ function NewInvoicePage() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
           </div>
 
           {/* حالة الفاتورة */}
-          <div className="plate rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-5">
+          <div className="rounded-[1.75rem] border border-border/30 p-5">
             <Label className="mb-3 block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">حالة الفاتورة</Label>
             <div className="grid grid-cols-3 gap-2">
               {([
@@ -951,16 +944,15 @@ function NewInvoicePage() {
           </div>
 
           {/* ملاحظات */}
-          <div className="plate rounded-[1.75rem] border border-white/5 bg-white/[0.02] p-5">
+          <div className="rounded-[1.75rem] border border-border/30 p-5">
             <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2 block">ملاحظات إضافية</Label>
             <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="ملاحظات..." maxLength={200} className="bg-transparent border-white/10" />
           </div>
 
           {/* تتبع الربح */}
-          <div className={cn("rounded-[2rem] border-2 p-1.5 transition-all duration-500",
-            profit > 0 ? "border-success/30 bg-success/5" : profit < 0 ? "border-danger/30 bg-danger/5" : "border-white/5 bg-white/[0.02]"
+          <div className={cn("rounded-[2rem] border p-5 transition-colors duration-500",
+            profit > 0 ? "border-success/30 bg-success/5" : profit < 0 ? "border-danger/30 bg-danger/5" : "border-border/30"
           )}>
-            <div className="rounded-[calc(2rem-0.375rem)] bg-background/40 p-6 backdrop-blur-md">
               <div className="grid grid-cols-2 gap-y-6 gap-x-4">
                 <div className="space-y-1">
                   <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">إجمالي التكلفة</span>
@@ -987,9 +979,7 @@ function NewInvoicePage() {
                   <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">نسبة الربح</span>
                   <span className={cn("block text-3xl font-black tracking-tighter", blurCls, profit > 0 ? "text-success" : profit < 0 ? "text-danger" : "text-muted-foreground")}>{profitPct.toFixed(1)}%</span>
                 </div>
-              </div>
-          </div>
-          </div>
+                </div>
           </div>
           )}
 
@@ -1023,8 +1013,7 @@ function NewInvoicePage() {
         {/* ===== العمود الجانبي ===== */}
         <aside className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
           {/* ملخص الفاتورة */}
-          <div className="plate rounded-[2rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
-            <div className="space-y-4 rounded-[calc(2rem-0.375rem)] bg-background/60 p-5 text-right shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+          <div className="rounded-[2rem] border border-border/30 p-5 space-y-4 text-right">
               <div className="flex items-center justify-between">
                 <span className={cn("rounded-full border px-3 py-1 text-[10px] font-bold",
                   blockReason ? "border-warning/40 bg-warning/10 text-warning" : "border-success/40 bg-success/10 text-success")}>
@@ -1054,13 +1043,10 @@ function NewInvoicePage() {
                   </span>
                   <span className="text-xs font-bold text-primary">ج.م</span>
                 </div>
-              </div>
-            </div>
           </div>
 
           {/* الإجراءات */}
-          <div className="plate rounded-[2rem] border border-foreground/10 bg-foreground/[0.02] p-1.5">
-            <div className="space-y-3 rounded-[calc(2rem-0.375rem)] bg-background/60 p-5 text-right shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+          <div className="rounded-[2rem] border border-border/30 p-5 space-y-3 text-right">
               <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">الإجراءات</span>
               {blockReason && (
                 <div className="text-[11px] font-bold text-warning">{blockReason}</div>
@@ -1089,7 +1075,6 @@ function NewInvoicePage() {
               <Button asChild variant="ghost" className="h-11 w-full rounded-2xl text-muted-foreground">
                 <Link to="/invoices">إلغاء</Link>
               </Button>
-            </div>
           </div>
         </aside>
       </div>

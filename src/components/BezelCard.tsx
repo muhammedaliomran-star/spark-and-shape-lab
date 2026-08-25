@@ -15,7 +15,7 @@ export const BezelCard = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "rounded-[1.75rem] bg-card/70 ring-1 ring-inset ring-[var(--hairline)] shadow-[0_10px_28px_-20px_hsl(165_40%_1%/0.45)]",
+          "rounded-[1.75rem] bg-card/70 ring-1 ring-inset ring-[var(--hairline)] shadow-[0_4px_16px_-12px_hsl(165_40%_1%/0.35)]",
           className,
         )}
         {...props}

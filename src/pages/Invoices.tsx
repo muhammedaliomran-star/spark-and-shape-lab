@@ -242,23 +242,23 @@ function InvoicesPage() {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
-        <StatCard icon={<Wallet className="w-5 h-5" />} label="إجمالي المسدد" value={`${fmt(stats.totalPaid)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
-        <StatCard icon={<TrendingUp className="w-5 h-5" />} label="إجمالي المبيعات" value={`${fmt(stats.totalSales)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
-        <StatCard icon={<FileText className="w-5 h-5" />} label="عدد الفواتير" value={String(stats.invoiceCount)} tone="primary" valueClassName={blurCls} />
+        <StatCard icon={<Wallet className="w-5 h-5" />} label="إجمالي المسدد" value={`${fmt(stats.totalPaid)} ج.م`} tone="neutral" trend="up" valueClassName={blurCls} />
+        <StatCard icon={<TrendingUp className="w-5 h-5" />} label="إجمالي المبيعات" value={`${fmt(stats.totalSales)} ج.م`} tone="neutral" trend="up" valueClassName={blurCls} />
+        <StatCard icon={<FileText className="w-5 h-5" />} label="عدد الفواتير" value={String(stats.invoiceCount)} tone="neutral" valueClassName={blurCls} />
         
         <StatCard icon={<AlertCircle className="w-5 h-5" />} label="الفواتير المتعثرة" value={String(stats.overdueCount)} tone="danger" trend="down" valueClassName={blurCls} />
-        <StatCard icon={<CalendarDays className="w-5 h-5" />} label="تحصيلات الشهر الحالي" value={`${fmt(stats.monthCollections)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
-        <StatCard icon={<Wallet className="w-5 h-5" />} label="إجمالي المبيعات النشطة" value={`${fmt(stats.activeSalesTotal)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
+        <StatCard icon={<CalendarDays className="w-5 h-5" />} label="تحصيلات الشهر الحالي" value={`${fmt(stats.monthCollections)} ج.م`} tone="neutral" trend="up" valueClassName={blurCls} />
+        <StatCard icon={<Wallet className="w-5 h-5" />} label="إجمالي المبيعات النشطة" value={`${fmt(stats.activeSalesTotal)} ج.م`} tone="neutral" trend="up" valueClassName={blurCls} />
 
-        <StatCard icon={<TrendingUp className="w-5 h-5" />} label="نسبة التحصيل" value={`%${stats.collectionRate.toFixed(1)}`} tone="success" trend="up" valueClassName={blurCls} />
-        <StatCard icon={<FileText className="w-5 h-5" />} label="متوسط قيمة الفاتورة" value={`${fmt(stats.avgInvoiceValue)} ج.م`} tone="primary" valueClassName={blurCls} />
-        <StatCard icon={<CalendarDays className="w-5 h-5" />} label="مبيعات الشهر الحالي" value={`${fmt(stats.monthSales)} ج.م`} tone="success" trend="up" valueClassName={blurCls} />
+        <StatCard icon={<TrendingUp className="w-5 h-5" />} label="نسبة التحصيل" value={`%${stats.collectionRate.toFixed(1)}`} tone="neutral" trend="up" valueClassName={blurCls} />
+        <StatCard icon={<FileText className="w-5 h-5" />} label="متوسط قيمة الفاتورة" value={`${fmt(stats.avgInvoiceValue)} ج.م`} tone="neutral" valueClassName={blurCls} />
+        <StatCard icon={<CalendarDays className="w-5 h-5" />} label="مبيعات الشهر الحالي" value={`${fmt(stats.monthSales)} ج.م`} tone="neutral" trend="up" valueClassName={blurCls} />
       </div>
 
       <div className="sticky-search-bar">
         <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="mb-4">
         <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full h-auto">
-          <TabsTrigger value="active" className="gap-1.5 data-[state=active]:bg-primary/15 data-[state=active]:text-primary">
+          <TabsTrigger value="active" className="gap-1.5 data-[state=active]:bg-foreground/[0.06] data-[state=active]:text-foreground">
             فواتير نشطة <Badge variant="secondary" className="rounded-full">{counts.active}</Badge>
           </TabsTrigger>
           <TabsTrigger value="overdue" className="gap-1.5 data-[state=active]:bg-danger/15 data-[state=active]:text-danger">
@@ -343,7 +343,6 @@ function InvoicesPage() {
                   icon={Receipt}
                   title={tab === "active" ? "لا توجد فواتير نشطة." : tab === "overdue" ? "لا توجد فواتير متأخرة." : "لا توجد فواتير."}
                   hint={tab === "active" ? "كل الفواتير مسددة بالكامل." : tab === "overdue" ? "لا توجد مديونيات متأخرة حالياً." : "سجّل أول فاتورة وابدأ تتبع التحصيلات."}
-                />
             </BezelCard>
           ) : (
             list.map((inv, idx) => {
@@ -457,8 +456,8 @@ function InvoicesPage() {
   );
 }
 
-function StatCard({ icon, label, value, tone, trend, valueClassName }: { icon: React.ReactNode; label: string; value: string; tone: "primary" | "success" | "danger"; trend?: "up" | "down"; valueClassName?: string }) {
-  const toneCls = tone === "primary" ? "bg-primary/10 text-primary border-primary/30" : tone === "success" ? "bg-success/10 text-success border-success/30" : "bg-danger/10 text-danger border-danger/30";
+function StatCard({ icon, label, value, tone, trend, valueClassName }: { icon: React.ReactNode; label: string; value: string; tone: "primary" | "success" | "danger" | "neutral"; trend?: "up" | "down"; valueClassName?: string }) {
+  const toneCls = tone === "primary" ? "bg-primary/10 text-primary border-primary/30" : tone === "success" ? "bg-success/10 text-success border-success/30" : tone === "danger" ? "bg-danger/10 text-danger border-danger/30" : "bg-foreground/[0.06] text-foreground border-border";
   const valueCls = tone === "success" ? "text-success" : tone === "danger" ? "text-danger" : "";
   return (
     <div className={cn("rounded-[1.25rem] bg-card/70 p-4 flex items-center gap-3 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] animate-[fade-in_0.4s_ease-out]", tone === "success" ? "border-success/30 hover:border-success/60" : tone === "danger" ? "border-danger/30 hover:border-danger/60" : "border-border hover:border-primary/40")}>
