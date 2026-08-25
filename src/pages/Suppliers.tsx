@@ -127,27 +127,27 @@ function SuppliersPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-        <StatBox
+<StatBox
           label="إجمالي ديون الموردين"
           value={`${fmt(totals.totalDebt)} ج.م`}
-          icon={<Wallet className="w-5 h-5" />}
-          tone="primary"
+          icon={<Wallet className="w-5 w-5" />}
+          tone="neutral"
           valueClassName={blurCls}
           sub={`${totals.owing} مورد له مديونية`}
         />
         <StatBox
           label="مشتريات نقدية (الشهر)"
           value={`${fmt(totals.monthCash)} ج.م`}
-          icon={<Banknote className="w-5 h-5" />}
-          tone="success"
+          icon={<Banknote className="w-5 w-5" />}
+          tone="neutral"
           valueClassName={blurCls}
           sub="مخصومة من صافي الربح"
         />
         <StatBox
           label="إجمالي الموردين"
           value={String(data.suppliers.length)}
-          icon={<Truck className="w-5 h-5" />}
-          tone="primary"
+          icon={<Truck className="w-5 w-5" />}
+          tone="neutral"
           sub={`${data.purchases.length} فاتورة شراء`}
         />
       </div>
@@ -155,16 +155,16 @@ function SuppliersPage() {
       <div className="sticky-search-bar">
         <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="mb-4">
         <TabsList className="grid grid-cols-4 w-full h-auto">
-          <TabsTrigger value="all" className="gap-1.5">
+          <TabsTrigger value="all" className="gap-1.5 data-[state=active]:bg-foreground/[0.06] data-[state=active]:text-foreground">
             الكل <Badge variant="secondary" className="rounded-full">{enriched.length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="owing" className="gap-1.5 data-[state=active]:bg-warning/15 data-[state=active]:text-warning">
+          <TabsTrigger value="owing" className="gap-1.5 data-[state=active]:bg-foreground/[0.06] data-[state=active]:text-foreground">
             عليهم مديونية <Badge variant="secondary" className="rounded-full">{enriched.filter((x) => x.balance > 0).length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="settled" className="gap-1.5 data-[state=active]:bg-success/15 data-[state=active]:text-success">
+          <TabsTrigger value="settled" className="gap-1.5 data-[state=active]:bg-foreground/[0.06] data-[state=active]:text-foreground">
             مسدد <Badge variant="secondary" className="rounded-full">{enriched.filter((x) => x.balance <= 0).length}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="purchases" className="gap-1.5 data-[state=active]:bg-primary/15 data-[state=active]:text-primary">
+          <TabsTrigger value="purchases" className="gap-1.5 data-[state=active]:bg-foreground/[0.06] data-[state=active]:text-foreground">
             كل المشتريات <Badge variant="secondary" className="rounded-full">{data.purchases.length}</Badge>
           </TabsTrigger>
         </TabsList>
@@ -197,15 +197,15 @@ function SuppliersPage() {
             </div>
           ) : (
             list.map(({ s, balance }, idx) => (
-              <div
-                key={s.id}
-                className="group bezel-shell bezel-lift animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)] both"
+              <BezelCard
+                variant="flat"
+                className="group animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)]"
                 style={{ animationDelay: `${Math.min(idx, 12) * 45}ms` }}
+                innerClassName="grid grid-cols-1 items-center gap-5 p-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] md:gap-6"
               >
-                <div className="bezel-core grid grid-cols-1 items-center gap-5 p-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] md:gap-6">
                   {/* الهوية */}
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="text-display grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/25">
+                    <div className="text-display grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-foreground/[0.06] text-muted-foreground ring-1 ring-border">
                       <Truck className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
@@ -227,9 +227,9 @@ function SuppliersPage() {
                         <div className="text-[10px] text-muted-foreground mb-0.5">الحالة</div>
                         <div className="mt-0.5">
                           {balance > 0 ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-xl text-[10px] font-bold border bg-warning/15 text-warning border-warning/30">عليه مديونية</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-xl text-[10px] font-bold border border-border/30 bg-foreground/[0.06] text-muted-foreground">عليه مديونية</span>
                           ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-xl text-[10px] font-bold border bg-success/15 text-success border-success/30">مسدد</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-xl text-[10px] font-bold border border-border/30 bg-foreground/[0.06] text-muted-foreground">مسدد</span>
                           )}
                         </div>
                       </div>
@@ -328,28 +328,29 @@ function SuppliersPage() {
 
 function StatBox({
   label, value, icon, tone, valueClassName, sub,
-}: { label: string; value: string; icon: React.ReactNode; tone: "primary" | "success"; valueClassName?: string; sub?: string }) {
+}: { label: string; value: string; icon: React.ReactNode; tone: "primary" | "success" | "neutral"; valueClassName?: string; sub?: string }) {
   const isSuccess = tone === "success";
+  const isPrimary = tone === "primary";
   return (
     <div className={cn(
-      "relative overflow-hidden bg-card plate p-5 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] duration-300 hover:-translate-y-1",
-      isSuccess ? "border-success/30 hover:border-success/60" : "border-primary/30 hover:border-primary/60",
+      "relative overflow-hidden bg-card plate p-5 transition-[transform,background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5",
+      tone === "danger" ? "border-danger/30 hover:border-danger/60" : "border-border/30 hover:border-border/40",
     )}>
       <div className={cn(
         "absolute inset-0 opacity-[0.06] pointer-events-none",
-        isSuccess ? "bg-linear-to-bl from-success to-transparent" : "bg-linear-to-bl from-primary to-transparent",
+        "bg-gradient-to-bl from-transparent to-transparent",
       )} />
       <div className="relative">
         <div className="flex items-start justify-between">
           <div className={cn(
             "w-10 h-10 rounded-2xl border flex items-center justify-center",
-            isSuccess ? "bg-success/10 border-success/30 text-success" : "bg-primary/10 border-primary/30 text-primary",
+            "bg-foreground/[0.06] border-border/30 text-muted-foreground",
           )}>{icon}</div>
           <div className="text-xs text-muted-foreground text-left max-w-[55%]">{label}</div>
         </div>
         <div className={cn(
           "text-2xl lg:text-3xl font-extrabold mt-4 tabular-nums text-right",
-          isSuccess ? "text-success" : "text-primary",
+          "text-foreground",
           valueClassName,
         )}>{value}</div>
         {sub && <div className="text-[11px] text-muted-foreground mt-1.5 text-right">{sub}</div>}
@@ -649,10 +650,10 @@ export function NewPurchaseDialog({
                 type="button"
                 onClick={() => setPaymentType("cash")}
                 className={cn(
-                  "flex items-center justify-center gap-2 rounded-2xl border-2 px-3 py-2.5 text-sm font-bold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                  "flex items-center justify-center gap-2 rounded-2xl border-2 px-3 py-2.5 text-sm font-bold transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
                   paymentType === "cash"
-                    ? "border-success bg-success/10 text-success shadow-md shadow-success/20"
-                    : "border-border text-muted-foreground hover:border-success/40",
+                    ? "border-border bg-foreground text-background"
+                    : "border-border text-muted-foreground hover:bg-foreground/[0.04]",
                 )}
               >
                 <Banknote className="w-4 h-4" /> نقدي (خصم من الخزينة)
@@ -661,15 +662,14 @@ export function NewPurchaseDialog({
                 type="button"
                 onClick={() => setPaymentType("credit")}
                 className={cn(
-                  "flex items-center justify-center gap-2 rounded-2xl border-2 px-3 py-2.5 text-sm font-bold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                  "flex items-center justify-center gap-2 rounded-2xl border-2 px-3 py-2.5 text-sm font-bold transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
                   paymentType === "credit"
-                    ? "border-warning bg-warning/10 text-warning shadow-md shadow-warning/20"
-                    : "border-border text-muted-foreground hover:border-warning/40",
+                    ? "border-border bg-foreground text-background"
+                    : "border-border text-muted-foreground hover:bg-foreground/[0.04]",
                 )}
               >
                 <Wallet className="w-4 h-4" /> آجل (يضاف للمديونية)
               </button>
-            </div>
           </div>
 
           <div className="space-y-2">
@@ -863,15 +863,15 @@ function SupplierProfileDialog({
         </DialogHeader>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-          <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3">
+          <div className="rounded-2xl border border-border/30 bg-foreground/[0.06] p-3">
             <div className="text-xs text-muted-foreground">المديونية الحالية</div>
             <div className={cn("text-xl font-extrabold text-primary mt-1", blurCls)}>{fmt(Math.max(0, balance))} ج.م</div>
           </div>
-          <div className="plate p-3">
+          <div className="rounded-2xl border border-border/30 bg-foreground/[0.06] p-3">
             <div className="text-xs text-muted-foreground">عدد فواتير الشراء</div>
             <div className="text-xl font-extrabold mt-1">{purchases.length}</div>
           </div>
-          <div className="plate p-3">
+          <div className="rounded-2xl border border-border/30 bg-foreground/[0.06] p-3">
             <div className="text-xs text-muted-foreground">إجمالي المدفوعات</div>
             <div className={cn("text-xl font-extrabold text-success mt-1", blurCls)}>
               {fmt(payments.reduce((s, p) => s + p.amount, 0))} ج.م
@@ -879,10 +879,10 @@ function SupplierProfileDialog({
           </div>
         </div>
 
-        <Tabs defaultValue="purchases">
+<Tabs defaultValue="purchases">
           <TabsList className="grid grid-cols-2 w-full h-auto">
-            <TabsTrigger value="purchases" className="gap-1.5"><Receipt className="w-4 h-4" /> فواتير الشراء</TabsTrigger>
-            <TabsTrigger value="payments" className="gap-1.5"><Wallet className="w-4 h-4" /> المدفوعات</TabsTrigger>
+            <TabsTrigger value="purchases" className="gap-1.5 data-[state=active]:bg-foreground/[0.06] data-[state=active]:text-foreground"><Receipt className="w-4 h-4" /> فواتير الشراء</TabsTrigger>
+            <TabsTrigger value="payments" className="gap-1.5 data-[state=active]:bg-foreground/[0.06] data-[state=active]:text-foreground"><Wallet className="w-4 w-4" /> المدفوعات</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -894,15 +894,15 @@ function SupplierProfileDialog({
           {purchases.map((p) => {
             const its = items.filter((i) => i.purchaseId === p.id);
             return (
-              <div key={p.id} className="rounded-2xl hairline p-3 bg-card">
+              <div key={p.id} className="rounded-2xl border border-border/30 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className={cn("font-bold tabular-nums", blurCls)}>{fmt(p.total)} ج.م</span>
                     <Badge variant="outline" className={cn(
                       "text-[10px]",
                       p.paymentType === "cash"
-                        ? "bg-success/10 text-success border-success/30"
-                        : "bg-warning/10 text-warning border-warning/30",
+                        ? "bg-foreground/[0.06] text-muted-foreground ring-border"
+                        : "bg-foreground/[0.06] text-muted-foreground ring-border",
                     )}>
                       {p.paymentType === "cash" ? "نقدي" : "آجل"}
                     </Badge>
@@ -953,7 +953,7 @@ function PurchasesTable({ privacy }: { privacy: boolean }) {
 
   return (
     <>
-      <div className="bg-card plate overflow-hidden animate-[fade-in_0.4s_ease-out]">
+      <BezelCard variant="flat" className="animate-[fade-in_0.4s_ease-out]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-foreground/[0.04] text-muted-foreground">
@@ -989,12 +989,12 @@ function PurchasesTable({ privacy }: { privacy: boolean }) {
                     <td className="p-4 font-medium">{supplierName(p.supplierId)}</td>
                     <td className={cn("p-4 font-bold tabular-nums", blurCls)}>{fmt(p.total)} ج.م</td>
                     <td className="p-4">
-                      <Badge variant="outline" className={cn(
-                        "text-[11px]",
-                        p.paymentType === "cash"
-                          ? "bg-success/10 text-success border-success/30"
-                          : "bg-warning/10 text-warning border-warning/30",
-                      )}>
+<Badge variant="outline" className={cn(
+                      "text-[11px]",
+                      p.paymentType === "cash"
+                        ? "bg-foreground/[0.06] text-muted-foreground ring-border"
+                        : "bg-foreground/[0.06] text-muted-foreground ring-border",
+                    )}>
                         {p.paymentType === "cash" ? "نقدي" : "آجل"}
                       </Badge>
                     </td>
@@ -1018,7 +1018,7 @@ function PurchasesTable({ privacy }: { privacy: boolean }) {
             </tbody>
           </table>
         </div>
-      </div>
+      </BezelCard>
 
       <Dialog open={!!detailFor} onOpenChange={(v) => !v && setDetailFor(null)}>
         <DialogContent dir="rtl" className="max-h-[85vh] overflow-y-auto">
@@ -1040,7 +1040,7 @@ function PurchasesTable({ privacy }: { privacy: boolean }) {
                 </Badge>
                 <div className={cn("font-extrabold tabular-nums text-lg", blurCls)}>{fmt(detailFor.total)} ج.م</div>
               </div>
-              <div className="rounded-2xl hairline p-3">
+              <div className="border-t border-border/30 pt-4">
                 <div className="text-xs text-muted-foreground mb-2">الأصناف</div>
                 <div className="space-y-1.5">
                   {data.purchaseItems.filter((i) => i.purchaseId === detailFor.id).map((it) => (
@@ -1126,15 +1126,15 @@ function SupplierPaymentRow({ payment, blurCls }: { payment: SupplierPayment; bl
 
   return (
     <>
-      <div className="rounded-2xl border border-success/30 bg-success/5 p-3 flex items-center justify-between">
+      <div className="rounded-2xl border border-border/30 bg-foreground/[0.06] p-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Wallet className="w-4 h-4 text-success" />
-          <span className={cn("font-bold text-success tabular-nums", blurCls)}>{fmt(payment.amount)} ج.م</span>
+          <Wallet className="w-4 h-4 text-muted-foreground" />
+          <span className={cn("font-bold text-foreground tabular-nums", blurCls)}>{fmt(payment.amount)} ج.م</span>
         </div>
         <div className="flex items-center gap-1">
           <Button
             size="icon" variant="ghost" title="تعديل الدفعة"
-            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-foreground/[0.08]"
             onClick={() => { setAmount(String(payment.amount)); setEditOpen(true); }}
           >
             <Pencil className="w-4 h-4" />
