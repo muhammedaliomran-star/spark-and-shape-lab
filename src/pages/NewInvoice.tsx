@@ -337,7 +337,7 @@ function NewInvoicePage() {
             >
               {privacy ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </Button>
-            <span className="rounded-full border border-primary/30 bg-primary/10 px-4 py-2 font-mono text-sm font-bold tracking-wider text-primary">
+            <span className="rounded-full border border-border/30 bg-foreground/[0.06] px-4 py-2 font-mono text-sm font-bold tracking-wider text-foreground">
               {invoiceCode}
             </span>
             <Button asChild variant="outline" className="rounded-full">
@@ -373,7 +373,7 @@ function NewInvoicePage() {
               >
                 <span className={cn(
                   "grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] font-black",
-                  step === s.n ? "bg-background text-foreground" : "bg-foreground/10",
+                  step === s.n ? "bg-foreground text-background" : "bg-foreground/10",
                 )}>{s.n}</span>
                 <span className="truncate">{s.label}</span>
               </button>
@@ -414,12 +414,11 @@ function NewInvoicePage() {
               {customer && customerInfo && (
                 <div className="flex flex-wrap items-center gap-2 animate-[fade-in_0.2s_ease-out]">
                   <CustomerTypeBadge type={customer.customerType} />
-                  <Badge variant="outline" className={cn("gap-1 font-bold",
-                    customerInfo.balance > 0 ? "bg-danger/10 text-danger border-danger/40" : "bg-success/10 text-success border-success/40"
-                  )}>
+<Badge variant="outline" className={cn("gap-1 font-bold",
+                      customerInfo.balance > 0 ? "bg-danger/10 text-danger border-danger/40" : "bg-foreground/[0.06] text-foreground ring-border")}>
                     مديونية حالية: {fmt(customerInfo.balance)} ج.م
                   </Badge>
-                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/40 font-bold">
+                  <Badge variant="outline" className="bg-foreground/[0.06] text-muted-foreground ring-border font-bold">
                     سقف الائتمان: {customerInfo.limit > 0 ? `${fmt(customerInfo.limit)} ج.م` : "بدون حد"}
                   </Badge>
                   {customerInfo.wouldExceed && (
@@ -441,7 +440,7 @@ function NewInvoicePage() {
           {/* نوع الفاتورة */}
           <div className="rounded-[1.75rem] border border-border/30 p-5 space-y-3">
               <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">نوع الفاتورة</Label>
-              <div className="grid grid-cols-2 gap-1.5 rounded-2xl bg-foreground/[0.04] p-1.5">
+              <div className="grid grid-cols-2 gap-1.5">
                 {([
                   { key: "installments" as const, label: "أقساط", hint: "دفع على دفعات شهرية" },
                   { key: "cash" as const, label: "فوري (نقدي)", hint: "سداد كامل الآن" },
@@ -493,10 +492,10 @@ function NewInvoicePage() {
 
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <Button type="button" size="sm" variant="outline" onClick={addProduct} className="gap-1.5 rounded-full border-primary/40 px-4 text-primary transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/10 active:scale-[0.98]">
+                <Button type="button" size="sm" variant="outline" onClick={addProduct} className="gap-1.5 rounded-full border border-border/30 px-4 text-muted-foreground transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.05] active:scale-[0.98]">
                   <Plus className="w-4 h-4" /> إضافة منتج آخر
                 </Button>
-                <Button type="button" size="sm" variant="outline" onClick={() => setScanOpen(true)} className="gap-1.5 rounded-full border-success/40 px-4 text-success transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-success/10 active:scale-[0.98]">
+                <Button type="button" size="sm" variant="outline" onClick={() => setScanOpen(true)} className="gap-1.5 rounded-full border border-border/30 px-4 text-muted-foreground transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.05] active:scale-[0.98]">
                   <ScanLine className="w-4 h-4" /> مسح باركود
                 </Button>
               </div>
@@ -516,7 +515,7 @@ function NewInvoicePage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -6 }}
                       transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-                      className="rounded-2xl border border-white/5 bg-background/50 px-3 py-2.5 transition-colors hover:border-primary/20"
+                      className="divide-y divide-border/30 px-3 py-2.5"
                     >
                       <div className="grid grid-cols-1 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_76px_96px_96px_32px]">
                         <div className="min-w-0">
@@ -576,7 +575,7 @@ function NewInvoicePage() {
             {/* الخصم والضريبة */}
             <div className="rounded-[1.75rem] border border-border/30 p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className={cn("text-xs font-bold", discountValue > 0 ? "text-primary" : "text-muted-foreground/50")}>
+                  <span className={cn("text-xs font-bold", discountValue > 0 ? "text-foreground" : "text-muted-foreground/50")}>
                     − {fmt(discountValue)} ج.م
                   </span>
                   <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">الخصم</Label>
@@ -617,7 +616,7 @@ function NewInvoicePage() {
                       key={n}
                       type="button"
                       onClick={() => { setDiscountPct(String(n)); setDiscountAmt(String(Math.round((subtotal * n) / 100))); }}
-                      className="rounded-xl bg-white/[0.05] px-4 py-2 text-[10px] font-black tracking-widest text-muted-foreground/80 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/10 hover:text-primary active:scale-95"
+                      className="rounded-xl bg-white/[0.05] px-4 py-2 text-[10px] font-black tracking-widest text-muted-foreground/80 transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.06] hover:text-foreground active:scale-95"
                     >
                       {n}%
                     </button>
@@ -646,7 +645,7 @@ function NewInvoicePage() {
                           key={n}
                           type="button"
                           onClick={() => setTaxPct(n === 0 ? "" : String(n))}
-                          className="rounded-xl bg-white/[0.05] px-3 py-1.5 text-[10px] font-black text-muted-foreground/80 transition-all hover:bg-primary/10 hover:text-primary active:scale-95"
+                          className="rounded-xl bg-white/[0.05] px-3 py-1.5 text-[10px] font-black text-muted-foreground/80 transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground active:scale-95"
                         >
                           {n === 0 ? "بدون ضريبة" : `${n}%`}
                         </button>
@@ -663,7 +662,7 @@ function NewInvoicePage() {
                       <span className="text-muted-foreground">قيمة الضريبة</span>
                     </div>
                     <div className="flex items-center justify-between border-t border-white/5 pt-2">
-                      <span className="text-base font-black text-primary">{fmt(totalPrice)} ج.م</span>
+                      <span className="text-base font-black text-foreground">{fmt(totalPrice)} ج.م</span>
                       <span className="text-muted-foreground">الإجمالي النهائي</span>
                     </div>
                   </div>
@@ -677,7 +676,7 @@ function NewInvoicePage() {
             <div className="space-y-4">
               <div className="rounded-[1.75rem] border border-border/30 p-5 space-y-6">
                   <div className="flex items-center justify-between gap-3">
-                    <Badge className="gap-1.5 border border-primary/40 bg-primary/15 px-3 py-1 text-primary">
+                    <Badge className="gap-1.5 border border-border/30 bg-foreground/[0.06] px-3 py-1 text-muted-foreground">
                       <Truck className="h-3.5 w-3.5" /> تفاصيل الشحن
                     </Badge>
                     <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">اختياري</Label>
@@ -752,14 +751,14 @@ function NewInvoicePage() {
                     className="space-y-4"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <Badge className="gap-1.5 border border-success/40 bg-success/15 px-3 py-1 text-success">
+                      <Badge className="gap-1.5 border border-border/30 bg-foreground/[0.06] px-3 py-1 text-muted-foreground">
                         <Banknote className="h-3.5 w-3.5" /> بيع نقدي
                       </Badge>
                       <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">تفاصيل السداد</Label>
                     </div>
 
-                    <div className="flex items-baseline justify-between gap-3 rounded-2xl bg-primary/[0.06] px-4 py-3">
-                      <span className="text-[clamp(1.25rem,4vw,1.75rem)] font-extrabold leading-none tracking-tight text-primary">{fmt(totalPrice)} ج.م</span>
+<div className="flex items-baseline justify-between gap-3 rounded-2xl bg-foreground/[0.06] px-4 py-3">
+                        <span className="text-[clamp(1.25rem,4vw,1.75rem)] font-extrabold leading-none tracking-tight text-foreground">{fmt(totalPrice)} ج.م</span>
                       <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">المطلوب دفعه الآن</span>
                     </div>
 
@@ -772,7 +771,7 @@ function NewInvoicePage() {
                             key={`${v}-${i}`}
                             type="button"
                             onClick={() => setCashPaid(String(i === 0 ? v : (Number(cashPaid || 0) + v)))}
-                            className="rounded-full bg-foreground/[0.05] px-3 py-1 text-[11px] font-bold text-muted-foreground transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/10 hover:text-primary active:scale-[0.96]"
+                            className="rounded-full bg-foreground/[0.05] px-3 py-1 text-[11px] font-bold text-muted-foreground transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground active:scale-[0.96]"
                           >
                             {i === 0 ? "المبلغ بالظبط" : `+ ${fmt(v)}`}
                           </button>
@@ -817,7 +816,7 @@ function NewInvoicePage() {
                             key={btn.pct}
                             type="button"
                             onClick={() => setDown(String(Math.round((totalPrice * btn.pct) / 100)))}
-                            className="rounded-xl bg-white/[0.05] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/10 hover:text-primary active:scale-95"
+                            className="rounded-xl bg-white/[0.05] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground active:scale-95"
                           >
                             {btn.label}
                           </button>
@@ -825,8 +824,8 @@ function NewInvoicePage() {
                       </div>
                     </div>
 
-                    <div className="flex items-baseline justify-between gap-3 rounded-2xl bg-primary/[0.06] px-4 py-3">
-                      <span className="text-[clamp(1.25rem,4vw,1.75rem)] font-extrabold leading-none tracking-tight text-primary">{fmt(remaining)} ج.م</span>
+<div className="flex items-baseline justify-between gap-3 rounded-2xl bg-foreground/[0.06] px-4 py-3">
+                        <span className="text-[clamp(1.25rem,4vw,1.75rem)] font-extrabold leading-none tracking-tight text-foreground">{fmt(remaining)} ج.م</span>
                       <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">المتبقي للتقسيط</span>
                     </div>
 
@@ -841,10 +840,10 @@ function NewInvoicePage() {
                               type="button"
                               onClick={() => setCount(String(n))}
                               className={cn(
-                                "flex-1 rounded-xl py-2.5 text-xs font-black transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95",
+                                "flex-1 rounded-xl py-2.5 text-xs font-black transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95",
                                 countNum === n
-                                  ? "bg-primary text-black"
-                                  : "bg-white/[0.05] text-muted-foreground hover:bg-white/[0.08]"
+                                  ? "bg-foreground text-background"
+                                  : "bg-foreground/[0.06] text-muted-foreground hover:bg-foreground/[0.08]"
                               )}
                             >
                               {n}
@@ -854,7 +853,7 @@ function NewInvoicePage() {
                       </div>
                       <div>
                         <Label className="text-xs">القسط الشهري (ج.م)</Label>
-                        <Input type="number" value={monthly} onChange={(e) => setMonthly(e.target.value)} className={cn(countNum > 0 && "border-success/40 bg-success/5")} />
+                        <Input type="number" value={monthly} onChange={(e) => setMonthly(e.target.value)} className={cn(countNum > 0 && "border-border/30")} />
                       </div>
                       <div>
                         <Label className="text-xs">تاريخ أول قسط</Label>
@@ -873,14 +872,14 @@ function NewInvoicePage() {
                           <button
                             type="button"
                             onClick={() => setDate(addMonths(new Date(), 1))}
-                            className="rounded-full bg-foreground/[0.05] px-2.5 py-1 text-[11px] font-bold text-muted-foreground transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/10 hover:text-primary active:scale-[0.96]"
+                            className="rounded-full bg-foreground/[0.05] px-2.5 py-1 text-[11px] font-bold text-muted-foreground transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground active:scale-[0.96]"
                           >
                             بعد شهر
                           </button>
                           <button
                             type="button"
                             onClick={() => { const n = addMonths(new Date(), 1); setDate(new Date(n.getFullYear(), n.getMonth(), 1)); }}
-                            className="rounded-full bg-foreground/[0.05] px-2.5 py-1 text-[11px] font-bold text-muted-foreground transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary/10 hover:text-primary active:scale-[0.96]"
+                            className="rounded-full bg-foreground/[0.05] px-2.5 py-1 text-[11px] font-bold text-muted-foreground transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/[0.08] hover:text-foreground active:scale-[0.96]"
                           >
                             أول الشهر الجاي
                           </button>
@@ -889,7 +888,7 @@ function NewInvoicePage() {
                     </div>
 
                     {schedule.length > 0 && (
-                      <div className="space-y-2 rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-3">
+                      <div className="space-y-2 rounded-2xl border border-border/30 p-3">
                         <div className="flex items-center justify-between">
                           <span className="text-[11px] font-bold text-muted-foreground">
                             إجمالي المستحق: <span className="text-foreground">{fmt(totalDue)} ج.م</span>
@@ -924,17 +923,17 @@ function NewInvoicePage() {
             <Label className="mb-3 block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">حالة الفاتورة</Label>
             <div className="grid grid-cols-3 gap-2">
               {([
-                { v: "paid", label: "مدفوعة", cls: "bg-success text-black", ring: "hover:text-success" },
-                { v: "pending", label: "معلقة", cls: "bg-warning text-black", ring: "hover:text-warning" },
-                { v: "cancelled", label: "ملغية", cls: "bg-danger text-white", ring: "hover:text-danger" },
+                { v: "paid", label: "مدفوعة", cls: "bg-foreground text-background", ring: "" },
+                { v: "pending", label: "معلقة", cls: "bg-foreground text-background", ring: "" },
+                { v: "cancelled", label: "ملغية", cls: "bg-foreground text-background", ring: "" },
               ] as const).map((o) => (
                 <button
                   key={o.v}
                   type="button"
                   onClick={() => setStatus(o.v)}
                   className={cn(
-                    "rounded-2xl py-3 text-xs font-black transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95",
-                    status === o.v ? o.cls : cn("bg-white/[0.05] text-muted-foreground hover:bg-white/[0.08]", o.ring),
+                    "rounded-2xl py-3 text-xs font-black transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-95",
+                    status === o.v ? o.cls : "bg-foreground/[0.06] text-muted-foreground hover:bg-foreground/[0.08]",
                   )}
                 >
                   {o.label}
@@ -950,10 +949,9 @@ function NewInvoicePage() {
           </div>
 
           {/* تتبع الربح */}
-          <div className={cn("rounded-[2rem] border p-5 transition-colors duration-500",
-            profit > 0 ? "border-success/30 bg-success/5" : profit < 0 ? "border-danger/30 bg-danger/5" : "border-border/30"
-          )}>
-              <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+          <div className="rounded-[2rem] border border-border/30 p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-y-6 gap-x-4 divide-y divide-border/30">
+                <div className="space-y-1 pt-4 border-t border-border/30">
                 <div className="space-y-1">
                   <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">إجمالي التكلفة</span>
                   <div className="flex items-baseline gap-1">
@@ -968,14 +966,14 @@ function NewInvoicePage() {
                     <span className="text-[10px] font-bold text-muted-foreground/40">ج.م</span>
                   </div>
                 </div>
-                <div className="space-y-1 border-t border-white/5 pt-4">
+                <div className="space-y-1 pt-4 border-t border-border/30">
                   <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">صافي الربح</span>
                   <div className="flex items-baseline gap-1">
                     <span className={cn("text-3xl font-black tracking-tighter", blurCls, profit > 0 ? "text-success" : profit < 0 ? "text-danger" : "text-muted-foreground")}>{fmt(profit)}</span>
                     <span className="text-xs font-bold text-muted-foreground/40">ج.م</span>
                   </div>
                 </div>
-                <div className="space-y-1 border-t border-white/5 pt-4">
+                <div className="space-y-1 pt-4 border-t border-border/30">
                   <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">نسبة الربح</span>
                   <span className={cn("block text-3xl font-black tracking-tighter", blurCls, profit > 0 ? "text-success" : profit < 0 ? "text-danger" : "text-muted-foreground")}>{profitPct.toFixed(1)}%</span>
                 </div>
@@ -1017,7 +1015,7 @@ function NewInvoicePage() {
           <div className="rounded-[2rem] border border-border/30 p-5 space-y-4 text-right">
               <div className="flex items-center justify-between">
                 <span className={cn("rounded-full border px-3 py-1 text-[10px] font-bold",
-                  blockReason ? "border-warning/40 bg-warning/10 text-warning" : "border-success/40 bg-success/10 text-success")}>
+                  blockReason ? "border-warning/40 bg-warning/10 text-warning" : "border border-border/30 bg-foreground/[0.06] text-foreground")}>
                   {blockReason ? "غير مكتملة" : "جاهزة للحفظ"}
                 </span>
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">ملخص الفاتورة</span>
@@ -1034,15 +1032,15 @@ function NewInvoicePage() {
                 {!isCashMode && countNum > 0 && <Row label="عدد الأقساط" value={String(countNum)} />}
               </div>
 
-              <div className="rounded-2xl bg-primary/[0.07] px-4 py-4">
+              <div className="rounded-2xl bg-foreground/[0.06] px-4 py-4">
                 <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
                   {isCashMode ? "إجمالي الفاتورة" : "المقدم الآن"}
                 </span>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-black leading-none tracking-tighter text-primary">
+                  <span className="text-4xl font-black leading-none tracking-tighter text-foreground">
                     {fmt(isCashMode ? totalPrice : downNum)}
                   </span>
-                  <span className="text-xs font-bold text-primary">ج.م</span>
+                  <span className="text-xs font-bold text-foreground">ج.م</span>
                 </div>
               </div>
           </div>
@@ -1093,7 +1091,7 @@ function NewInvoicePage() {
           </Button>
           <div className="text-right">
             <span className="block text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">الإجمالي</span>
-            <span className="text-lg font-black leading-none text-primary">{fmt(totalPrice)}</span>
+            <span className="text-lg font-black leading-none text-foreground">{fmt(totalPrice)}</span>
           </div>
         </div>
       </div>
