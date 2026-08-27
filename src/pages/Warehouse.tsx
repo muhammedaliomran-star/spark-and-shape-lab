@@ -529,8 +529,6 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground opacity-50">EGP</div>
                 </div>
               </div>
-              </div>
-              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
