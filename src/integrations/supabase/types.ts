@@ -109,7 +109,6 @@ export type Database = {
           invoice_id: string
           name: string
           price: number
-          quantity: number
           user_id: string
         }
         Insert: {
@@ -119,7 +118,6 @@ export type Database = {
           invoice_id: string
           name: string
           price?: number
-          quantity?: number
           user_id: string
         }
         Update: {
@@ -129,7 +127,6 @@ export type Database = {
           invoice_id?: string
           name?: string
           price?: number
-          quantity?: number
           user_id?: string
         }
         Relationships: [
