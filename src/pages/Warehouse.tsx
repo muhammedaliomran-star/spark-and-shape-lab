@@ -43,9 +43,9 @@ export default function Page() {
 type Filter = "any" | WarehouseSeason;
 
 const seasonMeta: Record<WarehouseSeason, { label: string; cls: string }> = {
-  summer: { label: "صيفي", cls: "bg-amber-500/12 text-amber-500 ring-amber-500/25" },
-  winter: { label: "شتوي", cls: "bg-sky-500/12 text-sky-400 ring-sky-500/25" },
-  all: { label: "عام", cls: "bg-primary/12 text-primary ring-primary/25" },
+  summer: { label: "صيفي", cls: "bg-foreground/[0.06] text-muted-foreground ring-border" },
+  winter: { label: "شتوي", cls: "bg-foreground/[0.06] text-muted-foreground ring-border" },
+  all: { label: "عام", cls: "bg-foreground/[0.06] text-muted-foreground ring-border" },
 };
 
 function WarehousePage() {
@@ -228,7 +228,7 @@ function ItemCard({ item, masked }: { item: WarehouseItem; masked: boolean }) {
   return (
     <BezelCard className="bezel-lift" innerClassName="flex flex-col gap-4 p-5">
       <div className="flex items-start justify-between gap-3">
-        <Badge variant="outline" className={cn("rounded-full border-0 ring-1", meta.cls)}>{meta.label}</Badge>
+        <Badge variant="outline" className={cn("rounded-full border-0 ring-1", "bg-foreground/[0.06] text-muted-foreground ring-border")}>{meta.label}</Badge>
         <div className="min-w-0 text-right">
           <div className="truncate font-semibold">{item.name}</div>
           <div className="mt-1 text-[11px] text-muted-foreground">{cat}</div>
@@ -480,8 +480,8 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
         <DialogHeader className="p-6 pb-2 sticky top-0 bg-card/50 backdrop-blur-xl z-20 border-b border-[var(--hairline)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center">
-                <WarehouseIcon className="w-5 h-5 text-primary" />
+              <div className="w-10 h-10 rounded-2xl bg-foreground/[0.06] flex items-center justify-center">
+                <WarehouseIcon className="w-5 h-5 text-muted-foreground" />
               </div>
               <div>
                 <DialogTitle className="text-right text-xl font-black">إضافة صنف للمخزن</DialogTitle>
@@ -506,35 +506,37 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Quantity */}
-              <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
-                <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">الكمية</Label>
-                <Input 
-                  type="number" 
-                  value={quantity} 
-                  onChange={(e) => setQuantity(e.target.value)} 
-                  className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-black" 
-                />
+<div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[border-color,ring-color,box-shadow] hover:ring-foreground/40 group/field">
+              <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">الكمية</Label>
+              <Input 
+                type="number" 
+                value={quantity} 
+                onChange={(e) => setQuantity(e.target.value)} 
+                className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-foreground/30 font-black" 
+              />
               </div>
 
               {/* Cost */}
               <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
-                <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">سعر التكلفة</Label>
+<Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">سعر التكلفة</Label>
                 <div className="relative">
                   <Input 
                     type="number" 
                     value={unitCost} 
                     onChange={(e) => setUnitCost(e.target.value)} 
-                    className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-black" 
+                    className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-foreground/30 font-black" 
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground opacity-50">EGP</div>
                 </div>
+              </div>
+              </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Sale Price */}
-              <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
-                <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">سعر البيع المتوقع</Label>
+<div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[border-color,ring-color,box-shadow] hover:ring-foreground/40 group/field">
+              <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">سعر البيع المتوقع</Label>
                 <div className="relative">
                   <Input 
                     type="number" 
@@ -563,8 +565,8 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
             </div>
 
             {/* Category */}
-            <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
-              <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">الفئة / القسم</Label>
+            <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[border-color,ring-color,box-shadow] hover:ring-foreground/40 group/field">
+              <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">الفئة / القسم</Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger className="h-12 bg-background/50 border-none rounded-xl text-right font-bold">
                   <SelectValue />
@@ -578,7 +580,7 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
             </div>
 
             <Button 
-              className="w-full gap-2 py-8 text-xl rounded-2xl shadow-2xl transition-all duration-500 font-black relative overflow-hidden group bg-primary text-primary-foreground hover:shadow-primary/30" 
+              className="w-full gap-2 py-8 text-xl rounded-2xl shadow-2xl transition-[transform,box-shadow] duration-500 font-black relative overflow-hidden group bg-primary text-primary-foreground hover:shadow-primary/30" 
               onClick={submit}
               disabled={busy}
             >
