@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { PageTransition } from "@/components/PageTransition";
-import { BezelCard } from "@/components/BezelCard";
 import { ChartEmpty } from "@/components/ChartEmpty";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -265,10 +264,10 @@ ${topItems.map((i) => `<tr><td>${escapeHtml(i.name)}</td><td class="num">${fmt(i
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={exportExcel} className="gap-2">
-                  <FileSpreadsheet className="w-4 h-4 text-success" /> Excel (.xlsx)
+                  <FileSpreadsheet className="w-4 h-4 text-muted-foreground" /> Excel (.xlsx)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={exportPDF} className="gap-2">
-                  <FileText className="w-4 h-4 text-danger" /> PDF مطبوع
+                  <FileText className="w-4 h-4 text-muted-foreground" /> PDF مطبوع
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -289,29 +288,29 @@ ${topItems.map((i) => `<tr><td>${escapeHtml(i.name)}</td><td class="num">${fmt(i
       </Tabs>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-6">
-        <SummaryBox label="المبيعات" value={totals.sales} icon={<Receipt className="w-5 h-5" />} tone="primary" blurCls={blurCls} />
-        <SummaryBox label="التحصيلات" value={totals.collected} icon={<Wallet className="w-5 h-5" />} tone="success" blurCls={blurCls} />
+        <SummaryBox label="المبيعات" value={totals.sales} icon={<Receipt className="w-5 h-5" />} tone="neutral" blurCls={blurCls} />
+        <SummaryBox label="التحصيلات" value={totals.collected} icon={<Wallet className="w-5 h-5" />} tone="neutral" blurCls={blurCls} />
         <SummaryBox label="المصروفات" value={totals.expenses} icon={<TrendingDown className="w-5 h-5" />} tone="danger" blurCls={blurCls} />
-        <SummaryBox label="صافي الربح" value={totals.net} icon={<TrendingUp className="w-5 h-5" />} tone={totals.net >= 0 ? "success" : "danger"} blurCls={blurCls} />
+        <SummaryBox label="صافي الربح" value={totals.net} icon={<TrendingUp className="w-5 h-5" />} tone={totals.net >= 0 ? "neutral" : "danger"} blurCls={blurCls} />
       </div>
 
       {incompleteCostCount > 0 && <div className="mb-6 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm font-bold text-warning">بيانات غير مكتملة: {incompleteCostCount} فاتورة مستبعدة من حساب الربح لعدم اكتمال تكلفة الأصناف.</div>}
 
-      <div className="mb-6 grid gap-px overflow-hidden rounded-[1.5rem] hairline/70 bg-border/40 sm:grid-cols-3">
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
         {[
-          { label: "المتبقي على العملاء", value: fmt(outstanding), tone: "text-warning" },
+          { label: "المتبقي على العملاء", value: fmt(outstanding), tone: "text-muted-foreground" },
           {
             label: "قيمة المخزن",
             value: fmt(stockItems.reduce((s, i) => s + i.quantity * i.lastUnitCost, 0)),
             tone: "text-foreground",
           },
-          { label: "مجمل الربح قبل المصروفات", value: fmt(totals.profit), tone: "text-success" },
+          { label: "مجمل الربح قبل المصروفات", value: fmt(totals.profit), tone: "text-muted-foreground" },
         ].map((row) => (
           <div
             key={row.label}
-            className="bg-card/60 px-5 py-4 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-card/80"
+            className="rounded-xl hairline/70 bg-card/70 px-5 py-4"
           >
-            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{row.label}</p>
+            <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">{row.label}</p>
             <p className={cn("mt-1.5 text-base font-bold tabular-nums", row.tone, blurCls)}>
               {row.value} ج.م
             </p>
@@ -320,7 +319,7 @@ ${topItems.map((i) => `<tr><td>${escapeHtml(i.name)}</td><td class="num">${fmt(i
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2 mb-6">
-        <BezelCard innerClassName="p-6">
+        <div className="rounded-2xl hairline/70 bg-card/70 p-6">
           <h2 className="text-sm font-bold mb-4">المبيعات مقابل التحصيلات</h2>
           {hasData ? (
             <div className="h-64" dir="ltr">
@@ -335,16 +334,16 @@ ${topItems.map((i) => `<tr><td>${escapeHtml(i.name)}</td><td class="num">${fmt(i
                   />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <Bar name="المبيعات" dataKey="sales" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-                  <Bar name="التحصيلات" dataKey="collected" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
+                  <Bar name="التحصيلات" dataKey="collected" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           ) : (
             <ChartEmpty title="لسه مفيش بيانات كفاية" hint="سجّل فواتير ودفعات وهتلاقي الرسم البياني اتعبّى." />
           )}
-        </BezelCard>
+        </div>
 
-        <BezelCard innerClassName="p-6">
+        <div className="rounded-2xl hairline/70 bg-card/70 p-6">
           <h2 className="text-sm font-bold mb-4">صافي الربح شهريًا</h2>
           {hasData ? (
             <div className="h-64" dir="ltr">
@@ -367,17 +366,17 @@ ${topItems.map((i) => `<tr><td>${escapeHtml(i.name)}</td><td class="num">${fmt(i
           ) : (
             <ChartEmpty title="لسه مفيش بيانات كفاية" hint="أضف مصروفات وفواتير عشان نحسب صافي الربح." />
           )}
-        </BezelCard>
+        </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <BezelCard innerClassName="p-0 overflow-hidden">
-          <div className="flex items-center gap-2 p-5 pb-3">
-            <Users className="w-4 h-4 text-primary" />
+        <div className="rounded-2xl hairline/70 bg-card/70 overflow-hidden">
+          <div className="flex items-center gap-2 p-5 pb-3 border-b border-[var(--hairline)]">
+            <Users className="w-4 h-4 text-muted-foreground" />
             <h2 className="text-sm font-bold">أفضل 10 عملاء</h2>
           </div>
           {topCustomers.length === 0 ? (
-            <EmptyState icon={Users} title="مفيش عملاء بمشتريات لسه." hint="سجّل أول فاتورة عشان يظهر الترتيب." />
+            <EmptyState icon={Users} title="مفيش عملاء بمشتريات لسه." hint="سجّل أول فاتورة عشان يظهر الترتيب." className="p-10" />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -392,11 +391,11 @@ ${topItems.map((i) => `<tr><td>${escapeHtml(i.name)}</td><td class="num">${fmt(i
                 <tbody>
                   {topCustomers.map((c, idx) => (
                     <tr key={c.id} className="border-t border-[var(--hairline)] hover:bg-foreground/[0.035]">
-                      <td className="p-3 font-bold text-primary">
+                      <td className="p-3 font-bold text-foreground">
                         <span className="text-muted-foreground font-normal ml-1.5">{idx + 1}.</span>{c.name}
                       </td>
                       <td className={cn("p-3 tabular-nums", blurCls)}>{fmt(c.sales)}</td>
-                      <td className={cn("p-3 tabular-nums text-success", blurCls)}>{fmt(c.paid)}</td>
+                      <td className={cn("p-3 tabular-nums text-muted-foreground", blurCls)}>{fmt(c.paid)}</td>
                       <td className={cn("p-3 tabular-nums", c.due > 0 ? "text-warning font-bold" : "text-muted-foreground", blurCls)}>{fmt(c.due)}</td>
                     </tr>
                   ))}
@@ -404,15 +403,15 @@ ${topItems.map((i) => `<tr><td>${escapeHtml(i.name)}</td><td class="num">${fmt(i
               </table>
             </div>
           )}
-        </BezelCard>
+        </div>
 
-        <BezelCard innerClassName="p-0 overflow-hidden">
-          <div className="flex items-center gap-2 p-5 pb-3">
-            <Package className="w-4 h-4 text-primary" />
+        <div className="rounded-2xl hairline/70 bg-card/70 overflow-hidden">
+          <div className="flex items-center gap-2 p-5 pb-3 border-b border-[var(--hairline)]">
+            <Package className="w-4 h-4 text-muted-foreground" />
             <h2 className="text-sm font-bold">أكثر الأصناف مبيعًا</h2>
           </div>
           {topItems.length === 0 ? (
-            <EmptyState icon={Package} title="مفيش أصناف مباعة في الفترة دي." hint="أضف أصناف داخل الفواتير عشان نحلّلها." />
+            <EmptyState icon={Package} title="مفيش أصناف مباعة في الفترة دي." hint="أضف أصناف داخل الفواتير عشان نحلّلها." className="p-10" />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -437,11 +436,11 @@ ${topItems.map((i) => `<tr><td>${escapeHtml(i.name)}</td><td class="num">${fmt(i
               </table>
             </div>
           )}
-        </BezelCard>
+        </div>
       </div>
 
       {expenseBreakdown.length > 0 && (
-        <BezelCard className="mt-5" innerClassName="p-6">
+        <div className="mt-5 rounded-2xl hairline/70 bg-card/70 p-6">
           <h2 className="text-sm font-bold mb-4">المصروفات حسب البند</h2>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {expenseBreakdown.map((e) => (
@@ -451,7 +450,7 @@ ${topItems.map((i) => `<tr><td>${escapeHtml(i.name)}</td><td class="num">${fmt(i
               </div>
             ))}
           </div>
-        </BezelCard>
+        </div>
       )}
     </>
   );
@@ -461,14 +460,15 @@ function SummaryBox({
   label, value, icon, tone, blurCls,
 }: {
   label: string; value: number; icon: React.ReactNode;
-  tone: "primary" | "success" | "danger"; blurCls: string;
+  tone: "primary" | "success" | "danger" | "neutral"; blurCls: string;
 }) {
-  const toneCls = tone === "success" ? "text-success" : tone === "danger" ? "text-danger" : "text-primary";
+  const toneCls = tone === "success" ? "text-success" : tone === "danger" ? "text-danger" : tone === "primary" ? "text-primary" : "text-foreground";
+  const iconCls = tone === "success" ? "text-success" : tone === "danger" ? "text-danger" : tone === "primary" ? "text-primary" : "text-muted-foreground";
   return (
     <div className="rounded-[1.25rem] hairline/70 bg-card/70 p-4">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
-        <span className={toneCls}>{icon}</span>
+        <span className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">{label}</span>
+        <span className={iconCls}>{icon}</span>
       </div>
       <div className={cn("text-2xl font-extrabold tabular-nums", toneCls, blurCls)}>{fmt(value)} ج.م</div>
     </div>
