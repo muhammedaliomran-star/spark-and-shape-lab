@@ -46,7 +46,6 @@ export function EmptyState({ icon: Icon, title, hint, action, compact }: Props) 
             <Icon className="w-5 h-5" strokeWidth={1.75} />
           </span>
         </span>
-        </span>
       </div>
 
       <p className="text-[15px] font-bold tracking-[-0.01em] text-foreground">{title}</p>
