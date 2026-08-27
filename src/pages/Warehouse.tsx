@@ -43,8 +43,8 @@ export default function Page() {
 type Filter = "any" | WarehouseSeason;
 
 const seasonMeta: Record<WarehouseSeason, { label: string; cls: string }> = {
-  summer: { label: "صيفي", cls: "bg-foreground/[0.06] text-muted-foreground ring-border" },
-  winter: { label: "شتوي", cls: "bg-foreground/[0.06] text-muted-foreground ring-border" },
+  summer: { label: "صيفي", cls: "bg-amber-100 text-amber-700 border-amber-300" },
+  winter: { label: "شتوي", cls: "bg-blue-100 text-blue-700 border-blue-300" },
   all: { label: "عام", cls: "bg-foreground/[0.06] text-muted-foreground ring-border" },
 };
 
@@ -162,17 +162,17 @@ function WarehousePage() {
             ).map((f) => {
               const active = filter === f.value;
               const Icon = f.icon;
-              return (
+return (
                 <button
                   key={f.value}
                   onClick={() => setFilter(f.value)}
                   className={cn(
-                    "press flex items-center gap-1.5 rounded-full px-4 py-2 text-sm transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                    "press flex items-center gap-1.5 rounded-full px-4 py-2 text-sm transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
                     active
-                      ? "bg-primary font-semibold text-primary-foreground"
+                      ? "bg-foreground text-background"
                       : "text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground",
                   )}
-                >
+              >
                   <Icon className="h-3.5 w-3.5" />
                   {f.label}
                 </button>
@@ -226,7 +226,9 @@ function ItemCard({ item, masked }: { item: WarehouseItem; masked: boolean }) {
   const [moveOpen, setMoveOpen] = useState(false);
 
   return (
-    <BezelCard className="bezel-lift" innerClassName="flex flex-col gap-4 p-5">
+    <BezelCard
+      variant="flat"
+      innerClassName="flex flex-col gap-4 p-5"
       <div className="flex items-start justify-between gap-3">
         <Badge variant="outline" className={cn("rounded-full border-0 ring-1", "bg-foreground/[0.06] text-muted-foreground ring-border")}>{meta.label}</Badge>
         <div className="min-w-0 text-right">
@@ -494,13 +496,13 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
         <ScrollArea className="max-h-[80vh] p-6">
           <div className="space-y-6 text-right" dir="rtl">
             {/* Name */}
-            <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
-              <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">اسم الصنف</Label>
+            <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[border-color,ring-color,box-shadow] hover:ring-foreground/40 group/field">
+              <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">اسم الصنف</Label>
               <Input 
                 value={name} 
                 onChange={(e) => setName(e.target.value)} 
                 placeholder="مثال: بنطلون صيفي قطن..." 
-                className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-bold" 
+                className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-foreground/30 font-bold" 
               />
             </div>
 
@@ -516,9 +518,9 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
               />
               </div>
 
-              {/* Cost */}
-              <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
-<Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">سعر التكلفة</Label>
+{/* Cost */}
+              <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[border-color,ring-color,box-shadow] hover:ring-foreground/40 group/field">
+                <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">سعر التكلفة</Label>
                 <div className="relative">
                   <Input 
                     type="number" 
@@ -529,26 +531,28 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground opacity-50">EGP</div>
                 </div>
               </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Sale Price */}
-<div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[border-color,ring-color,box-shadow] hover:ring-foreground/40 group/field">
-              <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">سعر البيع المتوقع</Label>
+{/* Sale Price */}
+              <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[border-color,ring-color,box-shadow] hover:ring-foreground/40 group/field">
+                <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">سعر البيع المتوقع</Label>
                 <div className="relative">
                   <Input 
                     type="number" 
                     value={salePrice} 
                     onChange={(e) => setSalePrice(e.target.value)} 
-                    className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-black" 
+                    className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-foreground/30 font-black" 
                   />
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground opacity-50">EGP</div>
                 </div>
               </div>
+              </div>
 
               {/* Season */}
-              <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-all hover:ring-primary/40 group/field">
-                <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-primary transition-colors">الموسم</Label>
+              <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[border-color,ring-color,box-shadow] hover:ring-foreground/40 group/field">
+                <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">الموسم</Label>
                 <Select value={season} onValueChange={(v) => setSeason(v as WarehouseSeason)}>
                   <SelectTrigger className="h-12 bg-background/50 border-none rounded-xl text-right font-bold">
                     <SelectValue />
@@ -562,7 +566,7 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
               </div>
             </div>
 
-            {/* Category */}
+{/* Category */}
             <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[border-color,ring-color,box-shadow] hover:ring-foreground/40 group/field">
               <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">الفئة / القسم</Label>
               <Select value={category} onValueChange={setCategory}>
