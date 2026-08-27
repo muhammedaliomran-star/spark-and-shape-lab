@@ -108,7 +108,7 @@ export async function buildBackup(): Promise<BackupPayload> {
   const storefrontIds = await ownedIds("storefronts", "owner_id", userId);
   const orderIds = storefrontIds.length ? await ownedIds("store_orders", "storefront_id", storefrontIds) : [];
   for (const t of TABLES) {
-    let query: any = supabase.from(t).select("*");
+    let query: any = (supabase as any).from(t).select("*");
     if (USER_SCOPED_TABLES.has(t)) query = query.eq("user_id", userId);
     else if (t === "storefronts") query = query.eq("owner_id", userId);
     else if (t === "storefront_categories" || t === "storefront_products" || t === "storefront_coupons" || t === "storefront_domains" || t === "storefront_feature_flags" || t === "storefront_analytics_events") query = storefrontIds.length ? query.in("storefront_id", storefrontIds) : query.eq("id", "00000000-0000-0000-0000-000000000000");
@@ -187,7 +187,7 @@ export async function dataCounts(): Promise<Record<string, number>> {
   const orderIds = storefrontIds.length ? await ownedIds("store_orders", "storefront_id", storefrontIds) : [];
   await Promise.all(
     DELETE_ORDER.map(async (t) => {
-      let query: any = supabase.from(t).select("id", { count: "exact", head: true });
+      let query: any = (supabase as any).from(t).select("id", { count: "exact", head: true });
       if (USER_SCOPED_TABLES.has(t)) query = query.eq("user_id", userId);
       else if (t === "storefronts") query = query.eq("owner_id", userId);
       else if (t === "store_orders") query = storefrontIds.length ? query.in("storefront_id", storefrontIds) : query.eq("id", "00000000-0000-0000-0000-000000000000");
@@ -206,7 +206,7 @@ export async function wipeAllData() {
   const userId = await currentUserId();
   for (const t of DELETE_ORDER) {
     if (!USER_SCOPED_TABLES.has(t)) continue;
-    const { error } = await supabase.from(t).delete().eq("user_id", userId);
+    const { error } = await (supabase as any).from(t).delete().eq("user_id", userId);
     if (error) throw error;
   }
 }

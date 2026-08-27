@@ -24,6 +24,7 @@ import { Route as LandingRouteImport } from './routes/landing'
 import { Route as OrderTrackingRouteImport } from './routes/order-tracking'
 import { Route as PaymentsRouteImport } from './routes/payments'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ReconciliationRouteImport } from './routes/reconciliation'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReturnsRouteImport } from './routes/returns'
@@ -39,7 +40,14 @@ import { Route as InvoicesNewRouteImport } from './routes/invoices_.new'
 import { Route as PurchasesIndexRouteImport } from './routes/purchases/index'
 import { Route as PurchasesNewRouteImport } from './routes/purchases/new'
 import { Route as ReportsIndexRouteImport } from './routes/reports/index'
+import { Route as ShippingDayRouteImport } from './routes/shipping.day'
+import { Route as ShippingRescueRouteImport } from './routes/shipping.rescue'
 import { Route as ShopSlugRouteImport } from './routes/shop.$slug'
+import { Route as StorefrontAnalyticsRouteImport } from './routes/storefront.analytics'
+import { Route as StorefrontCatalogRouteImport } from './routes/storefront.catalog'
+import { Route as StorefrontOperationsRouteImport } from './routes/storefront.operations'
+import { Route as StorefrontSettingsRouteImport } from './routes/storefront.settings'
+import { Route as ShopSlugProductRouteImport } from './routes/shop.$slug.$product'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -114,6 +122,11 @@ const PaymentsRoute = PaymentsRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReconciliationRoute = ReconciliationRouteImport.update({
+  id: '/reconciliation',
+  path: '/reconciliation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportsRoute = ReportsRouteImport.update({
@@ -191,10 +204,45 @@ const ReportsIndexRoute = ReportsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ReportsRoute,
 } as any)
+const ShippingDayRoute = ShippingDayRouteImport.update({
+  id: '/day',
+  path: '/day',
+  getParentRoute: () => ShippingRoute,
+} as any)
+const ShippingRescueRoute = ShippingRescueRouteImport.update({
+  id: '/rescue',
+  path: '/rescue',
+  getParentRoute: () => ShippingRoute,
+} as any)
 const ShopSlugRoute = ShopSlugRouteImport.update({
   id: '/shop/$slug',
   path: '/shop/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const StorefrontAnalyticsRoute = StorefrontAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => StorefrontRoute,
+} as any)
+const StorefrontCatalogRoute = StorefrontCatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
+  getParentRoute: () => StorefrontRoute,
+} as any)
+const StorefrontOperationsRoute = StorefrontOperationsRouteImport.update({
+  id: '/operations',
+  path: '/operations',
+  getParentRoute: () => StorefrontRoute,
+} as any)
+const StorefrontSettingsRoute = StorefrontSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => StorefrontRoute,
+} as any)
+const ShopSlugProductRoute = ShopSlugProductRouteImport.update({
+  id: '/$product',
+  path: '/$product',
+  getParentRoute: () => ShopSlugRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -213,12 +261,13 @@ export interface FileRoutesByFullPath {
   '/order-tracking': typeof OrderTrackingRoute
   '/payments': typeof PaymentsRoute
   '/privacy': typeof PrivacyRoute
+  '/reconciliation': typeof ReconciliationRoute
   '/reports': typeof ReportsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
-  '/shipping': typeof ShippingRoute
-  '/storefront': typeof StorefrontRoute
+  '/shipping': typeof ShippingRouteWithChildren
+  '/storefront': typeof StorefrontRouteWithChildren
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
@@ -226,9 +275,16 @@ export interface FileRoutesByFullPath {
   '/inventory/new': typeof InventoryNewRoute
   '/invoices/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
-  '/shop/$slug': typeof ShopSlugRoute
+  '/shipping/day': typeof ShippingDayRoute
+  '/shipping/rescue': typeof ShippingRescueRoute
+  '/shop/$slug': typeof ShopSlugRouteWithChildren
+  '/storefront/analytics': typeof StorefrontAnalyticsRoute
+  '/storefront/catalog': typeof StorefrontCatalogRoute
+  '/storefront/operations': typeof StorefrontOperationsRoute
+  '/storefront/settings': typeof StorefrontSettingsRoute
   '/purchases/': typeof PurchasesIndexRoute
   '/reports/': typeof ReportsIndexRoute
+  '/shop/$slug/$product': typeof ShopSlugProductRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -246,11 +302,12 @@ export interface FileRoutesByTo {
   '/order-tracking': typeof OrderTrackingRoute
   '/payments': typeof PaymentsRoute
   '/privacy': typeof PrivacyRoute
+  '/reconciliation': typeof ReconciliationRoute
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
-  '/shipping': typeof ShippingRoute
-  '/storefront': typeof StorefrontRoute
+  '/shipping': typeof ShippingRouteWithChildren
+  '/storefront': typeof StorefrontRouteWithChildren
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
@@ -258,9 +315,16 @@ export interface FileRoutesByTo {
   '/inventory/new': typeof InventoryNewRoute
   '/invoices/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
-  '/shop/$slug': typeof ShopSlugRoute
+  '/shipping/day': typeof ShippingDayRoute
+  '/shipping/rescue': typeof ShippingRescueRoute
+  '/shop/$slug': typeof ShopSlugRouteWithChildren
+  '/storefront/analytics': typeof StorefrontAnalyticsRoute
+  '/storefront/catalog': typeof StorefrontCatalogRoute
+  '/storefront/operations': typeof StorefrontOperationsRoute
+  '/storefront/settings': typeof StorefrontSettingsRoute
   '/purchases': typeof PurchasesIndexRoute
   '/reports': typeof ReportsIndexRoute
+  '/shop/$slug/$product': typeof ShopSlugProductRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -279,12 +343,13 @@ export interface FileRoutesById {
   '/order-tracking': typeof OrderTrackingRoute
   '/payments': typeof PaymentsRoute
   '/privacy': typeof PrivacyRoute
+  '/reconciliation': typeof ReconciliationRoute
   '/reports': typeof ReportsRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
-  '/shipping': typeof ShippingRoute
-  '/storefront': typeof StorefrontRoute
+  '/shipping': typeof ShippingRouteWithChildren
+  '/storefront': typeof StorefrontRouteWithChildren
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
@@ -292,9 +357,16 @@ export interface FileRoutesById {
   '/inventory_/new': typeof InventoryNewRoute
   '/invoices_/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
-  '/shop/$slug': typeof ShopSlugRoute
+  '/shipping/day': typeof ShippingDayRoute
+  '/shipping/rescue': typeof ShippingRescueRoute
+  '/shop/$slug': typeof ShopSlugRouteWithChildren
+  '/storefront/analytics': typeof StorefrontAnalyticsRoute
+  '/storefront/catalog': typeof StorefrontCatalogRoute
+  '/storefront/operations': typeof StorefrontOperationsRoute
+  '/storefront/settings': typeof StorefrontSettingsRoute
   '/purchases/': typeof PurchasesIndexRoute
   '/reports/': typeof ReportsIndexRoute
+  '/shop/$slug/$product': typeof ShopSlugProductRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -314,6 +386,7 @@ export interface FileRouteTypes {
     | '/order-tracking'
     | '/payments'
     | '/privacy'
+    | '/reconciliation'
     | '/reports'
     | '/reset-password'
     | '/returns'
@@ -327,9 +400,16 @@ export interface FileRouteTypes {
     | '/inventory/new'
     | '/invoices/new'
     | '/purchases/new'
+    | '/shipping/day'
+    | '/shipping/rescue'
     | '/shop/$slug'
+    | '/storefront/analytics'
+    | '/storefront/catalog'
+    | '/storefront/operations'
+    | '/storefront/settings'
     | '/purchases/'
     | '/reports/'
+    | '/shop/$slug/$product'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -347,6 +427,7 @@ export interface FileRouteTypes {
     | '/order-tracking'
     | '/payments'
     | '/privacy'
+    | '/reconciliation'
     | '/reset-password'
     | '/returns'
     | '/settings'
@@ -359,9 +440,16 @@ export interface FileRouteTypes {
     | '/inventory/new'
     | '/invoices/new'
     | '/purchases/new'
+    | '/shipping/day'
+    | '/shipping/rescue'
     | '/shop/$slug'
+    | '/storefront/analytics'
+    | '/storefront/catalog'
+    | '/storefront/operations'
+    | '/storefront/settings'
     | '/purchases'
     | '/reports'
+    | '/shop/$slug/$product'
   id:
     | '__root__'
     | '/'
@@ -379,6 +467,7 @@ export interface FileRouteTypes {
     | '/order-tracking'
     | '/payments'
     | '/privacy'
+    | '/reconciliation'
     | '/reports'
     | '/reset-password'
     | '/returns'
@@ -392,9 +481,16 @@ export interface FileRouteTypes {
     | '/inventory_/new'
     | '/invoices_/new'
     | '/purchases/new'
+    | '/shipping/day'
+    | '/shipping/rescue'
     | '/shop/$slug'
+    | '/storefront/analytics'
+    | '/storefront/catalog'
+    | '/storefront/operations'
+    | '/storefront/settings'
     | '/purchases/'
     | '/reports/'
+    | '/shop/$slug/$product'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -413,12 +509,13 @@ export interface RootRouteChildren {
   OrderTrackingRoute: typeof OrderTrackingRoute
   PaymentsRoute: typeof PaymentsRoute
   PrivacyRoute: typeof PrivacyRoute
+  ReconciliationRoute: typeof ReconciliationRoute
   ReportsRoute: typeof ReportsRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   ReturnsRoute: typeof ReturnsRoute
   SettingsRoute: typeof SettingsRoute
-  ShippingRoute: typeof ShippingRoute
-  StorefrontRoute: typeof StorefrontRoute
+  ShippingRoute: typeof ShippingRouteWithChildren
+  StorefrontRoute: typeof StorefrontRouteWithChildren
   SuppliersRoute: typeof SuppliersRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
@@ -426,7 +523,7 @@ export interface RootRouteChildren {
   InventoryNewRoute: typeof InventoryNewRoute
   InvoicesNewRoute: typeof InvoicesNewRoute
   PurchasesNewRoute: typeof PurchasesNewRoute
-  ShopSlugRoute: typeof ShopSlugRoute
+  ShopSlugRoute: typeof ShopSlugRouteWithChildren
   PurchasesIndexRoute: typeof PurchasesIndexRoute
 }
 
@@ -537,6 +634,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reconciliation': {
+      id: '/reconciliation'
+      path: '/reconciliation'
+      fullPath: '/reconciliation'
+      preLoaderRoute: typeof ReconciliationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reports': {
       id: '/reports'
       path: '/reports'
@@ -642,12 +746,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportsIndexRouteImport
       parentRoute: typeof ReportsRoute
     }
+    '/shipping/day': {
+      id: '/shipping/day'
+      path: '/day'
+      fullPath: '/shipping/day'
+      preLoaderRoute: typeof ShippingDayRouteImport
+      parentRoute: typeof ShippingRoute
+    }
+    '/shipping/rescue': {
+      id: '/shipping/rescue'
+      path: '/rescue'
+      fullPath: '/shipping/rescue'
+      preLoaderRoute: typeof ShippingRescueRouteImport
+      parentRoute: typeof ShippingRoute
+    }
     '/shop/$slug': {
       id: '/shop/$slug'
       path: '/shop/$slug'
       fullPath: '/shop/$slug'
       preLoaderRoute: typeof ShopSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/storefront/analytics': {
+      id: '/storefront/analytics'
+      path: '/analytics'
+      fullPath: '/storefront/analytics'
+      preLoaderRoute: typeof StorefrontAnalyticsRouteImport
+      parentRoute: typeof StorefrontRoute
+    }
+    '/storefront/catalog': {
+      id: '/storefront/catalog'
+      path: '/catalog'
+      fullPath: '/storefront/catalog'
+      preLoaderRoute: typeof StorefrontCatalogRouteImport
+      parentRoute: typeof StorefrontRoute
+    }
+    '/storefront/operations': {
+      id: '/storefront/operations'
+      path: '/operations'
+      fullPath: '/storefront/operations'
+      preLoaderRoute: typeof StorefrontOperationsRouteImport
+      parentRoute: typeof StorefrontRoute
+    }
+    '/storefront/settings': {
+      id: '/storefront/settings'
+      path: '/settings'
+      fullPath: '/storefront/settings'
+      preLoaderRoute: typeof StorefrontSettingsRouteImport
+      parentRoute: typeof StorefrontRoute
+    }
+    '/shop/$slug/$product': {
+      id: '/shop/$slug/$product'
+      path: '/$product'
+      fullPath: '/shop/$slug/$product'
+      preLoaderRoute: typeof ShopSlugProductRouteImport
+      parentRoute: typeof ShopSlugRoute
     }
   }
 }
@@ -662,6 +815,50 @@ const ReportsRouteChildren: ReportsRouteChildren = {
 
 const ReportsRouteWithChildren =
   ReportsRoute._addFileChildren(ReportsRouteChildren)
+
+interface ShippingRouteChildren {
+  ShippingDayRoute: typeof ShippingDayRoute
+  ShippingRescueRoute: typeof ShippingRescueRoute
+}
+
+const ShippingRouteChildren: ShippingRouteChildren = {
+  ShippingDayRoute: ShippingDayRoute,
+  ShippingRescueRoute: ShippingRescueRoute,
+}
+
+const ShippingRouteWithChildren = ShippingRoute._addFileChildren(
+  ShippingRouteChildren,
+)
+
+interface StorefrontRouteChildren {
+  StorefrontAnalyticsRoute: typeof StorefrontAnalyticsRoute
+  StorefrontCatalogRoute: typeof StorefrontCatalogRoute
+  StorefrontOperationsRoute: typeof StorefrontOperationsRoute
+  StorefrontSettingsRoute: typeof StorefrontSettingsRoute
+}
+
+const StorefrontRouteChildren: StorefrontRouteChildren = {
+  StorefrontAnalyticsRoute: StorefrontAnalyticsRoute,
+  StorefrontCatalogRoute: StorefrontCatalogRoute,
+  StorefrontOperationsRoute: StorefrontOperationsRoute,
+  StorefrontSettingsRoute: StorefrontSettingsRoute,
+}
+
+const StorefrontRouteWithChildren = StorefrontRoute._addFileChildren(
+  StorefrontRouteChildren,
+)
+
+interface ShopSlugRouteChildren {
+  ShopSlugProductRoute: typeof ShopSlugProductRoute
+}
+
+const ShopSlugRouteChildren: ShopSlugRouteChildren = {
+  ShopSlugProductRoute: ShopSlugProductRoute,
+}
+
+const ShopSlugRouteWithChildren = ShopSlugRoute._addFileChildren(
+  ShopSlugRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -679,12 +876,13 @@ const rootRouteChildren: RootRouteChildren = {
   OrderTrackingRoute: OrderTrackingRoute,
   PaymentsRoute: PaymentsRoute,
   PrivacyRoute: PrivacyRoute,
+  ReconciliationRoute: ReconciliationRoute,
   ReportsRoute: ReportsRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   ReturnsRoute: ReturnsRoute,
   SettingsRoute: SettingsRoute,
-  ShippingRoute: ShippingRoute,
-  StorefrontRoute: StorefrontRoute,
+  ShippingRoute: ShippingRouteWithChildren,
+  StorefrontRoute: StorefrontRouteWithChildren,
   SuppliersRoute: SuppliersRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
@@ -692,7 +890,7 @@ const rootRouteChildren: RootRouteChildren = {
   InventoryNewRoute: InventoryNewRoute,
   InvoicesNewRoute: InvoicesNewRoute,
   PurchasesNewRoute: PurchasesNewRoute,
-  ShopSlugRoute: ShopSlugRoute,
+  ShopSlugRoute: ShopSlugRouteWithChildren,
   PurchasesIndexRoute: PurchasesIndexRoute,
 }
 export const routeTree = rootRouteImport
