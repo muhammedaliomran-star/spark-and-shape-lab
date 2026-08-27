@@ -281,7 +281,7 @@ function SuppliersPage() {
                     </TooltipProvider>
                   </div>
                 </div>
-              </div>
+              </BezelCard>
             ))
           )}
         </div>
@@ -670,6 +670,7 @@ export function NewPurchaseDialog({
               >
                 <Wallet className="w-4 h-4" /> آجل (يضاف للمديونية)
               </button>
+            </div>
           </div>
 
           <div className="space-y-2">
