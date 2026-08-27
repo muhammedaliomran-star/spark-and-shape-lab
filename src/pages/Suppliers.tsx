@@ -327,7 +327,7 @@ function SuppliersPage() {
 
 function StatBox({
   label, value, icon, tone, valueClassName, sub,
-}: { label: string; value: string; icon: React.ReactNode; tone: "primary" | "success" | "neutral"; valueClassName?: string; sub?: string }) {
+}: { label: string; value: string; icon: React.ReactNode; tone: "primary" | "success" | "neutral" | "danger"; valueClassName?: string; sub?: string }) {
   const isSuccess = tone === "success";
   const isPrimary = tone === "primary";
   return (
