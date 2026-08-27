@@ -549,7 +549,7 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground opacity-50">EGP</div>
                 </div>
               </div>
-              </div>
+
 
               {/* Season */}
               <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[border-color,ring-color,box-shadow] hover:ring-foreground/40 group/field">
