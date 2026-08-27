@@ -229,6 +229,7 @@ function ItemCard({ item, masked }: { item: WarehouseItem; masked: boolean }) {
     <BezelCard
       variant="flat"
       innerClassName="flex flex-col gap-4 p-5"
+    >
       <div className="flex items-start justify-between gap-3">
         <Badge variant="outline" className={cn("rounded-full border-0 ring-1", "bg-foreground/[0.06] text-muted-foreground ring-border")}>{meta.label}</Badge>
         <div className="min-w-0 text-right">
