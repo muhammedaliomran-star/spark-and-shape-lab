@@ -281,7 +281,7 @@ function SuppliersPage() {
                     </TooltipProvider>
                   </div>
               </BezelCard>
-            ))}
+            ))
           )}
         </div>
       </Reveal>
