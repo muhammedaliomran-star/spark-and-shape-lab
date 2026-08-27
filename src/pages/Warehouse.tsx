@@ -533,7 +533,7 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
                 </div>
               </div>
               </div>
-            </div>
+
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 {/* Sale Price */}
