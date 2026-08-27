@@ -20,6 +20,7 @@ const nav = [
   { to: "/purchases", label: "المشتريات", icon: Truck },
   { to: "/suppliers", label: "الموردين", icon: Users },
 
+  { to: "/inventory", label: "المنتجات", icon: Package },
   { to: "/warehouse", label: "المخزن", icon: Warehouse },
   { to: "/storefront", label: "المتجر الإلكتروني", icon: Store },
   { to: "/branches", label: "الفروع", icon: GitBranch },
