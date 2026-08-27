@@ -229,6 +229,7 @@ function ItemCard({ item, masked }: { item: WarehouseItem; masked: boolean }) {
     <BezelCard
       variant="flat"
       innerClassName="flex flex-col gap-4 p-5"
+    >
       <div className="flex items-start justify-between gap-3">
         <Badge variant="outline" className={cn("rounded-full border-0 ring-1", "bg-foreground/[0.06] text-muted-foreground ring-border")}>{meta.label}</Badge>
         <div className="min-w-0 text-right">
@@ -532,7 +533,7 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
                 </div>
               </div>
               </div>
-            </div>
+
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 {/* Sale Price */}
@@ -548,7 +549,7 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground opacity-50">EGP</div>
                 </div>
               </div>
-              </div>
+
 
               {/* Season */}
               <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[border-color,ring-color,box-shadow] hover:ring-foreground/40 group/field">
