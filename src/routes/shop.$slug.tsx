@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import PublicStorefront from "@/pages/PublicStorefront";
+import PublicStorefront from "@/pages/PublicStorefrontV2";
 
 export const Route = createFileRoute("/shop/$slug")({
   ssr: false,

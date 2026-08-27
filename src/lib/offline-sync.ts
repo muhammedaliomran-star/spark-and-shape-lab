@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { uid } from "@/lib/store";
 import { toast } from "sonner";
 
 export interface PendingOfflinePayment {
@@ -67,31 +66,13 @@ export async function syncOfflinePayments(onSynced?: (count: number) => void): P
 
   for (const item of queue) {
     try {
-      const user_id = await uid();
-      // تسجيل الدفعة
-      const { error: payErr } = await supabase.from("payments").insert({
-        user_id,
-        invoice_id: item.invoiceId,
-        amount: item.amount,
-        paid_at: item.paidAt,
+      const { error: payErr } = await (supabase as any).rpc("record_invoice_payment", {
+        p_invoice_id: item.invoiceId,
+        p_amount: item.amount,
+        p_payment_id: item.id,
+        p_paid_at: item.paidAt,
       });
-
       if (payErr) throw payErr;
-
-      // تحديث مدفوع الفاتورة
-      const { data: inv } = await supabase
-        .from("invoices")
-        .select("paid, total")
-        .eq("id", item.invoiceId)
-        .single();
-
-      if (inv) {
-        const nextPaid = Number(inv.paid || 0) + item.amount;
-        const status = nextPaid >= Number(inv.total) ? "paid" : "pending";
-        await (supabase.from as any)("invoices")
-          .update({ paid: nextPaid, status })
-          .eq("id", item.invoiceId);
-      }
 
       successCount++;
     } catch {

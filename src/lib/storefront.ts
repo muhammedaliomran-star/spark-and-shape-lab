@@ -18,6 +18,13 @@ export interface Storefront {
   logo_url: string | null;
   description: string | null;
   shipping_policy: string | null;
+  banner_url: string | null;
+  theme_key: string;
+  seo_title: string | null;
+  seo_description: string | null;
+  social_links: Record<string, string>;
+  minimum_order: number;
+  opening_hours: Record<string, string>;
   is_published: boolean;
 }
 
@@ -79,7 +86,10 @@ export interface StoreOrder {
   notes: string | null;
   subtotal: number;
   shipping_fee: number;
+  shipping_zone_id: string | null;
   total: number;
+  invoice_id: string | null;
+  return_id: string | null;
   created_at: string;
   reservation_expires_at: string | null;
   store_order_items?: StoreOrderItem[];
@@ -91,6 +101,15 @@ export interface StoreOrderItem {
   unit_price: number;
   quantity: number;
   line_total: number;
+}
+
+export interface StoreOrderEvent {
+  id: string;
+  order_id: string;
+  actor_user_id: string | null;
+  event_type: string;
+  payload: Record<string, unknown>;
+  created_at: string;
 }
 
 const asNumber = (value: unknown) => Number(value ?? 0);
@@ -153,8 +172,50 @@ export async function invoiceStoreOrder(orderId: string) {
   return data as { invoice_id: string; already_invoiced: boolean };
 }
 
-export async function updateStoreOrderStatus(orderId: string, status: Exclude<StoreOrderStatus, "accepted">) {
-  const { error } = await storefrontDb.from("store_orders").update({ status, updated_at: new Date().toISOString() }).eq("id", orderId);
+export async function invoiceStoreOrderInstallment(orderId: string, downPayment: number, monthlyInstallment: number, firstDueDate: string, installmentCount = 1) {
+  const { data, error } = await storefrontDb.rpc("invoice_store_order_installment", {
+    p_order_id: orderId,
+    p_down_payment: downPayment,
+    p_monthly_installment: monthlyInstallment,
+    p_first_due_date: firstDueDate,
+    p_installment_count: installmentCount,
+  });
+  if (error) throw error;
+  return data as { invoice_id: string; already_invoiced: boolean; installment_count: number; remaining: number };
+}
+
+export async function updateStoreOrderStatus(orderId: string, status: Exclude<StoreOrderStatus, "accepted">, reason?: string) {
+  const { error } = await storefrontDb.rpc("update_store_order_status", { p_order_id: orderId, p_status: status, p_reason: reason ?? null });
+  if (error) throw error;
+}
+
+export async function getStoreOrderEvents(orderId: string) {
+  const { data, error } = await storefrontDb.from("store_order_events").select("*").eq("order_id", orderId).order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as StoreOrderEvent[];
+}
+
+export async function updateStorefrontShipment(invoiceId: string, carrierId: string | null, zoneId: string | null, trackingNumber: string | null, reason?: string) {
+  const { error } = await storefrontDb.rpc("assign_storefront_shipment", { p_invoice_id: invoiceId, p_carrier_id: carrierId, p_zone_id: zoneId, p_tracking_number: trackingNumber?.trim() || null, p_reason: reason?.trim() || null });
+  if (error) throw error;
+}
+
+export async function updateStorefrontShipmentStatus(shipmentId: string, status: "processing" | "shipped" | "delivered" | "returned" | "cancelled") {
+  const { error } = await storefrontDb.rpc("update_storefront_shipment_status", { p_shipment_id: shipmentId, p_status: status });
+  if (error) throw error;
+}
+
+export async function createStorefrontReturn(orderId: string, reason: string) {
+  const { data: order, error: orderError } = await storefrontDb.from("store_orders").select("id,invoice_id,return_id,store_order_items(stock_item_id,product_title,quantity)").eq("id", orderId).single();
+  if (orderError) throw orderError;
+  if (!order.invoice_id) throw new Error("أنشئ الفاتورة قبل تسجيل المرتجع");
+  const { data, error } = await storefrontDb.rpc("create_storefront_sale_return", { p_order_id: orderId, p_reason: reason.trim(), p_items: (order.store_order_items ?? []).map((item: any) => ({ stock_item_id: item.stock_item_id, quantity: item.quantity })) });
+  if (error) throw error;
+  return data as string;
+}
+
+export async function reverseStorefrontReturn(returnId: string) {
+  const { error } = await storefrontDb.rpc("reverse_storefront_sale_return", { p_return_id: returnId });
   if (error) throw error;
 }
 
@@ -166,7 +227,7 @@ export interface PublicStorefrontData {
 }
 
 export async function getPublicStorefront(slug: string): Promise<PublicStorefrontData | null> {
-  const { data, error } = await storefrontDb.rpc("get_public_storefront", { p_slug: slug.toLowerCase() });
+  const { data, error } = await storefrontDb.rpc("get_public_storefront_with_settings", { p_slug: slug.toLowerCase() });
   if (error) throw error;
   if (!data) return null;
   return {
@@ -177,7 +238,7 @@ export async function getPublicStorefront(slug: string): Promise<PublicStorefron
   };
 }
 
-export async function submitStoreOrder(input: { storefrontId: string; customerName: string; customerPhone: string; deliveryAddress: string; deliveryArea?: string; notes?: string; orderType: OrderType; shippingZoneId?: string; items: Array<{ productId: string; quantity: number }> }) {
+export async function submitStoreOrder(input: { storefrontId: string; customerName: string; customerPhone: string; deliveryAddress: string; deliveryArea?: string; notes?: string; orderType: OrderType; shippingZoneId?: string; couponCode?: string; idempotencyKey?: string; items: Array<{ productId: string; quantity: number }> }) {
   const { data, error } = await storefrontDb.rpc("submit_store_order", {
     p_storefront_id: input.storefrontId,
     p_customer_name: input.customerName,
@@ -187,6 +248,8 @@ export async function submitStoreOrder(input: { storefrontId: string; customerNa
     p_notes: input.notes ?? null,
     p_order_type: input.orderType,
     p_shipping_zone_id: input.shippingZoneId ?? null,
+    p_coupon_code: input.couponCode?.trim() || null,
+    p_idempotency_key: input.idempotencyKey ?? crypto.randomUUID(),
     p_items: input.items.map((item) => ({ product_id: item.productId, quantity: item.quantity })),
   });
   if (error) throw error;

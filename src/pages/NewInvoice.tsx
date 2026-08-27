@@ -256,13 +256,14 @@ function NewInvoicePage() {
       if (validProducts.length > 0 && invData?.id) {
         const itemRows = validProducts.flatMap((p) => {
           const qty = Math.max(1, Number(p.quantity || 1));
-          return Array.from({ length: qty }, () => ({
+          return [{
             user_id: invData.user_id,
             invoice_id: invData.id,
             name: p.name.trim(),
             cost: Number(p.cost || 0),
             price: Number(p.price || 0),
-          }));
+            quantity: qty,
+          }];
         });
         const { error: itemsErr } = await supabase.from("invoice_items").insert(itemRows);
         if (itemsErr) throw itemsErr;

@@ -23,6 +23,7 @@ import { usePrivacy } from "@/lib/privacy";
 import { pdfDocument, openPdfDocument } from "@/lib/pdf-doc";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { roundCurrency } from "@/lib/financial-engine";
 
 export default function Page() {
   return (
@@ -50,7 +51,7 @@ function escapeHtml(s: string): string {
 }
 
 function ReportsPage() {
-  const { customers, invoices, invoiceItems, payments, expenses, purchases, stockItems } = useDB();
+  const { customers, invoices, invoiceItems, payments, expenses, purchases, returns, stockItems } = useDB();
   const { settings } = useShopSettings();
   const { privacy, toggle } = usePrivacy();
   const blurCls = privacy ? "privacy-blur" : "";
@@ -71,11 +72,20 @@ function ReportsPage() {
   /** Gross profit per invoice, from its line items (price - cost). */
   const invoiceProfit = useMemo(() => {
     const map = new Map<string, number>();
-    for (const it of invoiceItems) {
-      map.set(it.invoiceId, (map.get(it.invoiceId) ?? 0) + (it.price - it.cost));
+    const grouped = new Map<string, typeof invoiceItems>();
+    for (const it of invoiceItems) grouped.set(it.invoiceId, [...(grouped.get(it.invoiceId) ?? []), it]);
+    for (const [invoiceId, items] of grouped) {
+      if (items.length === 0 || items.some((it) => !Number.isFinite(it.cost) || it.cost <= 0)) continue;
+      map.set(invoiceId, roundCurrency(items.reduce((sum, it) => sum + (it.price - it.cost) * it.quantity, 0)));
     }
     return map;
   }, [invoiceItems]);
+
+  const incompleteCostCount = useMemo(() => invoices.filter((inv) => {
+    if (inv.status === "cancelled") return false;
+    const items = invoiceItems.filter((item) => item.invoiceId === inv.id);
+    return items.length === 0 || items.some((item) => !Number.isFinite(item.cost) || item.cost <= 0);
+  }).length, [invoices, invoiceItems]);
 
   const series = useMemo(() => {
     const base = new Map(months.map((m) => [m, { month: m, label: monthLabel(m), sales: 0, collected: 0, expenses: 0, profit: 0 }]));
@@ -83,7 +93,7 @@ function ReportsPage() {
     for (const inv of invoices) {
       const k = monthKey(new Date(inv.createdAt));
       const row = base.get(k);
-      if (!row) continue;
+      if (!row || inv.status === "cancelled") continue;
       row.sales += inv.total;
       row.collected += inv.downPayment;
       row.profit += invoiceProfit.get(inv.id) ?? 0;
@@ -104,11 +114,15 @@ function ReportsPage() {
         row.expenses += pu.total;
       }
     }
+    for (const returned of returns.filter((item) => item.type === "sale")) {
+      const row = base.get(monthKey(new Date(returned.createdAt)));
+      if (row) row.profit -= returned.totalAmount;
+    }
     return months.map((m) => {
       const r = base.get(m)!;
       return { ...r, net: r.profit - r.expenses };
     });
-  }, [months, invoices, payments, expenses, purchases, invoiceProfit]);
+  }, [months, invoices, payments, expenses, purchases, returns, invoiceProfit]);
 
   const totals = useMemo(() => {
     const t = series.reduce(
@@ -149,7 +163,7 @@ function ReportsPage() {
       const row = map.get(it.name) ?? { name: it.name, count: 0, revenue: 0, profit: 0 };
       row.count += 1;
       row.revenue += it.price;
-      row.profit += it.price - it.cost;
+      row.profit += (it.price - it.cost) * it.quantity;
       map.set(it.name, row);
     }
     return [...map.values()].sort((a, b) => b.count - a.count).slice(0, 10);
@@ -280,6 +294,8 @@ ${topItems.map((i) => `<tr><td>${escapeHtml(i.name)}</td><td class="num">${fmt(i
         <SummaryBox label="المصروفات" value={totals.expenses} icon={<TrendingDown className="w-5 h-5" />} tone="danger" blurCls={blurCls} />
         <SummaryBox label="صافي الربح" value={totals.net} icon={<TrendingUp className="w-5 h-5" />} tone={totals.net >= 0 ? "success" : "danger"} blurCls={blurCls} />
       </div>
+
+      {incompleteCostCount > 0 && <div className="mb-6 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm font-bold text-warning">بيانات غير مكتملة: {incompleteCostCount} فاتورة مستبعدة من حساب الربح لعدم اكتمال تكلفة الأصناف.</div>}
 
       <div className="mb-6 grid gap-px overflow-hidden rounded-[1.5rem] hairline/70 bg-border/40 sm:grid-cols-3">
         {[

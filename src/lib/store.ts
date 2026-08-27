@@ -75,6 +75,7 @@ export interface InvoiceItem {
   name: string;
   cost: number;
   price: number;
+  quantity: number;
   createdAt: string;
 }
 
@@ -113,6 +114,11 @@ export interface Shipment {
   recipientPhone: string | null;
   deliveryAddress: string | null;
   actualDeliveryDate: string | null;
+  processingAt: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  returnedAt: string | null;
+  statusUpdatedBy: string | null;
   notes: string | null;
   createdAt: string;
 }
@@ -271,8 +277,12 @@ export interface DBState {
   // Shipping
   addCarrier: (c: Omit<ShipmentCarrier, "id" | "createdAt">) => Promise<void>;
   updateCarrier: (id: string, patch: Partial<ShipmentCarrier>) => Promise<void>;
+  addZone: (z: Omit<ShippingZone, "id" | "createdAt">) => Promise<void>;
+  updateZone: (id: string, patch: Partial<ShippingZone>) => Promise<void>;
+  removeZone: (id: string) => Promise<void>;
   addShipment: (s: Omit<Shipment, "id" | "createdAt">) => Promise<void>;
-  updateShipmentStatus: (id: string, status: ShipmentStatus) => Promise<void>;
+  updateShipment: (id: string, patch: Partial<Shipment>) => Promise<void>;
+  updateShipmentStatus: (id: string, status: ShipmentStatus, reason?: string) => Promise<void>;
 }
 
 
@@ -360,7 +370,7 @@ async function fetchAll() {
     })),
     invoiceItems: (ii.data ?? []).map((r: any) => ({
       id: r.id, invoiceId: r.invoice_id, name: r.name,
-      cost: Number(r.cost ?? 0), price: Number(r.price ?? 0), createdAt: r.created_at,
+      cost: Number(r.cost ?? 0), price: Number(r.price ?? 0), quantity: Number(r.quantity ?? 1), createdAt: r.created_at,
     })),
     suppliers: (s.data ?? []).map((r: any) => ({
       id: r.id, name: r.name, contact: r.contact ?? "", notes: r.notes,
@@ -430,6 +440,9 @@ async function fetchAll() {
       trackingNumber: r.tracking_number, status: r.status as ShipmentStatus,
       recipientName: r.recipient_name, recipientPhone: r.recipient_phone,
       deliveryAddress: r.delivery_address, actualDeliveryDate: r.actual_delivery_date,
+      processingAt: r.processing_at ?? null, shippedAt: r.shipped_at ?? null,
+      deliveredAt: r.delivered_at ?? null, returnedAt: r.returned_at ?? null,
+      statusUpdatedBy: r.status_updated_by ?? null,
       notes: r.notes, createdAt: r.created_at,
     })),
 
@@ -466,7 +479,11 @@ export function useDB(): DBState {
     getFinancialReport: db.getFinancialReport,
     addCarrier: db.addCarrier,
     updateCarrier: db.updateCarrier,
+    addZone: db.addZone,
+    updateZone: db.updateZone,
+    removeZone: db.removeZone,
     addShipment: db.addShipment,
+    updateShipment: db.updateShipment,
     updateShipmentStatus: db.updateShipmentStatus,
 
   };
@@ -482,13 +499,8 @@ export async function uid() {
 // downPayment is stored on the invoice and was historically added to paid at creation time,
 // so total paid = downPayment (already counted) + sum of subsequent payment rows.
 async function recomputeInvoicePaid(invoiceId: string) {
-  const { data: inv } = await supabase.from("invoices").select("down_payment,total").eq("id", invoiceId).single();
-  const { data: pays } = await supabase.from("payments").select("amount").eq("invoice_id", invoiceId);
-  const sumPays = (pays ?? []).reduce((s: number, p: any) => s + Number(p.amount), 0);
-  const down = Number(inv?.down_payment ?? 0);
-  const total = Number(inv?.total ?? 0);
-  const newPaid = Math.min(total, down + sumPays);
-  await supabase.from("invoices").update({ paid: newPaid }).eq("id", invoiceId);
+  const { error } = await (supabase as any).rpc("recalculate_invoice_paid", { p_invoice_id: invoiceId });
+  if (error) throw error;
 }
 
 /**
@@ -587,7 +599,7 @@ export const db = {
     if (error) throw error;
     await fetchAll();
   },
-  async addInvoice(inv: Omit<Invoice, "id" | "createdAt" | "paid"> & { paid?: number; items?: Array<{ name: string; cost: number; price: number }> }) {
+  async addInvoice(inv: Omit<Invoice, "id" | "createdAt" | "paid"> & { paid?: number; items?: Array<{ name: string; cost: number; price: number; quantity?: number }> }) {
     const user_id = await uid();
     await assertInvoiceAllowed(inv);
 
@@ -602,26 +614,27 @@ export const db = {
     if (error) throw error;
     if (inv.items && inv.items.length > 0 && data?.id) {
       const rows = inv.items.map((it) => ({
-        user_id, invoice_id: data.id, name: it.name, cost: it.cost, price: it.price,
+        user_id, invoice_id: data.id, name: it.name, cost: it.cost, price: it.price, quantity: Math.max(1, Math.floor(it.quantity ?? 1)),
       }));
       const { error: e2 } = await supabase.from("invoice_items").insert(rows);
       if (e2) throw e2;
     }
     await fetchAll();
   },
-  async addInvoiceItem(invoiceId: string, item: { name: string; cost: number; price: number }) {
+  async addInvoiceItem(invoiceId: string, item: { name: string; cost: number; price: number; quantity?: number }) {
     const user_id = await uid();
     const { error } = await supabase.from("invoice_items").insert({
-      user_id, invoice_id: invoiceId, name: item.name, cost: item.cost, price: item.price,
+      user_id, invoice_id: invoiceId, name: item.name, cost: item.cost, price: item.price, quantity: Math.max(1, Math.floor(item.quantity ?? 1)),
     });
     if (error) throw error;
     await fetchAll();
   },
-  async updateInvoiceItem(id: string, patch: Partial<{ name: string; cost: number; price: number }>) {
+  async updateInvoiceItem(id: string, patch: Partial<{ name: string; cost: number; price: number; quantity: number }>) {
     const upd: any = {};
     if (patch.name !== undefined) upd.name = patch.name;
     if (patch.cost !== undefined) upd.cost = patch.cost;
     if (patch.price !== undefined) upd.price = patch.price;
+    if (patch.quantity !== undefined) upd.quantity = Math.max(1, Math.floor(patch.quantity));
     const { error } = await supabase.from("invoice_items").update(upd).eq("id", id);
     if (error) throw error;
     await fetchAll();
@@ -700,32 +713,22 @@ export const db = {
     await fetchAll();
   },
   async updatePayment(id: string, amount: number) {
-    const { data: pay, error: e0 } = await supabase.from("payments").select("invoice_id").eq("id", id).single();
-    if (e0) throw e0;
-    const { error: e1 } = await supabase.from("payments").update({ amount }).eq("id", id);
-    if (e1) throw e1;
-    if (pay?.invoice_id) await recomputeInvoicePaid(pay.invoice_id);
+    const { error } = await (supabase as any).rpc("update_invoice_payment", { p_payment_id: id, p_amount: amount });
+    if (error) throw error;
     await fetchAll();
   },
   async removePayment(id: string) {
-    const { data: pay, error: e0 } = await supabase.from("payments").select("invoice_id").eq("id", id).single();
-    if (e0) throw e0;
-    const { error: e1 } = await supabase.from("payments").delete().eq("id", id);
-    if (e1) throw e1;
-    if (pay?.invoice_id) await recomputeInvoicePaid(pay.invoice_id);
+    const { error } = await (supabase as any).rpc("delete_invoice_payment", { p_payment_id: id });
+    if (error) throw error;
     await fetchAll();
   },
   async recordPayment(invoiceId: string, amount: number) {
-    const user_id = await uid();
-    const inv = cache.invoices.find((i) => i.id === invoiceId);
-    if (!inv) throw new Error("Invoice not found");
-    const newPaid = Math.min(inv.total, inv.paid + amount);
-    const { error: e1 } = await supabase.from("payments").insert({
-      user_id, invoice_id: invoiceId, amount,
+    const { error } = await (supabase as any).rpc("record_invoice_payment", {
+      p_invoice_id: invoiceId,
+      p_amount: amount,
+      p_payment_id: crypto.randomUUID(),
     });
-    if (e1) throw e1;
-    const { error: e2 } = await supabase.from("invoices").update({ paid: newPaid }).eq("id", invoiceId);
-    if (e2) throw e2;
+    if (error) throw error;
     await fetchAll();
   },
   async addExpense(exp: Omit<Expense, "id" | "createdAt">) {
@@ -781,35 +784,16 @@ export const db = {
   async addPurchase(
     p: Omit<Purchase, "id" | "createdAt"> & { items: Array<{ name: string; unitCost: number; quantity: number }> }
   ) {
-    const user_id = await uid();
-    const { data, error } = await supabase.from("purchases").insert({
-      user_id, supplier_id: p.supplierId, total: p.total,
-      payment_type: p.paymentType, purchase_date: p.purchaseDate, notes: p.notes,
-    }).select("id").single();
+    const { error } = await (supabase as any).rpc("record_purchase_with_inventory", {
+      p_supplier_id: p.supplierId, p_total: p.total, p_payment_type: p.paymentType,
+      p_purchase_date: p.purchaseDate, p_notes: p.notes, p_items: p.items.map((item) => ({ name: item.name, unitCost: item.unitCost, quantity: item.quantity })),
+    });
     if (error) throw error;
-    const purchaseId = data?.id as string | undefined;
-    if (purchaseId && p.items.length > 0) {
-      const rows = p.items.map((it) => ({
-        user_id, purchase_id: purchaseId, name: it.name,
-        unit_cost: it.unitCost, quantity: it.quantity,
-      }));
-      const { error: e2 } = await supabase.from("purchase_items").insert(rows);
-      if (e2) throw e2;
-    }
-    // NOTE: Cash purchases are NOT inserted into the expenses table to avoid
-    // double-counting. The Dashboard reads cash purchases directly from the
-    // purchases table and subtracts them from net profit separately.
     await fetchAll();
   },
   async removePurchase(id: string) {
-    // Reverse the stock that was added by this purchase.
-    const { data: items } = await supabase
-      .from("purchase_items").select("name,quantity").eq("purchase_id", id);
-    const { error } = await supabase.from("purchases").delete().eq("id", id);
+    const { error } = await (supabase as any).rpc("delete_purchase_with_inventory", { p_purchase_id: id });
     if (error) throw error;
-    if (items && items.length > 0) {
-      await restoreStockByName(items.map((it: any) => ({ name: it.name, quantity: -Number(it.quantity || 0) })));
-    }
     await fetchAll();
   },
   async getFinancialReport(start: Date, end: Date) {
@@ -817,29 +801,30 @@ export const db = {
     const e = end.toISOString();
     
     const [sales, purchases, expenses, returns, saleItems] = await Promise.all([
-      supabase.from("invoices").select("id, total, tax_amount").gte("created_at", s).lte("created_at", e),
+      supabase.from("invoices").select("id, total, tax_amount, status").gte("created_at", s).lte("created_at", e),
       supabase.from("purchases").select("total").gte("purchase_date", s).lte("purchase_date", e),
       supabase.from("expenses").select("amount, category").gte("expense_date", s).lte("expense_date", e),
       supabase.from("return_records").select("total_amount").gte("created_at", s).lte("created_at", e),
       supabase.from("invoice_items").select("invoice_id, cost"),
     ]);
     
-    const totalSales = (sales.data ?? []).reduce((acc, curr) => acc + (curr.total || 0), 0);
-    const totalTax = (sales.data ?? []).reduce((acc, curr) => acc + (curr.tax_amount || 0), 0);
-    const totalPurchases = (purchases.data ?? []).reduce((acc, curr) => acc + (curr.total || 0), 0);
-    const totalExpenses = (expenses.data ?? []).reduce((acc, curr) => acc + (curr.amount || 0), 0);
-    const totalReturns = (returns.data ?? []).reduce((acc, curr) => acc + (curr.total_amount || 0), 0);
+    const validSales = (sales.data ?? []).filter((invoice: any) => invoice.status !== "cancelled");
+    const totalSales = validSales.reduce((acc: number, curr: any) => acc + (Number(curr.total) || 0), 0);
+    const totalTax = validSales.reduce((acc: number, curr: any) => acc + (Number(curr.tax_amount) || 0), 0);
+    const totalPurchases = (purchases.data ?? []).reduce((acc: number, curr: any) => acc + (Number(curr.total) || 0), 0);
+    const cashPurchases = (purchases.data ?? []).filter((purchase: any) => purchase.payment_type === "cash").reduce((acc: number, curr: any) => acc + (Number(curr.total) || 0), 0);
+    const totalExpenses = (expenses.data ?? []).reduce((acc: number, curr: any) => acc + (Number(curr.amount) || 0), 0);
+    const totalReturns = (returns.data ?? []).filter((item: any) => item.type === "sale").reduce((acc: number, curr: any) => acc + (Number(curr.total_amount) || 0), 0);
     
     const netSales = totalSales - totalTax - totalReturns;
 
     // Accurate COGS calculation
-    const periodInvoiceIds = new Set((sales.data ?? []).map(i => i.id));
-    const periodSaleItems = (saleItems.data ?? []).filter(item => periodInvoiceIds.has(item.invoice_id));
-    const cogs = periodSaleItems.reduce((sum, item) => sum + (Number(item.cost) || 0), 0);
+    const periodInvoiceIds = new Set(validSales.map((invoice: any) => invoice.id));
+    const periodSaleItems = (saleItems.data ?? []).filter((item: any) => periodInvoiceIds.has(item.invoice_id));
+    const cogs = periodSaleItems.reduce((sum: number, item: any) => sum + (Number(item.cost) || 0), 0);
     
-    // Fallback if no costs recorded
-    const grossProfit = cogs > 0 ? (netSales - cogs) : (netSales * 0.25);
-    const netProfit = grossProfit - totalExpenses;
+    const grossProfit = netSales - cogs;
+    const netProfit = grossProfit - totalExpenses - cashPurchases;
     
     return {
       sales: totalSales,
@@ -853,9 +838,7 @@ export const db = {
     };
   },
   /**
-   * Edit an existing purchase invoice: header fields + line items.
-   * Items are replaced wholesale. Stock levels are NOT auto-adjusted here —
-   * use the stock page for reconciliation (the UI warns about this).
+  * Edit an existing purchase invoice and apply the old/new inventory delta atomically.
    */
   async updatePurchase(
     id: string,
@@ -865,22 +848,11 @@ export const db = {
       items: Array<{ name: string; unitCost: number; quantity: number }>;
     },
   ) {
-    const user_id = await uid();
-    const { error } = await supabase.from("purchases").update({
-      supplier_id: p.supplierId, total: p.total, payment_type: p.paymentType,
-      purchase_date: p.purchaseDate, notes: p.notes,
-    }).eq("id", id);
+    const { error } = await (supabase as any).rpc("update_purchase_with_inventory", {
+      p_purchase_id: id, p_supplier_id: p.supplierId, p_total: p.total, p_payment_type: p.paymentType,
+      p_purchase_date: p.purchaseDate, p_notes: p.notes, p_items: p.items.map((item) => ({ name: item.name, unitCost: item.unitCost, quantity: item.quantity })),
+    });
     if (error) throw error;
-    const { error: eDel } = await supabase.from("purchase_items").delete().eq("purchase_id", id);
-    if (eDel) throw eDel;
-    if (p.items.length > 0) {
-      const rows = p.items.map((it) => ({
-        user_id, purchase_id: id, name: it.name,
-        unit_cost: it.unitCost, quantity: it.quantity,
-      }));
-      const { error: e2 } = await supabase.from("purchase_items").insert(rows);
-      if (e2) throw e2;
-    }
     await fetchAll();
   },
 
@@ -1079,6 +1051,16 @@ export const db = {
     notes: string | null;
     items: Array<{ name: string; unitPrice: number; quantity: number }>;
   }) {
+    if (r.type === "sale" && r.invoiceId) {
+      const { error } = await (supabase as any).rpc("create_sale_return", {
+        p_invoice_id: r.invoiceId,
+        p_reason: r.reason?.trim() || "مرتجع بيع",
+        p_items: r.items.map((item) => ({ name: item.name, unit_price: item.unitPrice, quantity: item.quantity })),
+      });
+      if (error) throw error;
+      await fetchAll();
+      return;
+    }
     const user_id = await uid();
     const { data, error } = await supabase.from("return_records").insert({
       user_id,
@@ -1103,17 +1085,18 @@ export const db = {
       const { error: e2 } = await supabase.from("return_items").insert(rows);
       if (e2) throw e2;
       
-      // If it's a sale return, add back to stock
-      if (r.type === "sale") {
-        await restoreStockByName(r.items);
-      }
+      // Supplier returns remain separate until supplier inventory reversal is modeled.
     }
     await fetchAll();
   },
   async removeReturn(id: string) {
-    // If it's a sale return, we should ideally deduct from stock again, 
-    // but the app usually treats deletion as "undoing" the entry.
-    // For simplicity and safety against negative stock, we just delete.
+    const { data: storefrontOrder } = await (supabase.from as any)("store_orders").select("id").eq("return_id", id).maybeSingle();
+    if (storefrontOrder) {
+      const { error: reverseError } = await (supabase as any).rpc("reverse_storefront_sale_return", { p_return_id: id });
+      if (reverseError) throw reverseError;
+      await fetchAll();
+      return;
+    }
     const { error } = await supabase.from("return_records").delete().eq("id", id);
     if (error) throw error;
     await fetchAll();
@@ -1140,37 +1123,62 @@ export const db = {
     if (error) throw error;
     await fetchAll();
   },
-  async addShipment(s: Omit<Shipment, "id" | "createdAt">) {
+  async addZone(z: Omit<ShippingZone, "id" | "createdAt">) {
     const user_id = await uid();
-    const { error } = await (supabase.from as any)("shipments").insert({
-      user_id, invoice_id: s.invoiceId, carrier_id: s.carrierId, zone_id: s.zoneId,
-      tracking_number: s.trackingNumber, status: s.status,
-      recipient_name: s.recipientName, recipient_phone: s.recipientPhone,
-      delivery_address: s.deliveryAddress, actual_delivery_date: s.actualDeliveryDate,
-      notes: s.notes
+    const { error } = await (supabase.from as any)("shipping_zones").insert({
+      user_id, name: z.name, carrier_id: z.carrierId,
+      delivery_cost: z.deliveryCost, estimated_days: z.estimatedDays,
     });
     if (error) throw error;
     await fetchAll();
   },
-  async updateShipmentStatus(id: string, status: ShipmentStatus) {
-    const { data: shipment } = await (supabase.from as any)("shipments").select("invoice_id").eq("id", id).single();
-    const { error } = await (supabase.from as any)("shipments").update({ 
-      status,
-      actual_delivery_date: status === 'delivered' ? new Date().toISOString() : null
-    }).eq("id", id);
+  async updateZone(id: string, patch: Partial<ShippingZone>) {
+    const upd: any = {};
+    if (patch.name !== undefined) upd.name = patch.name;
+    if (patch.carrierId !== undefined) upd.carrier_id = patch.carrierId;
+    if (patch.deliveryCost !== undefined) upd.delivery_cost = patch.deliveryCost;
+    if (patch.estimatedDays !== undefined) upd.estimated_days = patch.estimatedDays;
+    const { error } = await (supabase.from as any)("shipping_zones").update(upd).eq("id", id);
     if (error) throw error;
-
-    // Linkage logic: Update invoice status based on shipment status
-    if (shipment?.invoice_id) {
-      if (status === 'delivered') {
-        // If delivered, we can assume it's paid if it was pending delivery, 
-        // or just mark as paid to complete the cycle.
-        await supabase.from("invoices").update({ status: 'paid' }).eq("id", shipment.invoice_id);
-      } else if (status === 'returned') {
-        await supabase.from("invoices").update({ status: 'cancelled' }).eq("id", shipment.invoice_id);
-      }
+    await fetchAll();
+  },
+  async removeZone(id: string) {
+    const { error } = await (supabase.from as any)("shipping_zones").delete().eq("id", id);
+    if (error) throw error;
+    await fetchAll();
+  },
+  async addShipment(s: Omit<Shipment, "id" | "createdAt">) {
+    if (s.status !== "pending") throw new Error("الشحنة الجديدة يجب أن تبدأ بحالة قيد الانتظار");
+    const { error } = await (supabase as any).rpc("create_invoice_shipment", {
+      p_invoice_id: s.invoiceId,
+      p_carrier_id: s.carrierId,
+      p_zone_id: s.zoneId,
+      p_tracking_number: s.trackingNumber,
+    });
+    if (error) throw error;
+    await fetchAll();
+  },
+  async updateShipment(id: string, patch: Partial<Shipment>) {
+    if (patch.status !== undefined) {
+      await this.updateShipmentStatus(id, patch.status);
+      delete patch.status;
     }
-
+    const upd: any = {};
+    if (patch.carrierId !== undefined) upd.carrier_id = patch.carrierId;
+    if (patch.zoneId !== undefined) upd.zone_id = patch.zoneId;
+    if (patch.trackingNumber !== undefined) upd.tracking_number = patch.trackingNumber;
+    if (patch.recipientName !== undefined) upd.recipient_name = patch.recipientName;
+    if (patch.recipientPhone !== undefined) upd.recipient_phone = patch.recipientPhone;
+    if (patch.deliveryAddress !== undefined) upd.delivery_address = patch.deliveryAddress;
+    if (patch.notes !== undefined) upd.notes = patch.notes;
+    if (Object.keys(upd).length === 0) return;
+    const { error } = await (supabase.from as any)("shipments").update(upd).eq("id", id);
+    if (error) throw error;
+    await fetchAll();
+  },
+  async updateShipmentStatus(id: string, status: ShipmentStatus, reason?: string) {
+    const { error } = await (supabase as any).rpc("update_storefront_shipment_status", { p_shipment_id: id, p_status: status, p_reason: reason?.trim() || null });
+    if (error) throw error;
     await fetchAll();
   },
 };

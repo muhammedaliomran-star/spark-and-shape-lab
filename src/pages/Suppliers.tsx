@@ -495,7 +495,6 @@ export function NewPurchaseDialog({
     { id: crypto.randomUUID(), name: "", unitCost: "", quantity: "1" },
   ]);
   const [busy, setBusy] = useState(false);
-  const [stockPrompt, setStockPrompt] = useState<Array<{ name: string; quantity: number; unitCost: number; barcode?: string | null }> | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
 
   // Prefill when opening in edit mode.
@@ -601,7 +600,6 @@ export function NewPurchaseDialog({
           : "تم تسجيل الفاتورة وإضافتها لمديونية المورد");
         setOpen(false);
         reset();
-        setStockPrompt(validItems);
       }
     } catch (e: any) { toast.error(e.message || "خطأ"); }
     finally { setBusy(false); }
@@ -615,7 +613,7 @@ export function NewPurchaseDialog({
         <DialogHeader>
           <DialogTitle className="text-right">{isEdit ? "تعديل فاتورة الشراء" : "فاتورة شراء جديدة"}</DialogTitle>
           <DialogDescription className="text-right">
-            {isEdit ? "التعديل بيغيّر بيانات الفاتورة والأصناف — من غير تعديل تلقائي على المخزون." : "تسجيل عملية شراء من مورد."}
+            {isEdit ? "التعديل بيغيّر بيانات الفاتورة والأصناف ويحدّث المخزون تلقائيًا." : "تسجيل عملية شراء من مورد وتحديث المخزون تلقائيًا."}
           </DialogDescription>
         </DialogHeader>
 
@@ -769,37 +767,6 @@ export function NewPurchaseDialog({
       </DialogContent>
     </Dialog>
 
-    <AlertDialog open={!!stockPrompt} onOpenChange={(v) => !v && setStockPrompt(null)}>
-      <AlertDialogContent dir="rtl">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="text-right">تحديث المخزون؟</AlertDialogTitle>
-          <AlertDialogDescription className="text-right">
-            هل تريد إضافة كميات هذه الأصناف لمستويات المخزون الحالية؟
-            <ul className="mt-3 space-y-1 text-foreground">
-              {stockPrompt?.map((it, i) => (
-                <li key={i} className="flex items-center justify-between border-b border-[var(--hairline)] pb-1">
-                  <span className="text-muted-foreground">+{it.quantity}</span>
-                  <span className="font-medium">{it.name}</span>
-                </li>
-              ))}
-            </ul>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => setStockPrompt(null)}>تخطي</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={async () => {
-              if (!stockPrompt) return;
-              try {
-                await db.upsertStockDeltas(stockPrompt);
-                toast.success("تم تحديث المخزون");
-              } catch (e: any) { toast.error(e.message || "خطأ في تحديث المخزون"); }
-              setStockPrompt(null);
-            }}
-          >تحديث المخزون</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
     </>
   );
 }

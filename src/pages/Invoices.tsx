@@ -745,7 +745,7 @@ function EditInvoiceDialog({ inv, onClose }: { inv: Invoice | null; onClose: () 
     if (inv) {
       const items = data.invoiceItems.filter((it) => it.invoiceId === inv.id);
       const rows: ProductRow[] = items.length > 0
-        ? items.map((it) => ({ id: it.id, name: it.name, cost: String(it.cost), price: String(it.price), quantity: "1" }))
+        ? items.map((it) => ({ id: it.id, name: it.name, cost: String(it.cost), price: String(it.price), quantity: String(it.quantity) }))
         : [{ id: crypto.randomUUID(), name: inv.notes || "منتج", cost: "0", price: String(inv.total), quantity: "1" }];
       setProducts(rows);
       setDown(String(inv.downPayment));
@@ -758,8 +758,8 @@ function EditInvoiceDialog({ inv, onClose }: { inv: Invoice | null; onClose: () 
 
   if (!inv) return null;
 
-  const totalCost = products.reduce((s, p) => s + Number(p.cost || 0), 0);
-  const totalPrice = products.reduce((s, p) => s + Number(p.price || 0), 0);
+  const totalCost = products.reduce((s, p) => s + Number(p.cost || 0) * Number(p.quantity || 1), 0);
+  const totalPrice = products.reduce((s, p) => s + Number(p.price || 0) * Number(p.quantity || 1), 0);
   const remaining = Math.max(0, totalPrice - Number(down || 0));
   const profit = totalPrice - totalCost;
   const isCash = totalPrice > 0 && Number(down) >= totalPrice;
@@ -770,7 +770,7 @@ function EditInvoiceDialog({ inv, onClose }: { inv: Invoice | null; onClose: () 
     setProducts((p) => p.map((x) => x.id === id ? { ...x, ...patch } : x));
 
   const submit = async () => {
-    const valid = products.filter((p) => p.name.trim() && Number(p.price) > 0);
+    const valid = products.filter((p) => p.name.trim() && Number(p.price) > 0 && Number(p.quantity) > 0);
     if (valid.length === 0) return toast.error("أضف منتج واحد على الأقل");
     if (!isCash && (!Number(monthly) || !date)) return toast.error("املأ بيانات الأقساط");
     const iso = isCash ? format(new Date(), "yyyy-MM-dd") : format(date as Date, "yyyy-MM-dd");
@@ -789,7 +789,7 @@ function EditInvoiceDialog({ inv, onClose }: { inv: Invoice | null; onClose: () 
     const keptIds = new Set(valid.filter((p) => existingIds.has(p.id)).map((p) => p.id));
     for (const oldId of existingIds) if (!keptIds.has(oldId)) await db.removeInvoiceItem(oldId);
     for (const p of valid) {
-      const payload = { name: p.name.trim(), cost: Number(p.cost || 0), price: Number(p.price || 0) };
+      const payload = { name: p.name.trim(), cost: Number(p.cost || 0), price: Number(p.price || 0), quantity: Math.max(1, Math.floor(Number(p.quantity || 1))) };
       if (existingIds.has(p.id)) await db.updateInvoiceItem(p.id, payload);
       else await db.addInvoiceItem(inv.id, payload);
     }

@@ -24,7 +24,7 @@ import {
   type ShopSettings, type ThemeMode, type PrintPaper,
 } from "@/lib/store";
 import { applyTheme } from "@/lib/theme";
-import { downloadExcelBackup, downloadJsonBackup, dataCounts, wipeAllData } from "@/lib/backup";
+import { downloadExcelBackup, downloadJsonBackup, dataCounts, restoreJsonBackup, wipeAllData } from "@/lib/backup";
 import { cn } from "@/lib/utils";
 import {
   Settings as SettingsIcon, Store, KeyRound, Save, LogOut, Receipt, Bell,
@@ -835,6 +835,7 @@ function DataTab() {
   const [busy, setBusy] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  const [restoreInput, setRestoreInput] = useState<HTMLInputElement | null>(null);
 
   const load = useCallback(() => {
     dataCounts().then(setCounts).catch(() => setCounts({}));
@@ -878,6 +879,20 @@ function DataTab() {
               onClick={() => run("xlsx", downloadExcelBackup, "تم تنزيل ملف Excel")}
             >
               <FileSpreadsheet className="w-4 h-4 opacity-60" /> تنزيل Excel
+            </Button>
+            <input ref={setRestoreInput} type="file" accept="application/json" className="hidden" onChange={async (event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (!file) return;
+              try {
+                const report = await restoreJsonBackup(JSON.parse(await file.text()));
+                toast.success(`تم الاسترجاع: ${report.inserted} صف، وتم تخطي ${report.skipped} صف`);
+                if (report.failed.length > 0) toast.error(`تعذر استرجاع ${report.failed.length} صف`);
+                load();
+              } catch (error: unknown) { toast.error(error instanceof Error ? error.message : "تعذر استرجاع النسخة"); }
+            }} />
+            <Button variant="outline" className="h-12 gap-2 rounded-2xl px-6 font-bold" disabled={busy !== null} onClick={() => restoreInput?.click()}>
+              <Upload className="w-4 h-4" /> استرجاع JSON
             </Button>
           </div>
         </Section>

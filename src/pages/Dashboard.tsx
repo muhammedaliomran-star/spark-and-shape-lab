@@ -19,6 +19,7 @@ import {
   expenseCategoryLabel,
   supplierBalance,
 } from "@/lib/store";
+import { roundCurrency } from "@/lib/financial-engine";
 import { QuickActionsFab } from "@/components/QuickActionsFab";
 import {
   Users,
@@ -127,8 +128,8 @@ export function Dashboard() {
     })
     .reduce((s, p) => s + p.amount, 0);
 
-  // Simplified monthly calculation logic moved to useMemo to avoid async in component body
-  const { monthlyNetProfit, monthGrossProfit, monthExpenses, monthCashPurchases } = useMemo(() => {
+  // Profit uses recorded invoice line costs; unknown legacy costs remain unknown, never estimated.
+  const { monthlyNetProfit, monthGrossProfit, monthExpenses, monthCashPurchases, incompleteCostCount } = useMemo(() => {
     const expenses = data.expenses
       .filter((e) => {
         const d = new Date(e.expenseDate);
@@ -143,16 +144,34 @@ export function Dashboard() {
       })
       .reduce((s, p) => s + p.total, 0);
     
-    // For now, keep the 25% estimate for the quick dashboard preview, 
-    // but the Reports page will show the detailed breakdown.
-    const grossProfit = Math.round(monthCollected * 0.25);
+    const monthInvoices = data.invoices.filter((invoice) => {
+      const date = new Date(invoice.createdAt);
+      return invoice.status !== "cancelled" && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+    });
+    const invoiceIds = new Set(monthInvoices.map((invoice) => invoice.id));
+    const sales = monthInvoices.reduce((sum, invoice) => sum + invoice.total - (invoice.taxAmount ?? 0), 0);
+    const monthItems = data.invoiceItems.filter((item) => invoiceIds.has(item.invoiceId));
+    const itemsByInvoice = new Map<string, typeof monthItems>();
+    for (const item of monthItems) itemsByInvoice.set(item.invoiceId, [...(itemsByInvoice.get(item.invoiceId) ?? []), item]);
+    const incomplete = monthInvoices.filter((invoice) => {
+      const items = itemsByInvoice.get(invoice.id) ?? [];
+      return items.length === 0 || items.some((item) => !Number.isFinite(item.cost) || item.cost <= 0);
+    });
+    const cogs = monthItems
+      .filter((item) => !incomplete.some((invoice) => invoice.id === item.invoiceId))
+      .reduce((sum, item) => sum + item.cost * item.quantity, 0);
+    const returns = data.returns
+      .filter((item) => item.type === "sale" && (() => { const date = new Date(item.createdAt); return date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear(); })())
+      .reduce((sum, item) => sum + item.totalAmount, 0);
+    const grossProfit = roundCurrency(sales - cogs - returns);
     return {
-      monthlyNetProfit: grossProfit - expenses - cashPurchases,
+      monthlyNetProfit: roundCurrency(grossProfit - expenses - cashPurchases),
       monthGrossProfit: grossProfit,
       monthExpenses: expenses,
       monthCashPurchases: cashPurchases,
+      incompleteCostCount: incomplete.length,
     };
-  }, [data.expenses, data.purchases, monthCollected, today]);
+  }, [data.expenses, data.purchases, data.invoices, data.invoiceItems, data.returns, monthCollected, today]);
 
   const activeCustomers = data.customers.filter((c) => !c.frozen).length;
   const frozenCustomers = data.customers.length - activeCustomers;
@@ -579,7 +598,7 @@ export function Dashboard() {
               tone={monthlyNetProfit > 0 ? "positive" : monthlyNetProfit < 0 ? "danger" : "neutral"}
               icon={PiggyBank}
               series={monthBuckets.profitTrend}
-              sub={`أرباح ${m(fmt(monthGrossProfit))} − مصروفات ${m(fmt(monthExpenses))}`}
+              sub={incompleteCostCount > 0 ? `${incompleteCostCount} فاتورة بيانات تكلفتها غير مكتملة` : `أرباح ${m(fmt(monthGrossProfit))} − مصروفات ${m(fmt(monthExpenses))}`}
             />
           </Reveal>
 

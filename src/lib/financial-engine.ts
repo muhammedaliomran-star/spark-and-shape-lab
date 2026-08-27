@@ -142,7 +142,7 @@ export function generateInstallmentSchedule(
  */
 export function calculateRealCOGS(
   invoiceItems: Array<{ cost?: number; price?: number; quantity?: number; name?: string }>,
-  stockCatalog?: Array<{ id?: string; name: string; costPrice?: number; cost?: number }>
+  _stockCatalog?: Array<{ id?: string; name: string; costPrice?: number; cost?: number }>
 ): number {
   let totalCost = 0;
 
@@ -150,15 +150,8 @@ export function calculateRealCOGS(
     const qty = Number(item.quantity) || 1;
     const directCost = Number(item.cost);
 
-    if (!isNaN(directCost) && directCost > 0) {
+    if (Number.isFinite(directCost) && directCost >= 0) {
       totalCost += directCost * qty;
-    } else if (stockCatalog && stockCatalog.length > 0) {
-      // البحث في المخزن عن التكلفة المسجلة للأصل كـ fallback دقيق
-      const matched = stockCatalog.find(
-        (s) => s.name.trim().toLowerCase() === (item.name || "").trim().toLowerCase()
-      );
-      const catalogCost = Number(matched?.costPrice ?? matched?.cost) || 0;
-      totalCost += catalogCost * qty;
     }
   }
 
