@@ -235,6 +235,7 @@ export default function Shipping() {
         recipientName: customer?.name ?? null,
         recipientPhone: customer?.phone ?? null,
         deliveryAddress: customer?.address ?? null,
+        processingAt: null, shippedAt: null, deliveredAt: null, returnedAt: null, statusUpdatedBy: null,
         actualDeliveryDate: null,
         notes: null,
       });
@@ -275,8 +276,8 @@ export default function Shipping() {
           icon={<Truck className="h-7 w-7" />}
           action={
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" asChild><Link to="/shipping/day"><CalendarDays className="ml-2 h-4 w-4" /> يوم الشحن</Link></Button>
-              <Button variant="outline" asChild><Link to="/shipping/rescue"><ShieldAlert className="ml-2 h-4 w-4" /> إنقاذ الطلبات</Link></Button>
+              <Button variant="outline" asChild><Link to="/shipping/day" search={{}}><CalendarDays className="ml-2 h-4 w-4" /> يوم الشحن</Link></Button>
+              <Button variant="outline" asChild><Link to="/shipping/rescue" search={{}}><ShieldAlert className="ml-2 h-4 w-4" /> إنقاذ الطلبات</Link></Button>
               <Dialog open={isAddShipmentOpen} onOpenChange={(open) => { setIsAddShipmentOpen(open); if (!open) resetShipmentForm(); }}>
               <DialogTrigger asChild>
                 <Button size="lg" className="h-12 rounded-2xl px-6 font-bold shadow-lg shadow-primary/20">
@@ -429,7 +430,7 @@ export default function Shipping() {
                             {s.recipientName} • {s.recipientPhone}
                           </p>
                           {s.invoiceId && (
-                            <Link to={`/invoices?invoice=${s.invoiceId}`} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                            <Link to="/invoices" search={{ invoice: s.invoiceId } as never} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
                               <ExternalLink className="h-3 w-3" />
                               فاتورة مرتبطة
                             </Link>

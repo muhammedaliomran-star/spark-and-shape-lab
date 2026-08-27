@@ -36,6 +36,7 @@ export default function StorefrontPage() {
     try {
       const shop = await getMyStorefront();
       setStorefront(shop);
+      if (!shop) return;
       setForm({ slug: shop.slug, name: shop.name, phone: shop.phone ?? "", whatsapp_phone: shop.whatsapp_phone ?? "", description: shop.description ?? "", shipping_policy: shop.shipping_policy ?? "", is_published: shop.is_published });
       const [catalogue, orderList] = await Promise.all([getMyStorefrontProducts(shop.id), getMyStoreOrders(shop.id)]);
       setProducts(catalogue); setOrders(orderList);
