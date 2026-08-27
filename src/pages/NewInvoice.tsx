@@ -951,7 +951,6 @@ function NewInvoicePage() {
           {/* تتبع الربح */}
           <div className="rounded-[2rem] border border-border/30 p-5 space-y-4">
               <div className="grid grid-cols-2 gap-y-6 gap-x-4 divide-y divide-border/30">
-                <div className="space-y-1 pt-4 border-t border-border/30">
                 <div className="space-y-1">
                   <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">إجمالي التكلفة</span>
                   <div className="flex items-baseline gap-1">
