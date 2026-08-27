@@ -210,10 +210,10 @@ ${list.map((it) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={exportExcel} className="gap-2">
-                  <FileSpreadsheet className="w-4 h-4 text-success" /> Excel (.xlsx)
+                  <FileSpreadsheet className="w-4 h-4 text-foreground" /> Excel (.xlsx)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={exportPDF} className="gap-2">
-                  <FileText className="w-4 h-4 text-danger" /> PDF (للجرد)
+                  <FileText className="w-4 h-4 text-foreground" /> PDF (للجرد)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -236,22 +236,22 @@ ${list.map((it) => {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-6">
-        <StatBox label="إجمالي الأصناف" value={String(totals.totalItems)} icon={<Boxes className="w-5 h-5" />} tone="primary" sub="عدد الأصناف الفريدة" />
-        <StatBox label="قيمة المخزن" value={`${fmt(totals.value)} ج.م`} icon={<Wallet className="w-5 h-5" />} tone="success" valueClassName={blurCls} sub="الكمية × سعر الشراء" />
-        <StatBox label="متوسط سعر الشراء" value={`${fmt(totals.avgCost)} ج.م`} icon={<TrendingUp className="w-5 h-5" />} tone="primary" valueClassName={blurCls} sub="متوسط على كل الأصناف" />
-        <StatBox label="نواقص" value={String(totals.low)} icon={<AlertTriangle className="w-5 h-5" />} tone={totals.low > 0 ? "danger" : "primary"} sub={`أقل من ${LOW_STOCK()} وحدات • مرتبط بالمنبه`} />
+        <StatBox label="إجمالي الأصناف" value={String(totals.totalItems)} icon={<Boxes className="w-5 h-5" />} tone="neutral" sub="عدد الأصناف الفريدة" />
+        <StatBox label="قيمة المخزن" value={`${fmt(totals.value)} ج.م`} icon={<Wallet className="w-5 h-5" />} tone="neutral" valueClassName={blurCls} sub="الكمية × سعر الشراء" />
+        <StatBox label="متوسط سعر الشراء" value={`${fmt(totals.avgCost)} ج.م`} icon={<TrendingUp className="w-5 h-5" />} tone="neutral" valueClassName={blurCls} sub="متوسط على كل الأصناف" />
+        <StatBox label="نواقص" value={String(totals.low)} icon={<AlertTriangle className="w-5 w-5" />} tone={totals.low > 0 ? "danger" : "neutral"} sub={`أقل من ${LOW_STOCK()} وحدات • مرتبط بالمنبه`} />
       </div>
 
       <div className="sticky-search-bar">
         <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="mb-4">
           <TabsList className="grid grid-cols-3 w-full h-auto">
-            <TabsTrigger value="all" className="gap-1.5">
+            <TabsTrigger value="all" className="gap-1.5 data-[state=active]:bg-foreground/[0.06] data-[state=active]:text-foreground">
               الكل <Badge variant="secondary" className="rounded-full">{data.stockItems.length}</Badge>
             </TabsTrigger>
-            <TabsTrigger value="low" className="gap-1.5 data-[state=active]:bg-warning/15 data-[state=active]:text-warning">
+            <TabsTrigger value="low" className="gap-1.5 data-[state=active]:bg-foreground/[0.06] data-[state=active]:text-foreground">
               ناقص <Badge variant="secondary" className="rounded-full">{data.stockItems.filter((it) => it.quantity > 0 && it.quantity < LOW_STOCK()).length}</Badge>
             </TabsTrigger>
-            <TabsTrigger value="out" className="gap-1.5 data-[state=active]:bg-danger/15 data-[state=active]:text-danger">
+            <TabsTrigger value="out" className="gap-1.5 data-[state=active]:bg-foreground/[0.06] data-[state=active]:text-foreground">
               نفذ <Badge variant="secondary" className="rounded-full">{data.stockItems.filter((it) => it.quantity <= 0).length}</Badge>
             </TabsTrigger>
           </TabsList>
@@ -264,7 +264,7 @@ ${list.map((it) => {
             <button
               type="button"
               onClick={() => setScanOpen(true)}
-              className="absolute left-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
+              className="absolute left-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-foreground/[0.08] transition-[color,background-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
               title="مسح باركود"
             >
               <ScanLine className="w-4 h-4" />
@@ -311,9 +311,7 @@ ${list.map((it) => {
                       <div className="flex min-w-0 items-center gap-3">
                         <span className={cn(
                           "text-display grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-lg font-bold",
-                          out ? "bg-danger/12 text-danger ring-1 ring-danger/25" : 
-                          low ? "bg-warning/12 text-warning ring-1 ring-warning/25" : 
-                          "bg-primary/12 text-primary ring-1 ring-primary/25"
+                          "bg-foreground/[0.06] text-muted-foreground ring-1 ring-border"
                         )}>
                           <Package className="h-5 w-5" />
                         </span>
@@ -371,7 +369,7 @@ ${list.map((it) => {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => setAdjustItem(it)}>
+                              <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/[0.08]" onClick={() => setAdjustItem(it)}>
                                 <Scale className="w-4 h-4" />
                               </Button>
                             </TooltipTrigger>
@@ -382,7 +380,7 @@ ${list.map((it) => {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => setHistoryItem(it)}>
+                              <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/[0.08]" onClick={() => setHistoryItem(it)}>
                                 <History className="w-4 h-4" />
                               </Button>
                             </TooltipTrigger>
@@ -393,7 +391,7 @@ ${list.map((it) => {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-warning hover:bg-warning/10" onClick={() => setEditing(it)}>
+                              <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/[0.08]" onClick={() => setEditing(it)}>
                                 <Pencil className="w-4 h-4" />
                               </Button>
                             </TooltipTrigger>
@@ -404,7 +402,7 @@ ${list.map((it) => {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => setMoveItem(it)}>
+                              <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/[0.08]" onClick={() => setMoveItem(it)}>
                                 <Boxes className="w-4 h-4" />
                               </Button>
                             </TooltipTrigger>
@@ -985,18 +983,20 @@ function HistoryDialog({ item, onClose }: { item: StockItem | null; onClose: () 
 
 function StatBox({
   label, value, icon, tone, valueClassName, sub,
-}: { label: string; value: string; icon: React.ReactNode; tone: "primary" | "success" | "danger"; valueClassName?: string; sub?: string }) {
+}: { label: string; value: string; icon: React.ReactNode; tone: "primary" | "success" | "danger" | "neutral"; valueClassName?: string; sub?: string }) {
   const toneCls = tone === "success"
     ? { border: "border-success/30 hover:border-success/60", chip: "bg-success/10 border-success/30 text-success", text: "text-success", grad: "bg-linear-to-bl from-success to-transparent" }
     : tone === "danger"
     ? { border: "border-danger/30 hover:border-danger/60", chip: "bg-danger/10 border-danger/30 text-danger", text: "text-danger", grad: "bg-linear-to-bl from-danger to-transparent" }
-    : { border: "border-primary/30 hover:border-primary/60", chip: "bg-primary/10 border-primary/30 text-primary", text: "text-primary", grad: "bg-linear-to-bl from-primary to-transparent" };
+    : tone === "neutral"
+    ? { border: "border-border/30 hover:border-border/40", chip: "bg-foreground/[0.06] text-muted-foreground ring-1 ring-border", text: "text-foreground", grad: "bg-linear-to-bl from-transparent to-transparent" }
+    : { border: "border-border/30 hover:border-border/40", chip: "bg-foreground/[0.06] text-muted-foreground ring-1 ring-border", text: "text-foreground", grad: "bg-linear-to-bl from-transparent to-transparent" };
   return (
-    <div className={cn("relative overflow-hidden bg-card plate p-5 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] duration-300 hover:-translate-y-1", toneCls.border)}>
+    <div className={cn("relative overflow-hidden bg-card plate p-5 transition-[transform,background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5", toneCls.border)}>
       <div className={cn("absolute inset-0 opacity-[0.06] pointer-events-none", toneCls.grad)} />
       <div className="relative">
         <div className="flex items-start justify-between">
-          <div className={cn("w-10 h-10 rounded-2xl border flex items-center justify-center", toneCls.chip)}>{icon}</div>
+          <div className={cn("w-10 h-10 rounded-2xl border flex items-center justify-center", "bg-foreground/[0.06] border-border/30 text-muted-foreground ring-1 ring-border")}>{icon}</div>
           <div className="text-xs text-muted-foreground text-left max-w-[55%]">{label}</div>
         </div>
         <div className={cn("text-2xl lg:text-3xl font-extrabold mt-4 tabular-nums text-right", toneCls.text, valueClassName)}>{value}</div>
