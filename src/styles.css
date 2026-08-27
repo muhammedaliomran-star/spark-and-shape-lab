@@ -290,9 +290,9 @@
 
 @utility bezel-lift {
   &:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     box-shadow:
-      0 0 0 1px hsl(0 0% 100% / 0.08),
+      0 0 0 1px hsl(0 0% 100% / 0.05),
       var(--shadow-ambient);
   }
 }

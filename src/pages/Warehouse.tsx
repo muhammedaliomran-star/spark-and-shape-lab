@@ -258,7 +258,7 @@ function ItemCard({ item, masked }: { item: WarehouseItem; masked: boolean }) {
 function Cell({ label, value, masked, strong }: { label: string; value: string; masked?: boolean; strong?: boolean }) {
   return (
     <div>
-      <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</div>
+      <div className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
       <div className={cn("text-numeric mt-1", strong ? "font-extrabold" : "font-semibold", masked && "privacy-blur")}>
         {value}
       </div>

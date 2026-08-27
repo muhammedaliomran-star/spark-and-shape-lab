@@ -28,7 +28,7 @@ export function MetricLabel({
   return (
     <span
       className={cn(
-        "block text-[10px] font-bold uppercase leading-none tracking-[0.16em] text-muted-foreground",
+        "block text-xs font-bold uppercase leading-none tracking-[0.12em] text-muted-foreground",
         className,
       )}
     >

@@ -41,10 +41,11 @@ export function EmptyState({ icon: Icon, title, hint, action, compact }: Props) 
           <path d="M40 10v100" stroke="currentColor" strokeWidth="1" opacity="0.7" />
           <circle cx="60" cy="60" r="52" stroke="currentColor" strokeWidth="1" strokeDasharray="3 7" opacity="0.35" />
         </svg>
-        <span className="absolute inset-0 grid place-items-center">
+<span className="absolute inset-0 grid place-items-center">
           <span className="grid place-items-center w-11 h-11 rounded-2xl bg-foreground/[0.06] text-muted-foreground ring-1 ring-border">
             <Icon className="w-5 h-5" strokeWidth={1.75} />
           </span>
+        </span>
         </span>
       </div>
 

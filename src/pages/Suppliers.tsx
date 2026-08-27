@@ -186,15 +186,13 @@ function SuppliersPage() {
       <Reveal delay={140}>
         <div className="flex flex-col gap-3">
           {list.length === 0 ? (
-            <div className="bezel-shell">
-              <div className="bezel-core px-6 py-10">
-                <EmptyState
-                  icon={Truck}
-                  title="لا يوجد موردين."
-                  hint="أضف مورد وابدأ تسجيل فواتير الشراء ومتابعة المستحق عليه."
-                />
-              </div>
-            </div>
+            <BezelCard variant="flat" className="px-6 py-10">
+              <EmptyState
+                icon={Truck}
+                title="لا يوجد موردين."
+                hint="أضف مورد وابدأ تسجيل فواتير الشراء ومتابعة المستحق عليه."
+              />
+            </BezelCard>
           ) : (
             list.map(({ s, balance }, idx) => (
               <BezelCard
@@ -673,11 +671,11 @@ export function NewPurchaseDialog({
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <Button type="button" size="sm" variant="outline" onClick={addItem} className="gap-1.5 border-primary/40 text-primary hover:bg-primary/10">
+                <Button type="button" size="sm" variant="outline" onClick={addItem} className="gap-1.5 rounded-full border border-border/30 bg-foreground/[0.06] px-4 py-2 text-muted-foreground hover:bg-foreground/[0.08] hover:text-foreground">
                   <Plus className="w-4 h-4" /> إضافة صنف
                 </Button>
-                <Button type="button" size="sm" variant="outline" onClick={() => setScanOpen(true)} className="gap-1.5 border-success/40 text-success hover:bg-success/10">
-                  <ScanLine className="w-4 h-4" /> مسح باركود
+                <Button type="button" size="sm" variant="outline" onClick={() => setScanOpen(true)} className="gap-1.5 rounded-full border border-border/30 bg-foreground/[0.06] px-4 py-2 text-muted-foreground hover:bg-foreground/[0.08] hover:text-foreground">
+                  <ScanLine className="w-4 w-4" /> مسح باركود
                 </Button>
               </div>
               <Label className="text-base font-bold">الأصناف ({items.length})</Label>
