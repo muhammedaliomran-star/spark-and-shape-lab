@@ -138,7 +138,7 @@ function AlertsPage() {
             ? `العملاء المتأخرين، والمستحق عليهم اليوم أو خلال ${daysBefore} يوم — مرتبين حسب خطورة التأخر.`
             : "قائمة العملاء المستحقة أقساطهم اليوم أو المتأخرين، مرتبة حسب خطورة التأخر."
         }
-        icon={<Bell className="w-7 h-7 text-danger" />}
+          icon={<Bell className="w-7 h-7" />}
         action={
           <Button
             variant={privacy ? "default" : "outline"}
@@ -162,12 +162,12 @@ function AlertsPage() {
             const remaining = inv.total - inv.paid;
             const dueAmount = Math.min(inv.monthlyInstallment || remaining, remaining);
             const cls =
-              severity === "soon"    ? "border-primary/30 bg-primary/[0.04]" :
+              severity === "soon"    ? "border-foreground/15 bg-foreground/[0.03]" :
               severity === "due"     ? "border-success/40 bg-success/5"   :
               severity === "danger"  ? "border-danger/40 bg-danger/5"     :
                                        "border-warning/40 bg-warning/5";
             const accent =
-              severity === "soon"    ? "text-primary" :
+              severity === "soon"    ? "text-muted-foreground" :
               severity === "due"     ? "text-success" :
               severity === "danger"  ? "text-danger"  :
                                        "text-warning";
@@ -182,16 +182,16 @@ function AlertsPage() {
               >
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div className="flex items-center gap-4 flex-wrap">
-                    <div className="text-center bg-card/60 rounded-2xl p-3 min-w-[90px] hairline">
+                    <div className="text-center bg-card/60 rounded-2xl p-3 min-w-[90px] border border-foreground/10">
                       <div className={cn("text-2xl font-extrabold", accent)}>
                         {upcoming ? until : late > 0 ? late : "اليوم"}
                       </div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-xs text-muted-foreground">
                         {upcoming ? "يوم للاستحقاق" : late > 0 ? "يوم تأخر" : "مستحق"}
                       </div>
                     </div>
-                    <div className="bg-card/60 rounded-2xl p-3 hairline">
-                      <div className="text-[11px] text-muted-foreground">{upcoming ? "المبلغ المستحق قريباً" : "المبلغ المتأخر"}</div>
+                    <div className="bg-card/60 rounded-2xl p-3 border border-foreground/10">
+                      <div className="text-xs text-muted-foreground">{upcoming ? "المبلغ المستحق قريباً" : "المبلغ المتأخر"}</div>
                       <div className={cn("text-lg font-bold", blurCls)}>{fmt(remaining)} ج.م</div>
                     </div>
                   </div>
@@ -244,7 +244,7 @@ function AlertsPage() {
           })}
         </AnimatePresence>
         {items.length === 0 && lowStock.length === 0 && (
-          <div className="text-center py-20 bg-card plate">
+          <div className="text-center py-20 rounded-2xl border border-foreground/10 bg-card/70">
             <Bell className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
             <div className="text-lg font-medium">لا يوجد تنبيهات 🎉</div>
             <div className="text-sm text-muted-foreground mt-1">كل العملاء ملتزمين والمخزن بحالة جيدة.</div>
@@ -259,7 +259,7 @@ function AlertsPage() {
               <Package className="w-5 h-5" /> تنبيهات المخزن
               <span className="text-xs font-normal text-muted-foreground">(أقل من {lowStockLimit} وحدات)</span>
             </h2>
-            <Link to="/inventory" className="text-xs text-primary hover:underline">عرض المخزن ←</Link>
+            <Link to="/inventory" className="text-xs text-foreground hover:underline">عرض المخزن ←</Link>
           </div>
           <div className="grid gap-2">
             {lowStock.map((it) => {
@@ -277,7 +277,7 @@ function AlertsPage() {
                     <AlertTriangle className={cn("w-5 h-5", out ? "text-danger" : "text-warning")} />
                     <div>
                       <div className="font-bold">{it.name}</div>
-                      <div className="text-[11px] text-muted-foreground">{out ? "نفذ من المخزن" : "كمية منخفضة — يحتاج إعادة طلب"}</div>
+                      <div className="text-xs text-muted-foreground">{out ? "نفذ من المخزن" : "كمية منخفضة — يحتاج إعادة طلب"}</div>
                     </div>
                   </div>
                   <div className={cn("text-2xl font-extrabold tabular-nums", out ? "text-danger" : "text-warning", blurCls)}>
@@ -311,18 +311,18 @@ function AlertsPage() {
                       key={t.id}
                       onClick={() => setTone(t.id)}
                       className={cn(
-                        "rounded-2xl border-2 p-2.5 text-center transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] text-xs",
+                        "rounded-2xl border-2 p-2.5 text-center transition-[border-color,background-color,opacity,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] text-xs",
                         t.cls,
-                        tone === t.id ? "ring-2 ring-offset-2 ring-offset-background scale-[1.02]" : "opacity-70"
+                        tone === t.id ? "ring-1 ring-foreground/20 scale-[1.02]" : "opacity-70"
                       )}
                     >
                       <div className="font-bold">{t.label}</div>
-                      <div className="text-[10px] opacity-70 mt-0.5">{t.sub}</div>
+                      <div className="text-xs opacity-70 mt-0.5">{t.sub}</div>
                     </button>
                   ))}
                 </div>
 
-                <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-4 text-right leading-loose whitespace-pre-line">{msg}</div>
+                <div className="rounded-2xl border border-foreground/15 bg-foreground/[0.04] p-4 text-right leading-loose whitespace-pre-line">{msg}</div>
 
                 <div className="flex gap-2">
                   <Button className="flex-1 gap-1.5" onClick={() => { navigator.clipboard.writeText(toArabicDigits(msg)); toast.success("تم النسخ"); }}>
