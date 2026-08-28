@@ -42,7 +42,7 @@ export default function ResetPassword() {
     <div dir="rtl" className="min-h-screen grid place-items-center px-6 bg-background">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 text-primary">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-foreground/10 bg-foreground/[0.06] text-foreground">
             <KeyRound className="h-6 w-6" />
           </div>
           <h1 className="text-2xl font-bold">تعيين كلمة سر جديدة</h1>
@@ -70,7 +70,7 @@ export default function ResetPassword() {
         <button
           type="button"
           onClick={() => navigate("/auth")}
-          className="mt-6 w-full text-center text-xs text-muted-foreground hover:text-primary transition-colors"
+          className="mt-6 w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           الرجوع لتسجيل الدخول
         </button>

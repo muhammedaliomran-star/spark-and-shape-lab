@@ -26,23 +26,23 @@ export function InfoPageLayout({
       <main className="relative px-4 pt-16 sm:px-8">
         <div
           aria-hidden
-          className="pointer-events-none absolute -end-24 top-0 h-[480px] w-[480px] rounded-full opacity-70 blur-[120px]"
-          style={{ background: "hsl(var(--primary) / 0.10)" }}
+          className="pointer-events-none absolute -end-24 top-0 h-[480px] w-[480px] rounded-full opacity-30 blur-[80px]"
+          style={{ background: "hsl(var(--foreground) / 0.06)" }}
         />
 
         <div className="relative mx-auto w-full max-w-4xl">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
             <div className="min-w-0 space-y-4">
-              <span className="inline-flex items-center rounded-full hairline/70 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="inline-flex items-center rounded-full hairline/70 px-2.5 py-0.5 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
                 {eyebrow}
               </span>
-              <h1 className="text-display text-3xl font-extrabold text-foreground sm:text-4xl">
+              <h1 className="text-display text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
                 {title}
               </h1>
             </div>
             <Link
               to="/landing"
-              className="group inline-flex shrink-0 items-center gap-2 rounded-full hairline/70 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-primary hover:text-primary"
+              className="group inline-flex shrink-0 items-center gap-2 rounded-full hairline/70 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:border-foreground/20 hover:text-foreground"
             >
               <span className="hidden sm:inline">الرئيسية</span>
               <ArrowUpLeft className="h-4 w-4 transition-transform duration-500 group-hover:-rotate-45" />
@@ -55,10 +55,9 @@ export function InfoPageLayout({
             {sections.map((s) => (
               <section
                 key={s.heading}
-                className="rounded-[1.75rem] bg-[linear-gradient(150deg,hsl(var(--border)),transparent)] p-px"
+                className="rounded-2xl border border-foreground/10 bg-card/70 p-6 sm:p-8"
               >
-                <div className="rounded-[calc(1.75rem-1px)] bg-card/70 p-6 shadow-[inset_0_1px_1px_hsl(0_0%_100%/0.05)] sm:p-8">
-                  <h2 className="border-s-2 border-primary ps-3 text-base font-bold tracking-[0.04em] text-foreground sm:text-lg">
+                  <h2 className="border-s-2 border-foreground/20 ps-3 text-base font-bold tracking-tight text-foreground sm:text-lg">
                     {s.heading}
                   </h2>
                   {s.body ? (
@@ -68,13 +67,12 @@ export function InfoPageLayout({
                     <ul className="mt-4 space-y-3">
                       {s.bullets.map((b) => (
                         <li key={b} className="flex gap-3 leading-relaxed text-muted-foreground">
-                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground/30" />
                           <span className="min-w-0">{b}</span>
                         </li>
                       ))}
                     </ul>
                   ) : null}
-                </div>
               </section>
             ))}
           </div>
