@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearch } from "@tanstack/react-router";
+import { useSearch, Link } from "@tanstack/react-router";
 import { Truck, Search, Plus, MapPin, Building2, PackageCheck, Clock, Pencil, Trash2, ExternalLink, ShieldAlert, CalendarDays } from "lucide-react";
 import { useDB, db, ShipmentStatus, type ShipmentCarrier, type ShippingZone } from "@/lib/store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
