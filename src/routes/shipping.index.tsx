@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import Shipping from "@/pages/Shipping";
 import { requireAuth } from "@/lib/route-guards";
 
-export const Route = createFileRoute("/shipping")({
+export const Route = createFileRoute("/shipping/")({
   ssr: false,
   beforeLoad: requireAuth,
   component: Shipping,
