@@ -4,7 +4,6 @@ import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { PageTransition } from "@/components/PageTransition";
 import { Reveal } from "@/components/Reveal";
-import { BezelCard } from "@/components/BezelCard";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,24 +69,24 @@ function PurchasesPage() {
         <Reveal delay={140}>
           <div className="flex flex-col gap-3">
             {list.length === 0 ? (
-              <BezelCard innerClassName="px-6 py-20 text-center">
+              <div className="rounded-2xl border border-foreground/10 bg-card/70 px-6 py-20 text-center">
                 <EmptyState
                   icon={Truck}
                   title="لا توجد فواتير مشتريات."
                   hint="سجل أول فاتورة شراء لتبدأ بمتابعة مخزونك."
                 />
-              </BezelCard>
+              </div>
             ) : (
               list.map((p, idx) => (
                 <div
                   key={p.id}
-                  className="group bezel-shell bezel-lift animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)] both"
+                  className="group flex animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)] both rounded-2xl border border-foreground/10 bg-card/70 p-5"
                   style={{ animationDelay: `${Math.min(idx, 12) * 45}ms` }}
                 >
-                  <div className="bezel-core grid grid-cols-1 items-center gap-5 p-5 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:gap-6 text-right">
+                  <div className="grid w-full grid-cols-1 items-center gap-5 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] md:gap-6 text-right">
                     {/* المورد */}
                     <div className="flex items-center gap-3">
-                      <div className="text-display grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-foreground/[0.06] text-foreground ring-1 ring-foreground/10">
                         <Truck className="h-5 w-5" />
                       </div>
                       <div className="min-w-0">
@@ -101,15 +100,15 @@ function PurchasesPage() {
 
                     {/* القيمة */}
                     <div className="min-w-0">
-                      <div className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider font-bold">إجمالي الفاتورة</div>
-                      <div className={cn("text-numeric text-xl font-extrabold text-primary", blurCls)}>
+                      <div className="text-xs text-muted-foreground mb-1 uppercase tracking-[0.12em] font-bold">إجمالي الفاتورة</div>
+                      <div className={cn("text-numeric text-xl font-extrabold text-foreground", blurCls)}>
                         {fmt(p.total)} <span className="text-xs font-bold text-muted-foreground">ج.م</span>
                       </div>
                     </div>
 
                     {/* الحالة */}
                     <div className="min-w-0">
-                      <div className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider font-bold">طريقة الدفع</div>
+                      <div className="text-xs text-muted-foreground mb-1 uppercase tracking-[0.12em] font-bold">طريقة الدفع</div>
                       <div>
                         {p.paymentType === "cash" ? (
                           <Badge variant="outline" className="gap-1.5 rounded-xl bg-success/10 text-success border-success/30 px-3 py-1">
@@ -130,7 +129,7 @@ function PurchasesPage() {
                           "{p.notes}"
                         </div>
                       )}
-                      <Button asChild size="icon" variant="ghost" className="rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10">
+                      <Button asChild size="icon" variant="ghost" className="rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10">
                         <Link to="/suppliers">
                           <History className="w-4 h-4" />
                         </Link>
