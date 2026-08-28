@@ -90,7 +90,7 @@ export default function PaymentsPage() {
             action={
             <Button 
               onClick={() => setIsDialogOpen(true)}
-              className="rounded-full px-6 shadow-lg shadow-primary/20"
+              className="rounded-full px-6 shadow-sm"
             >
               <Plus className="ml-2 h-4 w-4" />
               إضافة سند جديد
@@ -99,15 +99,15 @@ export default function PaymentsPage() {
 
           {/* Metrics Grid */}
           <Reveal className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="plate p-6 flex flex-col gap-1 border-r-4 border-success">
+            <div className="rounded-2xl border border-foreground/10 bg-card/70 p-6 flex flex-col gap-1 border-r-4 border-success">
               <span className="text-muted-foreground text-sm font-medium">إجمالي المقبوضات</span>
               <span className="text-3xl font-bold text-success" dir="ltr">{stats.receipts.toLocaleString()} <span className="text-sm">EGP</span></span>
             </div>
-            <div className="plate p-6 flex flex-col gap-1 border-r-4 border-danger">
+            <div className="rounded-2xl border border-foreground/10 bg-card/70 p-6 flex flex-col gap-1 border-r-4 border-danger">
               <span className="text-muted-foreground text-sm font-medium">إجمالي المدفوعات</span>
               <span className="text-3xl font-bold text-danger" dir="ltr">{stats.payments.toLocaleString()} <span className="text-sm">EGP</span></span>
             </div>
-            <div className="plate p-6 flex flex-col gap-1 border-r-4 border-primary">
+            <div className="rounded-2xl border border-foreground/10 bg-card/70 p-6 flex flex-col gap-1 border-r-4 border-primary">
               <span className="text-muted-foreground text-sm font-medium">صافي الحركة</span>
               <span className={cn("text-3xl font-bold", stats.balance >= 0 ? "text-success" : "text-danger")} dir="ltr">
                 {stats.balance.toLocaleString()} <span className="text-sm">EGP</span>
@@ -126,7 +126,7 @@ export default function PaymentsPage() {
                 className="h-12 pr-11 rounded-2xl bg-background/50 border-none shadow-none focus-visible:ring-1 focus-visible:ring-primary/20"
               />
             </div>
-            <div className="flex gap-2 items-center plate p-1.5 rounded-2xl border-none shadow-none bg-background/50">
+            <div className="flex gap-2 items-center rounded-2xl border border-foreground/10 bg-background/50 p-1.5">
               <div className="flex items-center gap-2 px-3 border-l border-[var(--hairline)]">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <div className="flex items-center gap-1">
@@ -183,7 +183,7 @@ export default function PaymentsPage() {
               
               return (
                 <Reveal key={voucher.id} delay={idx * 0.05}>
-                  <div className="plate bezel-lift group relative flex items-center gap-6 p-5">
+                  <div className="group relative flex items-center gap-6 rounded-2xl border border-foreground/10 bg-card/70 p-5">
                     {/* Status Stripe */}
                     <div className={cn(
                       "absolute right-0 top-0 bottom-0 w-1.5 rounded-r-full",
@@ -220,7 +220,7 @@ export default function PaymentsPage() {
 
                     {/* Value Column */}
                     <div className="flex flex-col items-end gap-1 px-8 border-x border-[var(--hairline)]">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">المبلغ</span>
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-[0.12em]">المبلغ</span>
                       <span className={cn(
                         "text-2xl font-black tabular-nums",
                         voucher.type === "receipt" ? "text-success" : "text-danger"
@@ -249,7 +249,7 @@ export default function PaymentsPage() {
             })}
 
             {filteredVouchers.length === 0 && !loading && (
-              <div className="py-20 text-center text-muted-foreground plate italic">
+              <div className="py-20 text-center text-muted-foreground rounded-2xl border border-dashed border-foreground/10 bg-card/50 italic">
                 {search || typeFilter !== "all" ? "لا توجد نتائج مطابقة للبحث" : "لا توجد سندات مسجلة حالياً"}
               </div>
             )}
@@ -259,7 +259,7 @@ export default function PaymentsPage() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent dir="rtl" className="sm:max-w-[500px] p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl">
-          <div className="glass-header sticky top-0 z-10 border-b border-[var(--hairline)] px-8 py-6">
+          <div className="sticky top-0 z-10 border-b border-[var(--hairline)] bg-card px-8 py-6">
             <DialogTitle className="text-2xl font-bold">تسجيل سند جديد</DialogTitle>
             <p className="text-xs text-muted-foreground mt-1">قم بتسجيل عملية دفع أو تحصيل مالي جديدة</p>
           </div>
@@ -269,7 +269,7 @@ export default function PaymentsPage() {
                 <Button 
                   type="button" 
                   variant="ghost" 
-                  className={cn("rounded-xl gap-2 h-11 transition-all duration-300", typeFilter === "receipt" && "bg-background shadow-sm text-success")}
+                  className={cn("rounded-xl gap-2 h-11 transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-300", typeFilter === "receipt" && "bg-background shadow-sm text-success")}
                   onClick={() => setTypeFilter("receipt")}
                 >
                   <ArrowDownLeft className="h-4 w-4" />
@@ -278,7 +278,7 @@ export default function PaymentsPage() {
                 <Button 
                   type="button" 
                   variant="ghost"
-                  className={cn("rounded-xl gap-2 h-11 transition-all duration-300", typeFilter === "payment" && "bg-background shadow-sm text-danger")}
+                  className={cn("rounded-xl gap-2 h-11 transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-300", typeFilter === "payment" && "bg-background shadow-sm text-danger")}
                   onClick={() => setTypeFilter("payment")}
                 >
                   <ArrowUpRight className="h-4 w-4" />
@@ -288,11 +288,11 @@ export default function PaymentsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pr-1">
+                <Label className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground pr-1">
                   {typeFilter === "payment" ? "جهة الصرف (المورد)" : "جهة القبض (العميل)"}
                 </Label>
                 <Select name="partyId" required>
-                  <SelectTrigger className="h-12 rounded-2xl pr-4 bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-all">
+                  <SelectTrigger className="h-12 rounded-2xl pr-4 bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-[background-color,border-color,color,box-shadow,transform,opacity]">
                     <SelectValue placeholder={typeFilter === "payment" ? "اختر المورد..." : "اختر العميل..."} />
                   </SelectTrigger>
                   <SelectContent dir="rtl">
@@ -306,21 +306,21 @@ export default function PaymentsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pr-1">المبلغ</Label>
+                  <Label className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground pr-1">المبلغ</Label>
                   <div className="relative">
-                    <Banknote className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                    <Banknote className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground" />
                     <Input 
                       id="amount" 
                       name="amount" 
                       type="number" 
                       required 
                       placeholder="0.00" 
-                      className="h-12 rounded-2xl text-center text-xl font-black bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-all pr-11" 
+                      className="h-12 rounded-2xl text-center text-xl font-black bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-[background-color,border-color,color,box-shadow,transform,opacity] pr-11" 
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pr-1">تاريخ السند</Label>
+                  <Label className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground pr-1">تاريخ السند</Label>
                   <div className="relative">
                     <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input 
@@ -328,18 +328,18 @@ export default function PaymentsPage() {
                       name="voucherDate" 
                       type="date" 
                       defaultValue={format(new Date(), "yyyy-MM-dd")} 
-                      className="h-12 rounded-2xl bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-all pr-11 text-xs font-bold" 
+                      className="h-12 rounded-2xl bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-[background-color,border-color,color,box-shadow,transform,opacity] pr-11 text-xs font-bold" 
                     />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pr-1">طريقة الدفع</Label>
+                <Label className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground pr-1">طريقة الدفع</Label>
                 <Select name="paymentMethod" defaultValue="كاش">
-                  <SelectTrigger className="h-12 rounded-2xl pr-4 bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-all">
+                  <SelectTrigger className="h-12 rounded-2xl pr-4 bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-[background-color,border-color,color,box-shadow,transform,opacity]">
                     <div className="flex items-center gap-2">
-                      <Wallet className="h-4 w-4 text-primary" />
+                      <Wallet className="h-4 w-4 text-foreground" />
                       <SelectValue />
                     </div>
                   </SelectTrigger>
@@ -354,24 +354,24 @@ export default function PaymentsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pr-1">ملاحظات / وصف</Label>
+                <Label className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground pr-1">ملاحظات / وصف</Label>
                 <div className="relative">
                   <Receipt className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     id="description" 
                     name="description" 
                     placeholder="اكتب تفاصيل إضافية هنا..." 
-                    className="h-12 rounded-2xl bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-all pr-11 text-sm" 
+                    className="h-12 rounded-2xl bg-foreground/[0.02] border-foreground/5 focus:bg-background transition-[background-color,border-color,color,box-shadow,transform,opacity] pr-11 text-sm" 
                   />
                 </div>
               </div>
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button type="submit" className="flex-1 h-12 rounded-2xl font-black text-lg shadow-lg shadow-primary/20 bg-primary text-black transition-all hover:scale-[1.02] active:scale-[0.98]">
+              <Button type="submit" className="flex-1 h-12 rounded-2xl font-black text-lg shadow-sm bg-primary text-black transition-[background-color,border-color,color,box-shadow,transform,opacity] hover:scale-[1.02] active:scale-[0.98]">
                 تسجيل السند
               </Button>
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="h-12 px-6 rounded-2xl border-foreground/10 hover:bg-foreground/5 transition-all">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="h-12 px-6 rounded-2xl border-foreground/10 hover:bg-foreground/5 transition-[background-color,border-color,color,box-shadow,transform,opacity]">
                 إلغاء
               </Button>
             </div>
