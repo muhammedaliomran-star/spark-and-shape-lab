@@ -221,7 +221,7 @@ function ExpensesPage() {
 
       {/* Filters */}
       <div className="sticky-search-bar mb-6">
-        <div className="bg-card plate p-4">
+        <div className="rounded-2xl border border-foreground/10 bg-card/70 p-4">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
           <div className="relative md:col-span-2">
             <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
@@ -263,10 +263,10 @@ function ExpensesPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuItem onClick={exportCSV} className="gap-2" disabled={!!exporting}>
-                  <FileSpreadsheet className="w-4 h-4 text-success" /> Excel (CSV)
+                  <FileSpreadsheet className="w-4 h-4 text-muted-foreground" /> Excel (CSV)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={exportPDF} className="gap-2" disabled={!!exporting}>
-                  <FileText className="w-4 h-4 text-danger" /> PDF
+                  <FileText className="w-4 h-4 text-muted-foreground" /> PDF
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -284,23 +284,21 @@ function ExpensesPage() {
       <Reveal delay={140}>
         <div className="flex flex-col gap-3">
           {filtered.length === 0 ? (
-            <div className="bezel-shell">
-              <div className="bezel-core px-6 py-10">
+            <div className="rounded-2xl border border-foreground/10 bg-card/70 px-6 py-10">
                 <EmptyState
                   icon={Wallet}
                   title="لا توجد مصروفات مسجلة."
                   hint="سجّل مصروفات المحل عشان الربح الظاهر يبقى ربح حقيقي."
                 />
-              </div>
             </div>
           ) : (
             filtered.map((e, idx) => (
               <div
                 key={e.id}
-                className="group bezel-shell bezel-lift animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)] both"
+                className="group flex animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)] both rounded-2xl border border-foreground/10 bg-card/70 p-5"
                 style={{ animationDelay: `${Math.min(idx, 12) * 45}ms` }}
               >
-                <div className="bezel-core grid grid-cols-1 items-center gap-5 p-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] md:gap-6">
+                <div className="grid w-full grid-cols-1 items-center gap-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] md:gap-6">
                   {/* الهوية */}
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="text-display grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-danger/12 text-danger ring-1 ring-danger/25">
@@ -321,7 +319,7 @@ function ExpensesPage() {
                   </div>
 
                   {/* الإجراءات */}
-                  <div className="flex items-center justify-end gap-1.5 md:opacity-70 md:transition-opacity md:group-hover:opacity-100">
+                  <div className="flex items-center justify-end gap-1.5 md:opacity-70 md:transition-[opacity] md:group-hover:opacity-100">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -382,16 +380,16 @@ function SummaryCard({ label, children, clickable, active, onClick }: { label: s
       tabIndex={clickable ? 0 : undefined}
       onKeyDown={clickable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick?.(); } } : undefined}
       className={cn(
-        "rounded-[1.25rem] bg-card/70 p-4 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-        active ? "border-primary ring-2 ring-primary/30 bg-primary/5" : "border-primary/30",
-        clickable && "cursor-pointer hover:border-primary/60 hover:shadow-md hover:-translate-y-0.5"
+        "rounded-2xl border bg-card/70 p-4 transition-[border-color,background-color,box-shadow,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+        active ? "border-foreground ring-1 ring-foreground/20 bg-foreground/[0.04]" : "border-foreground/10",
+        clickable && "cursor-pointer hover:border-foreground/20 hover:shadow-sm hover:-translate-y-0.5"
       )}
     >
       <div className="text-xs text-muted-foreground text-right flex items-center justify-between">
         <span>{label}</span>
-        {clickable && <span className="text-[10px] text-primary/70">{active ? "تم التصفية ✓" : "اضغط للتصفية"}</span>}
+        {clickable && <span className="text-xs text-muted-foreground/70">{active ? "تم التصفية ✓" : "اضغط للتصفية"}</span>}
       </div>
-      <div className="text-2xl font-extrabold text-primary mt-1 text-right tabular-nums">{children}</div>
+      <div className="text-2xl font-extrabold text-foreground mt-1 text-right tabular-nums">{children}</div>
     </div>
   );
 }
