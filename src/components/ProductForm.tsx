@@ -194,7 +194,7 @@ export function ProductForm({
     >
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-1 pb-4">
         {/* ١ — هوية المنتج */}
-        <BezelCard variant="flat" innerClassName="p-4">
+        <div className="space-y-4">
           <GroupLabel icon={Tag}>هوية المنتج</GroupLabel>
           <div className="grid gap-3">
             <div className="grid gap-1.5">
@@ -228,10 +228,11 @@ export function ProductForm({
               </div>
             </div>
           </div>
-        </BezelCard>
+          <div className="h-px bg-[var(--hairline)]" />
+        </div>
 
         {/* ٢ — التسعير والكمية */}
-        <BezelCard variant="flat" innerClassName="p-4">
+        <div className="space-y-4">
           <GroupLabel icon={Wallet}>التسعير والكمية</GroupLabel>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="grid gap-1.5">
@@ -276,13 +277,14 @@ export function ProductForm({
               </motion.div>
             )}
           </AnimatePresence>
-        </BezelCard>
+          <div className="h-px bg-[var(--hairline)]" />
+        </div>
 
         {/* ٣ — الباركود والمخزون */}
-        <BezelCard variant="flat" innerClassName="p-4">
+        <div className="space-y-4">
           <GroupLabel icon={ScanLine}>الباركود والمخزون</GroupLabel>
 
-          <div className="mb-3 flex w-max items-center gap-1 rounded-full border border-foreground/10 bg-foreground/[0.04] p-1">
+          <div className="mb-3 flex w-max items-center gap-1">
             {([
               { value: "auto", label: "توليد تلقائي" },
               { value: "manual", label: "مسح / كتابة" },
@@ -292,10 +294,10 @@ export function ProductForm({
                 type="button"
                 onClick={() => { setMode(m.value); if (m.value === "manual") setBarcode(""); }}
                 className={cn(
-                  "press rounded-full px-4 py-1.5 text-xs transition-[background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                  "press rounded-full border px-4 py-1.5 text-xs transition-[background-color,color,border-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
                   mode === m.value
-                    ? "bg-foreground font-semibold text-background"
-                    : "text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground",
+                    ? "bg-foreground border-foreground font-semibold text-background"
+                    : "border-foreground/10 text-muted-foreground hover:border-foreground/20 hover:text-foreground",
                 )}
               >
                 {m.label}
@@ -378,7 +380,7 @@ export function ProductForm({
             <Input inputMode="decimal" value={minStock} onChange={(e) => setMinStock(posNum(e.target.value))} onFocus={(e) => e.currentTarget.select()} placeholder="5" className={cn("rounded-2xl", NUM_CLS)} />
             <div className="text-xs text-muted-foreground">يعتبر المنتج منخفضًا إذا كانت الكمية أقل من هذا الرقم.</div>
           </div>
-        </BezelCard>
+        </div>
       </div>
 
       {/* شريط sticky: الحساب + أزرار الحفظ — ظاهر دائمًا بدون تمرير */}
@@ -442,7 +444,7 @@ export function ProductForm({
 
 function CalcCell({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className="rounded-xl bg-foreground/[0.04] px-3 py-2 text-center">
+    <div className="px-3 py-2 text-center">
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className={cn("text-numeric mt-0.5 text-base font-extrabold", className)}>{children}</div>
     </div>
