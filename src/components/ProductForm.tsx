@@ -29,8 +29,8 @@ export const NUM_CLS =
 export function GroupLabel({ icon: Icon, children }: { icon: typeof Tag; children: React.ReactNode }) {
   return (
     <div className="mb-3 flex items-center gap-2">
-      <Icon className="h-3.5 w-3.5 text-primary" />
-      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{children}</span>
+      <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+      <span className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">{children}</span>
       <span className="h-px flex-1 bg-[var(--hairline)]" />
     </div>
   );
@@ -194,7 +194,7 @@ export function ProductForm({
     >
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-1 pb-4">
         {/* ١ — هوية المنتج */}
-        <BezelCard innerClassName="p-4">
+        <BezelCard variant="flat" innerClassName="p-4">
           <GroupLabel icon={Tag}>هوية المنتج</GroupLabel>
           <div className="grid gap-3">
             <div className="grid gap-1.5">
@@ -217,7 +217,7 @@ export function ProductForm({
               </div>
               <div className="grid gap-1.5">
                 <Label className="flex items-center gap-1.5">
-                  <Scale className="w-3.5 h-3.5 text-primary" /> نوع المنتج
+                  <Scale className="w-3.5 h-3.5 text-muted-foreground" /> نوع المنتج
                 </Label>
                 <Select value={itemType} onValueChange={setItemType}>
                   <SelectTrigger className="rounded-2xl text-right"><SelectValue /></SelectTrigger>
@@ -231,7 +231,7 @@ export function ProductForm({
         </BezelCard>
 
         {/* ٢ — التسعير والكمية */}
-        <BezelCard innerClassName="p-4">
+        <BezelCard variant="flat" innerClassName="p-4">
           <GroupLabel icon={Wallet}>التسعير والكمية</GroupLabel>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="grid gap-1.5">
@@ -257,7 +257,7 @@ export function ProductForm({
                 className="rounded-full"
                 onClick={() => { setPrice(String(Math.round(nCost * 2))); setConfirmZeroPrice(false); }}
               >
-                <Wand2 className="me-1.5 h-3.5 w-3.5 text-primary" />
+                <Wand2 className="me-1.5 h-3.5 w-3.5 text-muted-foreground" />
                 اقترح سعر بيع = ضعف الشراء ({fmt(Math.round(nCost * 2))})
               </Button>
             </div>
@@ -279,7 +279,7 @@ export function ProductForm({
         </BezelCard>
 
         {/* ٣ — الباركود والمخزون */}
-        <BezelCard innerClassName="p-4">
+        <BezelCard variant="flat" innerClassName="p-4">
           <GroupLabel icon={ScanLine}>الباركود والمخزون</GroupLabel>
 
           <div className="glass mb-3 flex w-max items-center gap-1 rounded-full p-1">
@@ -338,7 +338,7 @@ export function ProductForm({
                 className="rounded-2xl font-mono tabular-nums"
                 maxLength={64}
               />
-              <Button
+                  <Button
                 type="button"
                 variant="outline"
                 size="icon"
@@ -346,15 +346,15 @@ export function ProductForm({
                 onClick={() => { setBarcode(generateBarcode(existingBarcodes)); toast.success("تم توليد كود فريد"); }}
                 title="توليد كود فريد ١٣ رقمًا"
               >
-                <Sparkles className="w-4 h-4 text-primary" />
+                <Sparkles className="w-4 h-4 text-muted-foreground" />
               </Button>
               <Button type="button" variant="outline" size="icon" className="shrink-0 rounded-full" onClick={() => setScanOpen(true)} title="مسح بالكاميرا">
-                <ScanLine className="w-4 h-4" />
+                <ScanLine className="w-4 h-4 text-muted-foreground" />
               </Button>
             </div>
           )}
 
-          <div className="mt-2 text-[11px]">
+          <div className="mt-2 text-xs">
             {codeDuplicate ? (
               <span className="flex items-center gap-1.5 text-danger">
                 <AlertTriangle className="w-3.5 h-3.5" /> الكود ده مستخدم مع منتج آخر.
@@ -376,7 +376,7 @@ export function ProductForm({
           <div className="mt-4 grid gap-1.5">
             <Label>الحد الأدنى للمخزون</Label>
             <Input inputMode="decimal" value={minStock} onChange={(e) => setMinStock(posNum(e.target.value))} onFocus={(e) => e.currentTarget.select()} placeholder="5" className={cn("rounded-2xl", NUM_CLS)} />
-            <div className="text-[11px] text-muted-foreground">يعتبر المنتج منخفضًا إذا كانت الكمية أقل من هذا الرقم.</div>
+            <div className="text-xs text-muted-foreground">يعتبر المنتج منخفضًا إذا كانت الكمية أقل من هذا الرقم.</div>
           </div>
         </BezelCard>
       </div>
@@ -384,8 +384,8 @@ export function ProductForm({
       {/* شريط sticky: الحساب + أزرار الحفظ — ظاهر دائمًا بدون تمرير */}
       <div className="sticky bottom-0 z-10 -mx-1 mt-auto border-t border-[var(--hairline)] bg-card/85 px-1 pb-1 pt-3 backdrop-blur-xl supports-[padding:env(safe-area-inset-bottom)]:pb-[max(0.25rem,env(safe-area-inset-bottom))]">
         <div className="mb-3 flex items-center gap-2 px-1">
-          <Calculator className="h-3.5 w-3.5 text-primary" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">حساب الصفقة</span>
+          <Calculator className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">حساب الصفقة</span>
           <span className="h-px flex-1 bg-[var(--hairline)]" />
         </div>
         <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -442,8 +442,8 @@ export function ProductForm({
 
 function CalcCell({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className="rounded-2xl border border-[var(--hairline)] bg-muted/20 px-3 py-2 text-center">
-      <div className="text-[10px] text-muted-foreground">{label}</div>
+    <div className="rounded-2xl border border-foreground/10 bg-card/50 px-3 py-2 text-center">
+      <div className="text-xs text-muted-foreground">{label}</div>
       <div className={cn("text-numeric mt-0.5 text-base font-extrabold", className)}>{children}</div>
     </div>
   );
