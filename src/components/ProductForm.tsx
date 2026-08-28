@@ -10,7 +10,6 @@ import {
   AlertTriangle, Boxes, Wallet, ScanLine, Plus, Sparkles, Scale, Loader2,
   Check, Wand2, Tag, Calculator,
 } from "lucide-react";
-import { BezelCard } from "@/components/BezelCard";
 import { CountUp } from "@/components/CountUp";
 import { motion, AnimatePresence } from "framer-motion";
 import { openPdfDocument, esc } from "@/lib/pdf-doc";
