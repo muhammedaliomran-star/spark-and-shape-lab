@@ -6,10 +6,6 @@ export const Route = createFileRoute("/shipping")({
   ssr: false,
   beforeLoad: requireAuth,
   component: Shipping,
-  validateSearch: (search: Record<string, unknown>) => ({
-    q: typeof search.q === "string" ? search.q : undefined,
-    invoice: typeof search.invoice === "string" ? search.invoice : undefined,
-  }),
   head: () => ({
     meta: [
       { title: "الشحن — سِجلّي" },
