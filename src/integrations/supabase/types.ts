@@ -425,6 +425,9 @@ export type Database = {
         Row: {
           actual_delivery_date: string | null
           carrier_id: string | null
+          cod_amount: number
+          collected_at: string | null
+          collection_status: string
           created_at: string | null
           delivery_address: string | null
           id: string
@@ -432,6 +435,8 @@ export type Database = {
           notes: string | null
           recipient_name: string | null
           recipient_phone: string | null
+          settled_at: string | null
+          shipping_cost: number
           status: Database["public"]["Enums"]["shipment_status"] | null
           tracking_number: string | null
           user_id: string | null
@@ -440,6 +445,9 @@ export type Database = {
         Insert: {
           actual_delivery_date?: string | null
           carrier_id?: string | null
+          cod_amount?: number
+          collected_at?: string | null
+          collection_status?: string
           created_at?: string | null
           delivery_address?: string | null
           id?: string
@@ -447,6 +455,8 @@ export type Database = {
           notes?: string | null
           recipient_name?: string | null
           recipient_phone?: string | null
+          settled_at?: string | null
+          shipping_cost?: number
           status?: Database["public"]["Enums"]["shipment_status"] | null
           tracking_number?: string | null
           user_id?: string | null
@@ -455,6 +465,9 @@ export type Database = {
         Update: {
           actual_delivery_date?: string | null
           carrier_id?: string | null
+          cod_amount?: number
+          collected_at?: string | null
+          collection_status?: string
           created_at?: string | null
           delivery_address?: string | null
           id?: string
@@ -462,6 +475,8 @@ export type Database = {
           notes?: string | null
           recipient_name?: string | null
           recipient_phone?: string | null
+          settled_at?: string | null
+          shipping_cost?: number
           status?: Database["public"]["Enums"]["shipment_status"] | null
           tracking_number?: string | null
           user_id?: string | null
@@ -1589,6 +1604,10 @@ export type Database = {
         Args: { p_coupon_id: string; p_order_id: string }
         Returns: number
       }
+      settle_carrier_collections: {
+        Args: { p_carrier_id: string }
+        Returns: number
+      }
       submit_store_order: {
         Args: {
           p_customer_name: string
@@ -1649,6 +1668,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      update_storefront_shipment_status: {
+        Args: {
+          p_reason?: string
+          p_shipment_id: string
+          p_status: Database["public"]["Enums"]["shipment_status"]
+        }
+        Returns: undefined
       }
       validate_storefront_coupon: {
         Args: { p_code: string; p_storefront_id: string; p_subtotal: number }

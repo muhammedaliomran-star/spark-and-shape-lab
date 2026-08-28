@@ -102,6 +102,7 @@ export interface ShippingZone {
 }
 
 export type ShipmentStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'returned' | 'cancelled';
+export type ShipmentCollectionStatus = 'uncollected' | 'collected' | 'settled';
 
 export interface Shipment {
   id: string;
@@ -119,9 +120,15 @@ export interface Shipment {
   deliveredAt: string | null;
   returnedAt: string | null;
   statusUpdatedBy: string | null;
+  shippingCost: number;
+  codAmount: number;
+  collectionStatus: ShipmentCollectionStatus;
+  collectedAt: string | null;
+  settledAt: string | null;
   notes: string | null;
   createdAt: string;
 }
+
 
 export interface Expense {
   id: string;
@@ -283,6 +290,8 @@ export interface DBState {
   addShipment: (s: Omit<Shipment, "id" | "createdAt">) => Promise<void>;
   updateShipment: (id: string, patch: Partial<Shipment>) => Promise<void>;
   updateShipmentStatus: (id: string, status: ShipmentStatus, reason?: string) => Promise<void>;
+  settleCarrierCollections: (carrierId: string) => Promise<number>;
+
 }
 
 
@@ -443,6 +452,12 @@ async function fetchAll() {
       processingAt: r.processing_at ?? null, shippedAt: r.shipped_at ?? null,
       deliveredAt: r.delivered_at ?? null, returnedAt: r.returned_at ?? null,
       statusUpdatedBy: r.status_updated_by ?? null,
+      shippingCost: Number(r.shipping_cost ?? 0),
+      codAmount: Number(r.cod_amount ?? 0),
+      collectionStatus: (r.collection_status ?? "uncollected") as ShipmentCollectionStatus,
+      collectedAt: r.collected_at ?? null,
+      settledAt: r.settled_at ?? null,
+
       notes: r.notes, createdAt: r.created_at,
     })),
 
@@ -485,6 +500,8 @@ export function useDB(): DBState {
     addShipment: db.addShipment,
     updateShipment: db.updateShipment,
     updateShipmentStatus: db.updateShipmentStatus,
+    settleCarrierCollections: db.settleCarrierCollections,
+
 
   };
 }
@@ -1149,13 +1166,20 @@ export const db = {
   },
   async addShipment(s: Omit<Shipment, "id" | "createdAt">) {
     if (s.status !== "pending") throw new Error("الشحنة الجديدة يجب أن تبدأ بحالة قيد الانتظار");
-    const { error } = await (supabase as any).rpc("create_invoice_shipment", {
+    const { data, error } = await (supabase as any).rpc("create_invoice_shipment", {
       p_invoice_id: s.invoiceId,
       p_carrier_id: s.carrierId,
       p_zone_id: s.zoneId,
       p_tracking_number: s.trackingNumber,
     });
     if (error) throw error;
+    const created = Array.isArray(data) ? data[0] : data;
+    const money: any = {};
+    if (s.shippingCost) money.shipping_cost = s.shippingCost;
+    if (s.codAmount) money.cod_amount = s.codAmount;
+    if (created?.id && Object.keys(money).length) {
+      await (supabase.from as any)("shipments").update(money).eq("id", created.id);
+    }
     await fetchAll();
   },
   async updateShipment(id: string, patch: Partial<Shipment>) {
@@ -1170,6 +1194,8 @@ export const db = {
     if (patch.recipientName !== undefined) upd.recipient_name = patch.recipientName;
     if (patch.recipientPhone !== undefined) upd.recipient_phone = patch.recipientPhone;
     if (patch.deliveryAddress !== undefined) upd.delivery_address = patch.deliveryAddress;
+    if (patch.shippingCost !== undefined) upd.shipping_cost = patch.shippingCost;
+    if (patch.codAmount !== undefined) upd.cod_amount = patch.codAmount;
     if (patch.notes !== undefined) upd.notes = patch.notes;
     if (Object.keys(upd).length === 0) return;
     const { error } = await (supabase.from as any)("shipments").update(upd).eq("id", id);
@@ -1181,7 +1207,30 @@ export const db = {
     if (error) throw error;
     await fetchAll();
   },
+  /** تغيير حالة مجموعة شحنات دفعة واحدة — يرجّع عدد الناجح والأخطاء. */
+  async bulkShipmentStatus(ids: string[], status: ShipmentStatus, reason?: string) {
+    let ok = 0; const errors: string[] = [];
+    for (const id of ids) {
+      const { error } = await (supabase as any).rpc("update_storefront_shipment_status", { p_shipment_id: id, p_status: status, p_reason: reason?.trim() || null });
+      if (error) errors.push(error.message); else ok += 1;
+    }
+    await fetchAll();
+    return { ok, errors };
+  },
+  /** تعيين مندوب لمجموعة شحنات. */
+  async bulkAssignCarrier(ids: string[], carrierId: string) {
+    const { error } = await (supabase.from as any)("shipments").update({ carrier_id: carrierId }).in("id", ids);
+    if (error) throw error;
+    await fetchAll();
+  },
+  async settleCarrierCollections(carrierId: string) {
+    const { data, error } = await (supabase as any).rpc("settle_carrier_collections", { p_carrier_id: carrierId });
+    if (error) throw error;
+    await fetchAll();
+    return Number(data ?? 0);
+  },
 };
+
 
 
 
