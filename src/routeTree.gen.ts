@@ -29,7 +29,6 @@ import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as ShippingRouteImport } from './routes/shipping'
 import { Route as StorefrontRouteImport } from './routes/storefront'
 import { Route as SuppliersRouteImport } from './routes/suppliers'
 import { Route as SupportRouteImport } from './routes/support'
@@ -40,6 +39,7 @@ import { Route as InvoicesNewRouteImport } from './routes/invoices_.new'
 import { Route as PurchasesIndexRouteImport } from './routes/purchases/index'
 import { Route as PurchasesNewRouteImport } from './routes/purchases/new'
 import { Route as ReportsIndexRouteImport } from './routes/reports/index'
+import { Route as ShippingIndexRouteImport } from './routes/shipping.index'
 import { Route as ShippingDayRouteImport } from './routes/shipping.day'
 import { Route as ShippingRescueRouteImport } from './routes/shipping.rescue'
 import { Route as ShopSlugRouteImport } from './routes/shop.$slug'
@@ -149,11 +149,6 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ShippingRoute = ShippingRouteImport.update({
-  id: '/shipping',
-  path: '/shipping',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const StorefrontRoute = StorefrontRouteImport.update({
   id: '/storefront',
   path: '/storefront',
@@ -204,15 +199,20 @@ const ReportsIndexRoute = ReportsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ReportsRoute,
 } as any)
+const ShippingIndexRoute = ShippingIndexRouteImport.update({
+  id: '/shipping/',
+  path: '/shipping/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShippingDayRoute = ShippingDayRouteImport.update({
-  id: '/day',
-  path: '/day',
-  getParentRoute: () => ShippingRoute,
+  id: '/shipping/day',
+  path: '/shipping/day',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ShippingRescueRoute = ShippingRescueRouteImport.update({
-  id: '/rescue',
-  path: '/rescue',
-  getParentRoute: () => ShippingRoute,
+  id: '/shipping/rescue',
+  path: '/shipping/rescue',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ShopSlugRoute = ShopSlugRouteImport.update({
   id: '/shop/$slug',
@@ -266,7 +266,6 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
-  '/shipping': typeof ShippingRouteWithChildren
   '/storefront': typeof StorefrontRouteWithChildren
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
@@ -284,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/storefront/settings': typeof StorefrontSettingsRoute
   '/purchases/': typeof PurchasesIndexRoute
   '/reports/': typeof ReportsIndexRoute
+  '/shipping/': typeof ShippingIndexRoute
   '/shop/$slug/$product': typeof ShopSlugProductRoute
 }
 export interface FileRoutesByTo {
@@ -306,7 +306,6 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
-  '/shipping': typeof ShippingRouteWithChildren
   '/storefront': typeof StorefrontRouteWithChildren
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
@@ -324,6 +323,7 @@ export interface FileRoutesByTo {
   '/storefront/settings': typeof StorefrontSettingsRoute
   '/purchases': typeof PurchasesIndexRoute
   '/reports': typeof ReportsIndexRoute
+  '/shipping': typeof ShippingIndexRoute
   '/shop/$slug/$product': typeof ShopSlugProductRoute
 }
 export interface FileRoutesById {
@@ -348,7 +348,6 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
-  '/shipping': typeof ShippingRouteWithChildren
   '/storefront': typeof StorefrontRouteWithChildren
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
@@ -366,6 +365,7 @@ export interface FileRoutesById {
   '/storefront/settings': typeof StorefrontSettingsRoute
   '/purchases/': typeof PurchasesIndexRoute
   '/reports/': typeof ReportsIndexRoute
+  '/shipping/': typeof ShippingIndexRoute
   '/shop/$slug/$product': typeof ShopSlugProductRoute
 }
 export interface FileRouteTypes {
@@ -391,7 +391,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/returns'
     | '/settings'
-    | '/shipping'
     | '/storefront'
     | '/suppliers'
     | '/support'
@@ -409,6 +408,7 @@ export interface FileRouteTypes {
     | '/storefront/settings'
     | '/purchases/'
     | '/reports/'
+    | '/shipping/'
     | '/shop/$slug/$product'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -431,7 +431,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/returns'
     | '/settings'
-    | '/shipping'
     | '/storefront'
     | '/suppliers'
     | '/support'
@@ -449,6 +448,7 @@ export interface FileRouteTypes {
     | '/storefront/settings'
     | '/purchases'
     | '/reports'
+    | '/shipping'
     | '/shop/$slug/$product'
   id:
     | '__root__'
@@ -472,7 +472,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/returns'
     | '/settings'
-    | '/shipping'
     | '/storefront'
     | '/suppliers'
     | '/support'
@@ -490,6 +489,7 @@ export interface FileRouteTypes {
     | '/storefront/settings'
     | '/purchases/'
     | '/reports/'
+    | '/shipping/'
     | '/shop/$slug/$product'
   fileRoutesById: FileRoutesById
 }
@@ -514,7 +514,6 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ReturnsRoute: typeof ReturnsRoute
   SettingsRoute: typeof SettingsRoute
-  ShippingRoute: typeof ShippingRouteWithChildren
   StorefrontRoute: typeof StorefrontRouteWithChildren
   SuppliersRoute: typeof SuppliersRoute
   SupportRoute: typeof SupportRoute
@@ -523,8 +522,11 @@ export interface RootRouteChildren {
   InventoryNewRoute: typeof InventoryNewRoute
   InvoicesNewRoute: typeof InvoicesNewRoute
   PurchasesNewRoute: typeof PurchasesNewRoute
+  ShippingDayRoute: typeof ShippingDayRoute
+  ShippingRescueRoute: typeof ShippingRescueRoute
   ShopSlugRoute: typeof ShopSlugRouteWithChildren
   PurchasesIndexRoute: typeof PurchasesIndexRoute
+  ShippingIndexRoute: typeof ShippingIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -669,13 +671,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/shipping': {
-      id: '/shipping'
-      path: '/shipping'
-      fullPath: '/shipping'
-      preLoaderRoute: typeof ShippingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/storefront': {
       id: '/storefront'
       path: '/storefront'
@@ -746,19 +741,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportsIndexRouteImport
       parentRoute: typeof ReportsRoute
     }
+    '/shipping/': {
+      id: '/shipping/'
+      path: '/shipping'
+      fullPath: '/shipping/'
+      preLoaderRoute: typeof ShippingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shipping/day': {
       id: '/shipping/day'
-      path: '/day'
+      path: '/shipping/day'
       fullPath: '/shipping/day'
       preLoaderRoute: typeof ShippingDayRouteImport
-      parentRoute: typeof ShippingRoute
+      parentRoute: typeof rootRouteImport
     }
     '/shipping/rescue': {
       id: '/shipping/rescue'
-      path: '/rescue'
+      path: '/shipping/rescue'
       fullPath: '/shipping/rescue'
       preLoaderRoute: typeof ShippingRescueRouteImport
-      parentRoute: typeof ShippingRoute
+      parentRoute: typeof rootRouteImport
     }
     '/shop/$slug': {
       id: '/shop/$slug'
@@ -816,20 +818,6 @@ const ReportsRouteChildren: ReportsRouteChildren = {
 const ReportsRouteWithChildren =
   ReportsRoute._addFileChildren(ReportsRouteChildren)
 
-interface ShippingRouteChildren {
-  ShippingDayRoute: typeof ShippingDayRoute
-  ShippingRescueRoute: typeof ShippingRescueRoute
-}
-
-const ShippingRouteChildren: ShippingRouteChildren = {
-  ShippingDayRoute: ShippingDayRoute,
-  ShippingRescueRoute: ShippingRescueRoute,
-}
-
-const ShippingRouteWithChildren = ShippingRoute._addFileChildren(
-  ShippingRouteChildren,
-)
-
 interface StorefrontRouteChildren {
   StorefrontAnalyticsRoute: typeof StorefrontAnalyticsRoute
   StorefrontCatalogRoute: typeof StorefrontCatalogRoute
@@ -881,7 +869,6 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ReturnsRoute: ReturnsRoute,
   SettingsRoute: SettingsRoute,
-  ShippingRoute: ShippingRouteWithChildren,
   StorefrontRoute: StorefrontRouteWithChildren,
   SuppliersRoute: SuppliersRoute,
   SupportRoute: SupportRoute,
@@ -890,8 +877,11 @@ const rootRouteChildren: RootRouteChildren = {
   InventoryNewRoute: InventoryNewRoute,
   InvoicesNewRoute: InvoicesNewRoute,
   PurchasesNewRoute: PurchasesNewRoute,
+  ShippingDayRoute: ShippingDayRoute,
+  ShippingRescueRoute: ShippingRescueRoute,
   ShopSlugRoute: ShopSlugRouteWithChildren,
   PurchasesIndexRoute: PurchasesIndexRoute,
+  ShippingIndexRoute: ShippingIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
