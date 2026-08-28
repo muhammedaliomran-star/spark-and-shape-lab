@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearch } from "@tanstack/react-router";
+import { useSearch } from "@tanstack/react-router";
 import { Truck, Search, Plus, MapPin, Building2, PackageCheck, Clock, Pencil, Trash2, ExternalLink, ShieldAlert, CalendarDays } from "lucide-react";
 import { useDB, db, ShipmentStatus, type ShipmentCarrier, type ShippingZone } from "@/lib/store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -276,8 +276,8 @@ export default function Shipping() {
           icon={<Truck className="h-7 w-7" />}
           action={
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" asChild><Link to="/shipping/day" search={{ q: undefined, invoice: undefined }}><CalendarDays className="ml-2 h-4 w-4" /> يوم الشحن</Link></Button>
-              <Button variant="outline" asChild><Link to="/shipping/rescue" search={{ q: undefined, invoice: undefined }}><ShieldAlert className="ml-2 h-4 w-4" /> إنقاذ الطلبات</Link></Button>
+              <Button variant="outline" asChild><a href="/shipping/day"><CalendarDays className="ml-2 h-4 w-4" /> يوم الشحن</a></Button>
+              <Button variant="outline" asChild><a href="/shipping/rescue"><ShieldAlert className="ml-2 h-4 w-4" /> إنقاذ الطلبات</a></Button>
               <Dialog open={isAddShipmentOpen} onOpenChange={(open) => { setIsAddShipmentOpen(open); if (!open) resetShipmentForm(); }}>
               <DialogTrigger asChild>
                 <Button size="lg" className="h-12 rounded-2xl px-6 font-bold shadow-lg shadow-primary/20">
