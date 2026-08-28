@@ -233,7 +233,7 @@ function ShopTab({ form, set }: TabProps) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2 animate-[fade-in_0.3s_ease-out]">
-      <Section icon={<Store className="w-5 h-5" />} title="هوية المحل" hint="بيانات النشاط التجاري للمطبوعات" iconClassName="text-foreground bg-foreground/[0.06]" />
+      <Section icon={<Store className="w-5 h-5" />} title="هوية المحل" hint="بيانات النشاط التجاري للمطبوعات" iconClassName="text-foreground bg-foreground/[0.06]">
         <div className="grid gap-3">
           <Field label="اسم النشاط التجاري">
             <Input value={form.shopName} onChange={(e) => set("shopName", e.target.value)} placeholder="مثال: شركة النور للتجارة" maxLength={80} className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-[background-color,border-color,color,box-shadow,transform,opacity]" />
