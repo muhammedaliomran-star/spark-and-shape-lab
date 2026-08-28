@@ -205,21 +205,21 @@ export function ProductForm({
                 onChange={(e) => setName(e.target.value)}
                 maxLength={100}
                 placeholder="مثال: قميص رجالي قطن..."
-                className="h-12 rounded-2xl text-right text-base font-semibold"
+                className="h-12 rounded-xl text-right text-base font-semibold"
                 autoFocus
               />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="grid gap-1.5">
                 <Label>المقاس (اختياري)</Label>
-                <Input value={size} onChange={(e) => setSize(e.target.value)} maxLength={30} placeholder="مثال: L / ٤٢ / XXL" className="rounded-2xl text-right" />
+                <Input value={size} onChange={(e) => setSize(e.target.value)} maxLength={30} placeholder="مثال: L / ٤٢ / XXL" className="rounded-xl text-right" />
               </div>
               <div className="grid gap-1.5">
                 <Label className="flex items-center gap-1.5">
                   <Scale className="w-3.5 h-3.5 text-muted-foreground" /> نوع المنتج
                 </Label>
                 <Select value={itemType} onValueChange={setItemType}>
-                  <SelectTrigger className="rounded-2xl text-right"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="rounded-xl text-right"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {PRODUCT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                   </SelectContent>
@@ -236,15 +236,15 @@ export function ProductForm({
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="grid gap-1.5">
               <Label>الكمية</Label>
-              <Input inputMode="decimal" value={qty} onChange={(e) => setQty(posNum(e.target.value))} onFocus={(e) => e.currentTarget.select()} className={cn("rounded-2xl", NUM_CLS)} />
+              <Input inputMode="decimal" value={qty} onChange={(e) => setQty(posNum(e.target.value))} onFocus={(e) => e.currentTarget.select()} className={cn("rounded-xl", NUM_CLS)} />
             </div>
             <div className="grid gap-1.5">
               <Label>سعر الشراء</Label>
-              <Input inputMode="decimal" value={cost} onChange={(e) => setCost(posNum(e.target.value))} onFocus={(e) => e.currentTarget.select()} placeholder="0" className={cn("rounded-2xl", NUM_CLS)} />
+              <Input inputMode="decimal" value={cost} onChange={(e) => setCost(posNum(e.target.value))} onFocus={(e) => e.currentTarget.select()} placeholder="0" className={cn("rounded-xl", NUM_CLS)} />
             </div>
             <div className="grid gap-1.5">
               <Label>سعر البيع</Label>
-              <Input inputMode="decimal" value={price} onChange={(e) => { setPrice(posNum(e.target.value)); setConfirmZeroPrice(false); }} onFocus={(e) => e.currentTarget.select()} placeholder="0" className={cn("rounded-2xl", NUM_CLS)} />
+              <Input inputMode="decimal" value={price} onChange={(e) => { setPrice(posNum(e.target.value)); setConfirmZeroPrice(false); }} onFocus={(e) => e.currentTarget.select()} placeholder="0" className={cn("rounded-xl", NUM_CLS)} />
             </div>
           </div>
 
@@ -313,7 +313,7 @@ export function ProductForm({
                   onChange={(e) => setPrefix(e.target.value.replace(/\D/g, "").slice(0, 8))}
                   dir="ltr"
                   data-latin-digits=""
-                  className="rounded-2xl font-mono tabular-nums"
+                  className="rounded-xl font-mono tabular-nums"
                   placeholder="040770"
                 />
               </div>
@@ -322,7 +322,7 @@ export function ProductForm({
                 <div
                   dir="ltr"
                   data-latin-digits=""
-                  className="flex h-10 items-center rounded-2xl border border-border/60 bg-muted/30 px-3 font-mono text-sm tabular-nums"
+                  className="flex h-10 items-center rounded-xl border border-border/60 bg-muted/30 px-3 font-mono text-sm tabular-nums"
                 >
                   {code || "—"}
                 </div>
@@ -336,7 +336,7 @@ export function ProductForm({
                 placeholder="امسح أو اكتب الكود..."
                 dir="ltr"
                 data-latin-digits=""
-                className="rounded-2xl font-mono tabular-nums"
+                className="rounded-xl font-mono tabular-nums"
                 maxLength={64}
               />
                   <Button
@@ -376,7 +376,7 @@ export function ProductForm({
 
           <div className="mt-4 grid gap-1.5">
             <Label>الحد الأدنى للمخزون</Label>
-            <Input inputMode="decimal" value={minStock} onChange={(e) => setMinStock(posNum(e.target.value))} onFocus={(e) => e.currentTarget.select()} placeholder="5" className={cn("rounded-2xl", NUM_CLS)} />
+            <Input inputMode="decimal" value={minStock} onChange={(e) => setMinStock(posNum(e.target.value))} onFocus={(e) => e.currentTarget.select()} placeholder="5" className={cn("rounded-xl", NUM_CLS)} />
             <div className="text-xs text-muted-foreground">يعتبر المنتج منخفضًا إذا كانت الكمية أقل من هذا الرقم.</div>
           </div>
         </div>
