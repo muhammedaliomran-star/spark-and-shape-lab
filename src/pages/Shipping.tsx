@@ -529,7 +529,7 @@ export default function Shipping() {
                     <metric.icon className="h-6 w-6" />
                   </div>
                 </div>
-              </BezelCard>
+              </div>
             </Reveal>
           ))}
         </div>
