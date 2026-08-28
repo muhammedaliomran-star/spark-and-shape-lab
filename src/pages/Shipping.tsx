@@ -387,7 +387,7 @@ export default function Shipping() {
       recipientPhone: s.recipientPhone ?? "",
       trackingNumber: tracking,
       carrierName: carrier?.name,
-      carrierPhone: carrier?.phone,
+      carrierPhone: carrier?.phone ?? undefined,
       zoneName: zone?.name,
       deliveryAddress: s.deliveryAddress ?? "",
       codAmount: s.codAmount ? String(s.codAmount) : undefined,
