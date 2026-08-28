@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { validateStorefrontCoupon } from "@/lib/storefront-commercial";
 import { submitStoreOrder, type OrderType, type ShippingOption, type StorefrontProduct } from "@/lib/storefront";
-import { Loader2, Minus, Plus, Tag, Truck, X } from "lucide-react";
+import { Loader2, Minus, Plus, Tag, Truck, X, Copy, MessageCircle, MapPin } from "lucide-react";
+import { renderOrderConfirmation, trackUrlFor, waLink } from "@/lib/whatsapp-templates";
 
 type CartLine = { product: StorefrontProduct; quantity: number };
 type Fulfillment = "pickup" | "delivery";
@@ -54,7 +55,23 @@ export default function StorefrontCheckout({ store, options, cart, onClose, onQu
   };
 
   return <div className="fixed inset-0 z-30 overflow-y-auto bg-[#040806]/95 p-4 text-white backdrop-blur-sm"><div className="mx-auto my-5 max-w-xl rounded-3xl border border-white/10 bg-[#0a1713] p-5 sm:p-7">
-    {done ? <div className="py-12 text-center"><h2 className="text-2xl font-black">طلبك اتسجل</h2><p className="mt-3 text-slate-300">رقم الطلب: <b className="text-emerald-300">{done}</b></p><Button className="mt-7" onClick={onClose}>رجوع للمتجر</Button></div> : <form onSubmit={submit}>
+    {done ? (() => {
+      const trackUrl = trackUrlFor(done, form.phone);
+      const waMsg = renderOrderConfirmation({
+        shop: { shopName: store.name },
+        customerName: form.name,
+        customerPhone: form.phone,
+        publicNumber: done,
+        address: fulfillment === "delivery" ? form.address : "استلام من المحل",
+        area: form.area,
+        total: money(total),
+        subtotal: money(subtotal),
+        shippingFee: money(shippingFee),
+        shippingZone: shipping?.name,
+        estimatedDays: shipping?.estimated_days,
+      });
+      return <div className="py-8 text-center"><div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-300 text-[#07110e]"><MapPin className="h-7 w-7" /></div><h2 className="mt-4 text-2xl font-black">تم تأكيد طلبك ✅</h2><p className="mt-2 text-sm text-slate-400">رقم الطلب</p><p className="text-xl font-black text-emerald-300 tracking-widest">{done}</p><div className="mt-5 rounded-2xl bg-white/5 p-4 text-right text-sm leading-6"><p>• العنوان: <b>{fulfillment === "delivery" ? `${form.area ? form.area + " - " : ""}${form.address}` : "استلام من المحل"}</b></p>{shipping && <p>• {shipping.name} — {money(shipping.delivery_cost)} ج.م · {shipping.estimated_days} أيام</p>}<p>• الإجمالي: <b className="text-emerald-300">{money(total)} ج.م</b></p></div><div className="mt-5 grid gap-2"><Button asChild className="gap-2 bg-emerald-300 text-[#07110e] hover:bg-emerald-200"><a href={waLink(form.phone, waMsg)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /> إرسال تأكيد واتساب</a></Button><div className="grid grid-cols-2 gap-2"><Button variant="outline" className="gap-2 border-white/10 bg-white/5 text-white" onClick={() => { navigator.clipboard.writeText(trackUrl); }}><Copy className="h-4 w-4" /> نسخ رابط التتبع</Button><Button variant="outline" className="gap-2 border-white/10 bg-white/5 text-white" onClick={() => window.open(trackUrl, "_blank")}><Truck className="h-4 w-4" /> تتبع مباشر</Button></div><Button variant="ghost" className="w-full text-slate-300" onClick={onClose}>رجوع للمتجر</Button></div><p className="mt-3 text-center text-xs text-slate-500">رابط التتبع: <span dir="ltr" className="font-mono text-[11px] break-all">{trackUrl}</span></p></div>;
+    })() : <form onSubmit={submit}>
       <div className="flex items-center justify-between"><h2 className="text-xl font-black">تأكيد الطلب</h2><button type="button" onClick={onClose} aria-label="إغلاق"><X className="h-5 w-5 text-slate-400" /></button></div>
       <div className="mt-5 grid gap-3">{cart.map((line) => <div key={line.product.id} className="flex items-center justify-between rounded-2xl bg-white/5 p-3"><span>{line.product.title} × {line.quantity}</span><div className="flex items-center gap-2"><button type="button" aria-label="تقليل الكمية" onClick={() => onQuantity(line.product.id, line.quantity - 1)}><Minus className="h-4 w-4" /></button><button type="button" aria-label="زيادة الكمية" onClick={() => onQuantity(line.product.id, line.quantity + 1)}><Plus className="h-4 w-4" /></button></div></div>)}</div>
       <div className="mt-5 grid grid-cols-2 gap-2"><Button type="button" variant={fulfillment === "pickup" ? "default" : "outline"} onClick={() => { setFulfillment("pickup"); setForm({ ...form, shippingZoneId: "" }); }}>استلام من المحل</Button><Button type="button" variant={fulfillment === "delivery" ? "default" : "outline"} disabled={!options.length} onClick={() => setFulfillment("delivery")}><Truck className="h-4 w-4" /> توصيل</Button></div>

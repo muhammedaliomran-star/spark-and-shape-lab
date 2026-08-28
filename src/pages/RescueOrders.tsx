@@ -9,13 +9,14 @@ import { Link } from "@/lib/router-compat";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, CheckCircle2, ChevronLeft, ExternalLink, MessageCircle, Phone, RefreshCw, Search, ShieldAlert, Truck } from "lucide-react";
 import { toast } from "sonner";
+import { renderRescuePending, waLink, trackUrlFor } from "@/lib/whatsapp-templates";
+import { useShopSettings } from "@/lib/store";
 
 type StoreOrder = { id: string; public_number: string; status: string; status_reason: string | null; customer_name: string; customer_phone: string; delivery_address: string; total: number; invoice_id: string | null; created_at: string; store_order_items?: Array<{ product_title: string; quantity: number }> };
 type RescueRow = { id: string; orderId: string | null; invoiceId: string | null; number: string; customer: string; phone: string; address: string; status: string; reason: string; total: number; createdAt: string; productSummary: string; shipmentId: string | null; kind: "shipment" | "order"; priority: "urgent" | "high" | "normal" };
 
 const labels: Record<string, string> = { pending: "الشحنة لم تبدأ", processing: "التجهيز متأخر", shipped: "الشحن متأخر", returned: "الشحنة مرتجعة", cancelled: "ملغي", rejected: "طلب مرفوض", needs_info: "بيانات ناقصة", under_review: "قيد المراجعة" };
 const ageInDays = (date: string) => Math.max(0, Math.floor((Date.now() - new Date(date).getTime()) / 86400000));
-const whatsapp = (phone: string) => `https://wa.me/${phone.replace(/\D/g, "").replace(/^0/, "20")}`;
 
 export default function RescueOrders() {
   const { shipments, carriers, zones } = useDB();
@@ -52,9 +53,26 @@ export default function RescueOrders() {
     return result.sort((a, b) => ({ urgent: 0, high: 1, normal: 2 }[a.priority] - { urgent: 0, high: 1, normal: 2 }[b.priority] || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
   }, [shipments, orders]);
 
+  const { settings: shopSettings } = useShopSettings();
   const filtered = rows.filter((row) => (filter === "all" || filter === row.priority || filter === row.kind) && `${row.number} ${row.customer} ${row.phone} ${row.reason} ${row.productSummary} ${carriers.find((carrier) => carrier.id === shipments.find((shipment) => shipment.id === row.shipmentId)?.carrierId)?.name ?? ""} ${zones.find((zone) => zone.id === shipments.find((shipment) => shipment.id === row.shipmentId)?.zoneId)?.name ?? ""}`.toLowerCase().includes(query.toLowerCase()));
   const urgent = rows.filter((row) => row.priority === "urgent").length;
-  const contact = (row: RescueRow) => { if (!row.phone) return toast.error("رقم العميل غير موجود"); window.open(whatsapp(row.phone), "_blank", "noopener,noreferrer"); };
+  const contact = (row: RescueRow) => {
+    if (!row.phone) return toast.error("رقم العميل غير موجود");
+    const msg = renderRescuePending({
+      shop: { shopName: shopSettings.shopName || "سِجلّي", shopPhone: shopSettings.phone, whatsapp: shopSettings.whatsapp },
+      customer: row.customer,
+      phone: row.phone,
+      number: row.number,
+      statusLabel: labels[row.status] ?? row.status,
+      reason: row.reason,
+      ageDays: ageInDays(row.createdAt),
+      productSummary: row.productSummary,
+      total: String(row.total),
+      address: row.address,
+      trackUrl: trackUrlFor(row.number, row.phone),
+    });
+    window.open(waLink(row.phone, msg), "_blank", "noopener,noreferrer");
+  };
 
   return <AppShell><div dir="rtl" className="space-y-6 pb-20"><PageHeader title="إنقاذ الطلبات" subtitle="كل طلب أو شحنة محتاجة تدخل قبل ما تضيع من إيدك." icon={<ShieldAlert className="h-7 w-7 text-warning" />} action={<div className="flex gap-2"><Button variant="outline" asChild><Link to="/shipping"><ChevronLeft className="h-4 w-4" /> قسم الشحن</Link></Button><Button variant="outline" onClick={() => void loadOrders()}><RefreshCw className="h-4 w-4" /> تحديث</Button></div>} /><div className="grid gap-3 sm:grid-cols-3"><Stat label="تحتاج إجراء فوري" value={urgent} tone="danger" /><Stat label="كل الحالات" value={rows.length} /><Stat label="بدون تتبع" value={rows.filter((row) => row.kind === "shipment" && !shipments.find((shipment) => shipment.id === row.shipmentId)?.trackingNumber).length} tone="warning" /></div><div className="flex flex-col gap-3 sm:flex-row"><div className="relative flex-1"><Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ابحث برقم الطلب أو العميل أو السبب" className="pr-10" /></div><div className="flex gap-2 overflow-x-auto"><FilterButton active={filter === "all"} onClick={() => setFilter("all")}>الكل</FilterButton><FilterButton active={filter === "urgent"} onClick={() => setFilter("urgent")}>فوري</FilterButton><FilterButton active={filter === "shipment"} onClick={() => setFilter("shipment")}>شحنات</FilterButton><FilterButton active={filter === "order"} onClick={() => setFilter("order")}>طلبات</FilterButton></div></div>{loading ? <BezelCard className="p-10 text-center text-muted-foreground">جاري تجميع الطلبات المحتاجة إنقاذ…</BezelCard> : filtered.length === 0 ? <BezelCard className="flex items-center gap-3 p-10 text-success"><CheckCircle2 className="h-6 w-6" /><div><p className="font-bold">مفيش طلبات محتاجة تدخل دلوقتي</p><p className="text-sm text-muted-foreground">تابع هنا أي حالة تتعطل أو تتأخر.</p></div></BezelCard> : <div className="grid gap-3">{filtered.map((row) => <RescueCard key={`${row.kind}-${row.id}`} row={row} shipment={shipments.find((shipment) => shipment.id === row.shipmentId)} onContact={() => contact(row)} onRefresh={loadOrders} />)}</div>}</div></AppShell>;
 }

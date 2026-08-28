@@ -4,7 +4,7 @@ import {
   Truck, Search, Plus, MapPin, Building2, PackageCheck, Clock, Pencil, Trash2, ExternalLink,
   ShieldAlert, CalendarDays, Printer, FileText, Wallet, BarChart3, MessageCircle, CheckCheck, AlertTriangle,
 } from "lucide-react";
-import { useDB, db, ShipmentStatus, type Shipment, type ShipmentCarrier, type ShippingZone } from "@/lib/store";
+import { useDB, db, useShopSettings, ShipmentStatus, type Shipment, type ShipmentCarrier, type ShippingZone } from "@/lib/store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { printShipmentLabel, printCarrierManifest } from "@/lib/shipping-docs";
+import { renderShipmentOutForDelivery, waLink } from "@/lib/whatsapp-templates";
 
 const statusMap: Record<string, { label: string; color: string }> = {
   pending: { label: "قيد الانتظار", color: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
@@ -52,6 +53,7 @@ const daysBetween = (a: string, b: string) => Math.max(0, (new Date(b).getTime()
 
 export default function Shipping() {
   const { shipments, carriers, zones, invoices, customers } = useDB();
+  const { settings: shopSettings } = useShopSettings();
   const search = useSearch({ strict: false }) as { q?: string; invoice?: string };
   const [searchQuery, setSearchQuery] = useState(search.q ?? search.invoice ?? "");
   const [orderNumbers, setOrderNumbers] = useState<Record<string, string>>({});
@@ -374,11 +376,25 @@ export default function Shipping() {
   };
 
   const whatsappLink = (s: Shipment) => {
-    const phone = (s.recipientPhone ?? "").replace(/\D/g, "").replace(/^0/, "20");
-    const track = s.trackingNumber ?? "";
-    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/track`;
-    const msg = `مرحبًا ${s.recipientName ?? ""}، شحنتك رقم ${track} حالتها الآن: ${statusMap[s.status]?.label}. تابع طلبك من هنا: ${url}`;
-    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    const carrier = carriers.find((c) => c.id === s.carrierId);
+    const zone = zones.find((z) => z.id === s.zoneId);
+    const orderNumber = s.invoiceId ? orderNumbers[s.invoiceId] : undefined;
+    const tracking = s.trackingNumber || orderNumber || s.id.slice(0, 8).toUpperCase();
+    const trackUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/order-tracking?num=${encodeURIComponent(orderNumber || tracking)}&phone=${encodeURIComponent(s.recipientPhone ?? "")}`;
+    const msg = renderShipmentOutForDelivery({
+      shop: { shopName: shopSettings.shopName || "سِجلّي", shopPhone: shopSettings.phone, whatsapp: shopSettings.whatsapp },
+      recipientName: s.recipientName ?? "",
+      recipientPhone: s.recipientPhone ?? "",
+      trackingNumber: tracking,
+      carrierName: carrier?.name,
+      carrierPhone: carrier?.phone,
+      zoneName: zone?.name,
+      deliveryAddress: s.deliveryAddress ?? "",
+      codAmount: s.codAmount ? String(s.codAmount) : undefined,
+      trackUrl,
+      publicNumber: orderNumber,
+    });
+    return waLink(s.recipientPhone ?? "", msg);
   };
 
   const selectedInvoiceCustomer = shipmentInvoiceId
