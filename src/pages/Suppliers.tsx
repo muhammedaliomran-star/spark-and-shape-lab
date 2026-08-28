@@ -216,18 +216,18 @@ function SuppliersPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-4">
                       <div className="flex flex-col">
-                        <div className="text-[10px] text-muted-foreground mb-0.5">المديونية</div>
+                        <div className="text-xs text-muted-foreground mb-0.5">المديونية</div>
                         <div className={cn("text-numeric text-xl font-extrabold", balance > 0 ? "text-danger" : "text-success", blurCls)}>
                           {fmt(Math.abs(balance))} <span className="text-xs font-bold text-muted-foreground">ج.م</span>
                         </div>
                       </div>
                       <div className="flex flex-col">
-                        <div className="text-[10px] text-muted-foreground mb-0.5">الحالة</div>
+                        <div className="text-xs text-muted-foreground mb-0.5">الحالة</div>
                         <div className="mt-0.5">
                           {balance > 0 ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-xl text-[10px] font-bold border border-border/30 bg-foreground/[0.06] text-muted-foreground">عليه مديونية</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-xl text-xs font-bold border border-border/30 bg-foreground/[0.06] text-muted-foreground">عليه مديونية</span>
                           ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-xl text-[10px] font-bold border border-border/30 bg-foreground/[0.06] text-muted-foreground">مسدد</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-xl text-xs font-bold border border-border/30 bg-foreground/[0.06] text-muted-foreground">مسدد</span>
                           )}
                         </div>
                       </div>
@@ -691,7 +691,7 @@ export function NewPurchaseDialog({
                   style={{ overflow: "hidden" }}
                   className="origin-top"
                 >
-                  <div className="rounded-2xl hairline bg-foreground/[0.03] p-3 space-y-2">
+                  <div className="rounded-2xl border border-foreground/10 bg-card/50/[0.03] p-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <Button type="button" size="icon" variant="ghost" onClick={() => removeItem(p.id)} disabled={items.length === 1} className="h-7 w-7 text-muted-foreground hover:text-danger hover:bg-danger/10" title="حذف">
                         <Trash2 className="w-4 h-4" />
@@ -725,7 +725,7 @@ export function NewPurchaseDialog({
                       </div>
                     </div>
                     {p.barcode && (
-                      <div className="text-[10px] text-muted-foreground font-mono inline-flex items-center gap-1">
+                      <div className="text-xs text-muted-foreground font-mono inline-flex items-center gap-1">
                         <ScanLine className="w-3 h-3" /> {p.barcode}
                       </div>
                     )}
@@ -864,7 +864,7 @@ function SupplierProfileDialog({
                   <div className="flex items-center gap-2">
                     <span className={cn("font-bold tabular-nums", blurCls)}>{fmt(p.total)} ج.م</span>
                     <Badge variant="outline" className={cn(
-                      "text-[10px]",
+                      "text-xs",
                       p.paymentType === "cash"
                         ? "bg-foreground/[0.06] text-muted-foreground ring-border"
                         : "bg-foreground/[0.06] text-muted-foreground ring-border",

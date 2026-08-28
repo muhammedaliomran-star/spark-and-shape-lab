@@ -498,7 +498,7 @@ export default function Shipping() {
                       <Label>رقم البوليصة / التتبع</Label>
                       <Input value={shipmentTracking} onChange={(e) => setShipmentTracking(e.target.value)} placeholder="اختياري" className="text-right" />
                     </div>
-                    <p className="rounded-xl bg-primary/5 p-3 text-xs text-muted-foreground">
+                    <p className="rounded-xl bg-foreground/[0.04] p-3 text-xs text-muted-foreground">
                       عند تسجيل «تم التوصيل» يتم تلقائيًا إضافة دفعة على الفاتورة بمبلغ التحصيل، وتسجيل مصروف بتكلفة الشحن.
                     </p>
                   </div>
@@ -513,13 +513,13 @@ export default function Shipping() {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: "شحنات نشطة", value: String(shipments.filter((s) => ["pending", "processing", "shipped"].includes(s.status)).length), icon: Truck, color: "text-blue-500", bg: "bg-blue-500/10" },
-            { label: "تم التوصيل", value: String(shipments.filter((s) => s.status === "delivered").length), icon: PackageCheck, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-            { label: "شحنات متأخرة", value: String(analytics.lateCount), icon: AlertTriangle, color: "text-rose-500", bg: "bg-rose-500/10" },
-            { label: "مستحقات المناديب", value: egp(totalDue), icon: Wallet, color: "text-amber-500", bg: "bg-amber-500/10" },
+            { label: "شحنات نشطة", value: String(shipments.filter((s) => ["pending", "processing", "shipped"].includes(s.status)).length), icon: Truck, color: "text-foreground", bg: "bg-foreground/[0.06]" },
+            { label: "تم التوصيل", value: String(shipments.filter((s) => s.status === "delivered").length), icon: PackageCheck, color: "text-foreground", bg: "bg-foreground/[0.06]" },
+            { label: "شحنات متأخرة", value: String(analytics.lateCount), icon: AlertTriangle, color: "text-foreground", bg: "bg-foreground/[0.06]" },
+            { label: "مستحقات المناديب", value: egp(totalDue), icon: Wallet, color: "text-foreground", bg: "bg-foreground/[0.06]" },
           ].map((metric, i) => (
             <Reveal key={metric.label} delay={i * 0.1}>
-              <BezelCard className="group relative overflow-hidden p-6 transition-all hover:translate-y-[-4px]">
+              <div className="group relative overflow-hidden rounded-2xl border border-foreground/10 bg-card/70 p-6">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">{metric.label}</p>
@@ -759,7 +759,7 @@ export default function Shipping() {
                 <Reveal delay={filteredCarriers.length * 0.1}>
                   <Dialog open={isAddCarrierOpen} onOpenChange={(open) => { setIsAddCarrierOpen(open); if (!open) resetCarrierForm(); }}>
                     <DialogTrigger asChild>
-                      <button className="group flex h-full min-h-[200px] w-full flex-col items-center justify-center gap-4 rounded-[1.75rem] border-2 border-dashed border-hairline p-8 transition-all hover:border-primary/50 hover:bg-primary/5">
+                      <button className="group flex h-full min-h-[200px] w-full flex-col items-center justify-center gap-4 rounded-[1.75rem] border-2 border-dashed border-hairline p-8 transition-[background-color,border-color,color,box-shadow,transform,opacity] hover:border-primary/50 hover:bg-primary/5">
                         <div className="rounded-full bg-muted p-4 transition-colors group-hover:bg-primary/10 group-hover:text-primary">
                           <Plus className="h-6 w-6" />
                         </div>
@@ -831,7 +831,7 @@ export default function Shipping() {
                 <Reveal delay={filteredZones.length * 0.1}>
                   <Dialog open={isAddZoneOpen} onOpenChange={(open) => { setIsAddZoneOpen(open); if (!open) resetZoneForm(); }}>
                     <DialogTrigger asChild>
-                      <button className="group flex h-full min-h-[200px] w-full flex-col items-center justify-center gap-4 rounded-[1.75rem] border-2 border-dashed border-hairline p-8 transition-all hover:border-amber-500/50 hover:bg-amber-500/5">
+                      <button className="group flex h-full min-h-[200px] w-full flex-col items-center justify-center gap-4 rounded-[1.75rem] border-2 border-dashed border-hairline p-8 transition-[background-color,border-color,color,box-shadow,transform,opacity] hover:border-amber-500/50 hover:bg-amber-500/5">
                         <div className="rounded-full bg-muted p-4 transition-colors group-hover:bg-amber-500/10 group-hover:text-amber-500">
                           <Plus className="h-6 w-6" />
                         </div>

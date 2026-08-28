@@ -276,20 +276,18 @@ ${list.map((it) => {
       <Reveal delay={140}>
         <div className="mb-3 flex items-center justify-between gap-3 px-2">
           <div className="flex items-center gap-1.5">
-            <div className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{list.length} صنف</div>
+            <div className="text-xs uppercase tracking-[0.12em] text-muted-foreground">{list.length} صنف</div>
           </div>
         </div>
 
         {list.length === 0 ? (
-          <div className="bezel-shell">
-            <div className="bezel-core px-6 py-10">
+          <div className="rounded-2xl border border-dashed border-foreground/10 bg-card/50 px-6 py-10">
               <EmptyState
                 icon={Package}
                 title="المخزن فاضي."
                 hint="أضف فاتورة شراء وهيتعبّى المخزن تلقائيًا بأصنافها."
                 action={<Button size="sm" onClick={() => { setAddPrefillBarcode(undefined); setAddOpen(true); }} className="gap-2"><Plus className="w-4 h-4" /> إضافة أول منتج</Button>}
               />
-            </div>
           </div>
         ) : (
           <ScrollArea className="max-h-[64vh]">
@@ -992,7 +990,7 @@ function StatBox({
     ? { border: "border-border/30 hover:border-border/40", chip: "bg-foreground/[0.06] text-muted-foreground ring-1 ring-border", text: "text-foreground", grad: "bg-linear-to-bl from-transparent to-transparent" }
     : { border: "border-border/30 hover:border-border/40", chip: "bg-foreground/[0.06] text-muted-foreground ring-1 ring-border", text: "text-foreground", grad: "bg-linear-to-bl from-transparent to-transparent" };
   return (
-    <div className={cn("relative overflow-hidden bg-card plate p-5 transition-[transform,background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5", toneCls.border)}>
+    <div className={cn("relative overflow-hidden rounded-2xl border border-foreground/10 bg-card/70 p-5 transition-[transform,background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5", toneCls.border)}>
       <div className={cn("absolute inset-0 opacity-[0.06] pointer-events-none", toneCls.grad)} />
       <div className="relative">
         <div className="flex items-start justify-between">
@@ -1000,7 +998,7 @@ function StatBox({
           <div className="text-xs text-muted-foreground text-left max-w-[55%]">{label}</div>
         </div>
         <div className={cn("text-2xl lg:text-3xl font-extrabold mt-4 tabular-nums text-right", toneCls.text, valueClassName)}>{value}</div>
-        {sub && <div className="text-[11px] text-muted-foreground mt-1.5 text-right">{sub}</div>}
+        {sub && <div className="text-xs text-muted-foreground mt-1.5 text-right">{sub}</div>}
       </div>
     </div>
   );

@@ -128,7 +128,7 @@ function NewPurchasePage() {
                     <X className="w-4 h-4 me-2" /> إلغاء
                   </Link>
                 </Button>
-                <Button size="sm" onClick={submit} disabled={busy} className="rounded-full shadow-lg shadow-primary/20">
+                <Button size="sm" onClick={submit} disabled={busy} className="rounded-full shadow-sm">
                   <Save className="w-4 h-4 me-2" /> حفظ الفاتورة
                 </Button>
               </div>
@@ -138,7 +138,7 @@ function NewPurchasePage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 mt-6">
             <div className="space-y-6">
               <Reveal>
-                <BezelCard innerClassName="p-6 space-y-6">
+                <div className="rounded-2xl border border-foreground/10 bg-card/70 p-6 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-right">
                     <div className="space-y-2">
                       <Label>المورد</Label>
@@ -166,7 +166,7 @@ function NewPurchasePage() {
 
                   <div className="space-y-3 text-right">
                     <div className="flex items-center justify-between mb-2">
-                      <Button type="button" size="sm" variant="outline" onClick={addItem} className="rounded-full border-primary/30 text-primary">
+                      <Button type="button" size="sm" variant="outline" onClick={addItem} className="rounded-full border-foreground/20 text-foreground">
                         <Plus className="w-4 h-4 me-2" /> إضافة صنف
                       </Button>
                       <Label className="text-lg font-bold">الأصناف المشتراة</Label>
@@ -180,10 +180,10 @@ function NewPurchasePage() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="relative group grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-3 p-4 rounded-2xl hairline bg-foreground/[0.02] hover:bg-foreground/[0.04] transition-colors"
+                            className="relative group grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-3 p-3 rounded-xl border border-foreground/10 bg-card/50"
                           >
                             <div className="space-y-1 text-right">
-                              <Label className="text-[10px] uppercase text-muted-foreground">اسم المنتج</Label>
+                              <Label className="text-xs uppercase tracking-[0.12em] text-muted-foreground">اسم المنتج</Label>
                               <Input 
                                 list="stock-suggestions"
                                 value={it.name} 
@@ -197,7 +197,7 @@ function NewPurchasePage() {
                               />
                             </div>
                             <div className="space-y-1 text-right">
-                              <Label className="text-[10px] uppercase text-muted-foreground">سعر التكلفة</Label>
+                              <Label className="text-xs uppercase tracking-[0.12em] text-muted-foreground">سعر التكلفة</Label>
                               <Input 
                                 type="number" 
                                 value={it.unitCost} 
@@ -207,7 +207,7 @@ function NewPurchasePage() {
                               />
                             </div>
                             <div className="space-y-1 text-right">
-                              <Label className="text-[10px] uppercase text-muted-foreground">الكمية</Label>
+                              <Label className="text-xs uppercase tracking-[0.12em] text-muted-foreground">الكمية</Label>
                               <Input 
                                 type="number" 
                                 value={it.quantity} 
@@ -245,16 +245,16 @@ function NewPurchasePage() {
                       className="rounded-2xl"
                     />
                   </div>
-                </BezelCard>
+                </div>
               </Reveal>
             </div>
 
             <aside className="space-y-4">
               <Reveal delay={100}>
-                <BezelCard innerClassName="p-5 space-y-5 sticky top-24">
+                <div className="rounded-2xl border border-foreground/10 bg-card/70 p-5 space-y-5 sticky top-24">
                   <div className="text-right">
                     <Label className="text-muted-foreground text-xs uppercase tracking-widest font-bold">ملخص الفاتورة</Label>
-                    <div className={cn("text-4xl font-black mt-2 text-primary tabular-nums", blurCls)}>
+                    <div className={cn("text-4xl font-black mt-2 text-foreground tabular-nums", blurCls)}>
                       {fmt(total)} <span className="text-sm font-bold text-muted-foreground">ج.م</span>
                     </div>
                   </div>
@@ -291,9 +291,9 @@ function NewPurchasePage() {
                     </div>
                   </div>
 
-                  <div className="bg-primary/5 rounded-2xl p-4 flex gap-3 text-right border border-primary/10">
-                    <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                    <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  <div className="bg-foreground/[0.04] rounded-2xl p-4 flex gap-3 text-right border border-foreground/10">
+                    <Info className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                    <p className="text-xs leading-relaxed text-muted-foreground">
                       عند حفظ الفاتورة، سيتم تحديث الكميات في المخازن تلقائياً وتعديل آخر سعر تكلفة لكل منتج.
                     </p>
                   </div>
@@ -301,11 +301,11 @@ function NewPurchasePage() {
                   <Button 
                     onClick={submit} 
                     disabled={busy} 
-                    className="w-full h-12 rounded-2xl text-base font-bold shadow-xl shadow-primary/20"
+                    className="w-full h-12 rounded-2xl text-base font-bold shadow-sm"
                   >
                     حفظ الفاتورة
                   </Button>
-                </BezelCard>
+                </div>
               </Reveal>
             </aside>
           </div>
