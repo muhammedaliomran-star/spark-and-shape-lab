@@ -62,7 +62,7 @@ export default function BranchesPage() {
                 setEditingBranch(null);
                 setIsDialogOpen(true);
               }}
-              className="rounded-full px-6 shadow-lg shadow-primary/20"
+              className="rounded-full px-6 shadow-sm"
             >
               <Plus className="ml-2 h-4 w-4" />
               إضافة فرع جديد
@@ -71,17 +71,17 @@ export default function BranchesPage() {
 
           {/* Quick Stats */}
           <Reveal className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="plate p-6 flex flex-col gap-1">
+            <div className="rounded-2xl border border-foreground/10 bg-card/70 p-6 flex flex-col gap-1">
               <span className="text-muted-foreground text-sm font-medium">إجمالي الفروع</span>
-              <span className="text-3xl font-bold">{branches.length}</span>
+              <span className="text-3xl font-bold tabular-nums">{branches.length}</span>
             </div>
-            <div className="plate p-6 flex flex-col gap-1">
+            <div className="rounded-2xl border border-foreground/10 bg-card/70 p-6 flex flex-col gap-1">
               <span className="text-muted-foreground text-sm font-medium">الفروع النشطة</span>
-              <span className="text-3xl font-bold text-success">{branches.length}</span>
+              <span className="text-3xl font-bold tabular-nums text-foreground">{branches.length}</span>
             </div>
-            <div className="plate p-6 flex flex-col gap-1">
+            <div className="rounded-2xl border border-foreground/10 bg-card/70 p-6 flex flex-col gap-1">
               <span className="text-muted-foreground text-sm font-medium">المديرين</span>
-              <span className="text-3xl font-bold text-primary">
+              <span className="text-3xl font-bold tabular-nums text-foreground">
                 {new Set(branches.map(b => b.managerName).filter(Boolean)).size}
               </span>
             </div>
@@ -104,7 +104,7 @@ export default function BranchesPage() {
                 </Reveal>
               ))}
               {branches.length === 0 && !loading && (
-                <div className="py-20 text-center text-muted-foreground plate italic">
+                <div className="py-20 text-center text-muted-foreground rounded-2xl border border-dashed border-foreground/10 bg-card/50 italic">
                   لا توجد فروع مسجلة حالياً
                 </div>
               )}
@@ -115,8 +115,8 @@ export default function BranchesPage() {
       </PageTransition>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl">
-          <div className="glass-header sticky top-0 z-10 border-b border-[var(--hairline)] px-8 py-6">
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-2xl border border-foreground/10 shadow-lg">
+          <div className="sticky top-0 z-10 border-b border-[var(--hairline)] bg-card px-8 py-6">
             <DialogTitle className="text-2xl font-bold">
               {editingBranch ? "تعديل بيانات الفرع" : "إضافة فرع جديد"}
             </DialogTitle>
@@ -150,7 +150,7 @@ export default function BranchesPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between p-4 plate rounded-2xl">
+              <div className="flex items-center justify-between p-4 rounded-2xl border border-foreground/10 bg-card/50">
                 <div className="space-y-0.5">
                   <Label>فرع رئيسي</Label>
                   <p className="text-xs text-muted-foreground">تعيين هذا الفرع كفرع أساسي للنظام</p>
@@ -159,7 +159,7 @@ export default function BranchesPage() {
               </div>
             </div>
             <div className="flex gap-3 pt-2">
-              <Button type="submit" className="flex-1 h-12 rounded-2xl font-bold text-lg shadow-lg shadow-primary/20">
+              <Button type="submit" className="flex-1 h-12 rounded-2xl font-bold text-lg shadow-sm">
                 حفظ البيانات
               </Button>
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="h-12 px-6 rounded-2xl border-[var(--hairline)]">
@@ -179,11 +179,11 @@ function BranchCard({ branch, onEdit, onDelete }: {
   onDelete: (id: string) => void;
 }) {
   return (
-    <div className="plate-glow bezel-lift group relative overflow-hidden flex flex-col">
+    <div className="group relative overflow-hidden flex flex-col rounded-2xl border border-foreground/10 bg-card/70 hover:border-foreground/20 transition-[border-color,background-color]">
       {/* Status Stripe */}
       <div className={cn(
         "absolute right-0 top-0 bottom-0 w-1.5 rounded-r-full",
-        branch.isMain ? "bg-warning" : "bg-primary"
+        branch.isMain ? "bg-warning" : "bg-foreground/20"
       )} />
 
       <div className="flex items-center gap-6 p-5">
@@ -191,7 +191,7 @@ function BranchCard({ branch, onEdit, onDelete }: {
         <div className="flex flex-1 items-center gap-4 min-w-0">
           <div className={cn(
             "h-12 w-12 shrink-0 rounded-2xl flex items-center justify-center ring-1",
-            branch.isMain ? "bg-warning/10 ring-warning/20 text-warning" : "bg-primary/10 ring-primary/20 text-primary"
+            branch.isMain ? "bg-warning/10 ring-warning/20 text-warning" : "bg-foreground/[0.06] ring-foreground/10 text-foreground"
           )}>
             <GitBranch className="h-6 w-6" />
           </div>
@@ -199,7 +199,7 @@ function BranchCard({ branch, onEdit, onDelete }: {
             <div className="flex items-center gap-2 mb-0.5">
               <span className="font-bold text-lg truncate">{branch.name}</span>
               {branch.isMain && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-warning/20 font-bold text-warning uppercase">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-warning/20 font-bold text-warning uppercase tracking-[0.12em]">
                   الفرع الرئيسي
                 </span>
               )}
@@ -218,17 +218,17 @@ function BranchCard({ branch, onEdit, onDelete }: {
         </div>
 
         {/* Info Column */}
-        <div className="flex flex-col items-end gap-1 px-8 border-x border-[var(--hairline)]">
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">رقم الهاتف</span>
+        <div className="flex flex-col items-end gap-1 px-6 border-x border-[var(--hairline)]">
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-[0.12em]">رقم الهاتف</span>
           <span className="text-xl font-black tabular-nums" dir="ltr">
             {branch.phone || "---"}
           </span>
-          <span className="text-[10px] text-muted-foreground font-medium">نشط</span>
+          <span className="text-xs text-muted-foreground font-medium">نشط</span>
         </div>
 
         {/* Actions Column */}
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={() => onEdit(branch)} className="h-10 w-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button variant="ghost" size="icon" onClick={() => onEdit(branch)} className="h-10 w-10 rounded-full opacity-0 group-hover:opacity-100 transition-[opacity,background-color,color]">
             <Pencil className="h-4 w-4" />
           </Button>
           <Button 
@@ -237,7 +237,7 @@ function BranchCard({ branch, onEdit, onDelete }: {
             onClick={() => {
               if (confirm("هل أنت متأكد من حذف هذا الفرع؟")) onDelete(branch.id);
             }} 
-            className="h-10 w-10 rounded-full text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="h-10 w-10 rounded-full text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-[opacity,background-color,color]"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
