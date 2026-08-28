@@ -270,7 +270,7 @@ export function ProductForm({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-                className="mt-3 flex items-center gap-1.5 text-[11px] text-danger"
+                className="mt-3 flex items-center gap-1.5 text-xs text-danger"
               >
                 <AlertTriangle className="w-3.5 h-3.5" /> سعر البيع أقل من سعر الشراء — الربح سالب.
               </motion.div>
@@ -282,7 +282,7 @@ export function ProductForm({
         <BezelCard variant="flat" innerClassName="p-4">
           <GroupLabel icon={ScanLine}>الباركود والمخزون</GroupLabel>
 
-          <div className="glass mb-3 flex w-max items-center gap-1 rounded-full p-1">
+          <div className="mb-3 flex w-max items-center gap-1 rounded-full border border-foreground/10 bg-foreground/[0.04] p-1">
             {([
               { value: "auto", label: "توليد تلقائي" },
               { value: "manual", label: "مسح / كتابة" },
@@ -292,9 +292,9 @@ export function ProductForm({
                 type="button"
                 onClick={() => { setMode(m.value); if (m.value === "manual") setBarcode(""); }}
                 className={cn(
-                  "press rounded-full px-4 py-1.5 text-xs transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                  "press rounded-full px-4 py-1.5 text-xs transition-[background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
                   mode === m.value
-                    ? "bg-primary font-semibold text-primary-foreground"
+                    ? "bg-foreground font-semibold text-background"
                     : "text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground",
                 )}
               >
@@ -382,7 +382,7 @@ export function ProductForm({
       </div>
 
       {/* شريط sticky: الحساب + أزرار الحفظ — ظاهر دائمًا بدون تمرير */}
-      <div className="sticky bottom-0 z-10 -mx-1 mt-auto border-t border-[var(--hairline)] bg-card/85 px-1 pb-1 pt-3 backdrop-blur-xl supports-[padding:env(safe-area-inset-bottom)]:pb-[max(0.25rem,env(safe-area-inset-bottom))]">
+      <div className="sticky bottom-0 z-10 -mx-1 mt-auto border-t border-foreground/10 bg-card px-1 pb-1 pt-3 supports-[padding:env(safe-area-inset-bottom)]:pb-[max(0.25rem,env(safe-area-inset-bottom))]">
         <div className="mb-3 flex items-center gap-2 px-1">
           <Calculator className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">حساب الصفقة</span>
@@ -442,7 +442,7 @@ export function ProductForm({
 
 function CalcCell({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className="rounded-2xl border border-foreground/10 bg-card/50 px-3 py-2 text-center">
+    <div className="rounded-xl bg-foreground/[0.04] px-3 py-2 text-center">
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className={cn("text-numeric mt-0.5 text-base font-extrabold", className)}>{children}</div>
     </div>

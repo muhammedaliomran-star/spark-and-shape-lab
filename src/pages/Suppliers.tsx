@@ -350,7 +350,7 @@ function StatBox({
           "text-foreground",
           valueClassName,
         )}>{value}</div>
-        {sub && <div className="text-[11px] text-muted-foreground mt-1.5 text-right">{sub}</div>}
+        {sub && <div className="text-xs text-muted-foreground mt-1.5 text-right">{sub}</div>}
       </div>
     </div>
   );
@@ -438,16 +438,16 @@ function SupplierFormDialog({
               />
             </div>
             <div className="flex gap-2 justify-end mt-2">
-              <Button type="button" variant="outline" size="sm" className="h-7 rounded-full px-3 text-[11px]"
+              <Button type="button" variant="outline" size="sm" className="h-7 rounded-full px-3 text-xs"
                 onClick={() => setJoinDate(firstOfMonth())}>أول الشهر</Button>
-              <Button type="button" variant="outline" size="sm" className="h-7 rounded-full px-3 text-[11px]"
+              <Button type="button" variant="outline" size="sm" className="h-7 rounded-full px-3 text-xs"
                 onClick={() => setJoinDate(new Date().toISOString().slice(0, 10))}>النهارده</Button>
             </div>
           </div>
           <div>
             <Label>مديونية افتتاحية (ج.م)</Label>
             <Input type="number" value={opening} onChange={(e) => setOpening(e.target.value)} />
-            <div className="text-[11px] text-muted-foreground mt-1">المبلغ المستحق للمورد قبل بداية تسجيل الفواتير في النظام.</div>
+            <div className="text-xs text-muted-foreground mt-1">المبلغ المستحق للمورد قبل بداية تسجيل الفواتير في النظام.</div>
           </div>
           <div><Label>ملاحظات</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} maxLength={500} /></div>
         </div>
@@ -955,7 +955,7 @@ function PurchasesTable({ privacy }: { privacy: boolean }) {
                     <td className={cn("p-4 font-bold tabular-nums", blurCls)}>{fmt(p.total)} ج.م</td>
                     <td className="p-4">
 <Badge variant="outline" className={cn(
-                      "text-[11px]",
+                      "text-xs",
                       p.paymentType === "cash"
                         ? "bg-foreground/[0.06] text-muted-foreground ring-border"
                         : "bg-foreground/[0.06] text-muted-foreground ring-border",

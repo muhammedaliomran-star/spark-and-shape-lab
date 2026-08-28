@@ -317,13 +317,13 @@ ${list.map((it) => {
                           <div className="truncate font-bold leading-tight">{it.name}</div>
                           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                             {(it.itemType || it.size) && (
-                              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                                 <Scale className="h-3 w-3" />
                                 {it.itemType || "غير محدد"}{it.size ? ` — ${it.size}` : ""}
                               </span>
                             )}
                             {it.barcode && (
-                              <span className="inline-flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
+                              <span className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground">
                                 <ScanLine className="h-3 w-3" /> {it.barcode}
                               </span>
                             )}
@@ -335,17 +335,17 @@ ${list.map((it) => {
                       <div className="min-w-0">
                         <div className="flex items-center gap-4">
                           <div className="flex flex-col">
-                            <div className="text-[10px] text-muted-foreground mb-0.5">الكمية</div>
+                            <div className="text-xs text-muted-foreground mb-0.5">الكمية</div>
                             <div className={cn("text-numeric text-xl font-extrabold leading-none", out ? "text-danger" : low ? "text-warning" : "text-foreground", privacy && "privacy-blur")}>
                               {fmt(it.quantity)}
                             </div>
                           </div>
                           
                           <div className="flex flex-col">
-                            <div className="text-[10px] text-muted-foreground mb-0.5">الربح المتوقع</div>
+                            <div className="text-xs text-muted-foreground mb-0.5">الربح المتوقع</div>
                             <div className={cn("text-numeric font-bold leading-none flex items-center gap-1", profit >= 0 ? "text-success" : "text-danger", privacy && "privacy-blur")}>
                               {profit >= 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                              {fmt(profit)} <span className="text-[10px]">ج.م</span>
+                              {fmt(profit)} <span className="text-xs">ج.م</span>
                             </div>
                           </div>
                         </div>
@@ -635,7 +635,7 @@ function MoveToWarehouseDialog({ item, onClose }: { item: StockItem | null; onCl
             <Label>الكمية المنقولة</Label>
             <Input inputMode="decimal" value={qty} onChange={(e) => setQty(posNum(e.target.value))} onFocus={(e) => e.currentTarget.select()} className={cn("rounded-2xl", NUM_CLS)} />
             {over && (
-              <div className="flex items-center gap-1.5 text-[11px] text-danger">
+              <div className="flex items-center gap-1.5 text-xs text-danger">
                 <AlertTriangle className="h-3.5 w-3.5" /> الكمية أكبر من المتاح.
               </div>
             )}
@@ -852,7 +852,7 @@ function EditDialog({ item, onClose, existingBarcodes }: { item: StockItem | nul
                 </Button>
               </div>
               {codeDuplicate && (
-                <div className="flex items-center gap-1.5 text-[11px] text-danger">
+                <div className="flex items-center gap-1.5 text-xs text-danger">
                   <AlertTriangle className="h-3.5 w-3.5" /> الكود ده مستخدم مع منتج آخر.
                 </div>
               )}
@@ -860,7 +860,7 @@ function EditDialog({ item, onClose, existingBarcodes }: { item: StockItem | nul
             <div className="mt-3 grid gap-1.5">
               <Label>الحد الأدنى للمخزون</Label>
               <Input inputMode="decimal" value={minStock} onChange={(e) => setMinStock(posNum(e.target.value))} onFocus={(e) => e.currentTarget.select()} className={cn("rounded-2xl", NUM_CLS)} />
-              <div className="text-[11px] text-muted-foreground">يعتبر المنتج منخفضًا إذا كانت الكمية أقل من هذا الرقم.</div>
+              <div className="text-xs text-muted-foreground">يعتبر المنتج منخفضًا إذا كانت الكمية أقل من هذا الرقم.</div>
             </div>
           </BezelCard>
 
@@ -958,7 +958,7 @@ function HistoryDialog({ item, onClose }: { item: StockItem | null; onClose: () 
                       {label}
                       {e.reason && <span className="text-xs font-normal text-muted-foreground">— {e.reason}</span>}
                     </div>
-                    <div className="text-[11px] text-muted-foreground truncate">
+                    <div className="text-xs text-muted-foreground truncate">
                       {new Date(e.date).toLocaleDateString("en-US", { day: "2-digit", month: "long", year: "numeric" })}
                       {e.notes ? ` • ${e.notes}` : e.ref ? ` • ${e.ref}` : ""}
                     </div>

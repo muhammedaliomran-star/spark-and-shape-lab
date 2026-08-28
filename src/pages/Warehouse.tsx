@@ -234,7 +234,7 @@ function ItemCard({ item, masked }: { item: WarehouseItem; masked: boolean }) {
         <Badge variant="outline" className={cn("rounded-full border-0 ring-1", "bg-foreground/[0.06] text-muted-foreground ring-border")}>{meta.label}</Badge>
         <div className="min-w-0 text-right">
           <div className="truncate font-semibold">{item.name}</div>
-          <div className="mt-1 text-[11px] text-muted-foreground">{cat}</div>
+          <div className="mt-1 text-xs text-muted-foreground">{cat}</div>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-2 text-right">
@@ -479,8 +479,8 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl overflow-hidden p-0 border-none bg-card/95 backdrop-blur-2xl">
-        <DialogHeader className="p-6 pb-2 sticky top-0 bg-card/50 backdrop-blur-xl z-20 border-b border-[var(--hairline)]">
+      <DialogContent className="max-w-2xl overflow-hidden rounded-2xl border border-foreground/10 bg-card p-0">
+        <DialogHeader className="p-6 pb-4 border-b border-foreground/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-foreground/[0.06] flex items-center justify-center">
@@ -488,7 +488,7 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
               </div>
               <div>
                 <DialogTitle className="text-right text-xl font-black">إضافة صنف للمخزن</DialogTitle>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold mt-0.5">Add New Warehouse Item</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-[0.12em] font-bold mt-0.5">Add New Warehouse Item</p>
               </div>
             </div>
           </div>
@@ -498,7 +498,7 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
           <div className="space-y-6 text-right" dir="rtl">
             {/* Name */}
             <div className="space-y-3">
-              <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">اسم الصنف</Label>
+              <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">اسم الصنف</Label>
               <Input 
                 value={name} 
                 onChange={(e) => setName(e.target.value)} 
@@ -510,7 +510,7 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Quantity */}
 <div className="space-y-3">
-              <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">الكمية</Label>
+              <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">الكمية</Label>
               <Input 
                 type="number" 
                 value={quantity} 
@@ -521,7 +521,7 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
 
 {/* Cost */}
               <div className="space-y-3">
-                <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">سعر التكلفة</Label>
+                <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">سعر التكلفة</Label>
                 <div className="relative">
                   <Input 
                     type="number" 
@@ -538,7 +538,7 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 {/* Sale Price */}
               <div className="space-y-3">
-                <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">سعر البيع المتوقع</Label>
+                <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">سعر البيع المتوقع</Label>
                 <div className="relative">
                   <Input 
                     type="number" 
@@ -553,7 +553,7 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
 
               {/* Season */}
               <div className="space-y-3">
-                <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">الموسم</Label>
+                <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">الموسم</Label>
                 <Select value={season} onValueChange={(v) => setSeason(v as WarehouseSeason)}>
                   <SelectTrigger className="h-12 bg-background/50 border-none rounded-xl text-right font-bold">
                     <SelectValue />
@@ -569,7 +569,7 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
 
 {/* Category */}
             <div className="space-y-3">
-              <Label className="text-[11px] font-black uppercase tracking-[0.15em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">الفئة / القسم</Label>
+              <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground group-focus-within/field:text-foreground transition-colors">الفئة / القسم</Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger className="h-12 bg-background/50 border-none rounded-xl text-right font-bold">
                   <SelectValue />
