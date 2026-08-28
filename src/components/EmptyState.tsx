@@ -6,17 +6,18 @@ type Props = {
   hint?: string;
   action?: React.ReactNode;
   compact?: boolean;
+  className?: string;
 };
 
 /**
  * Empty state with a hand-drawn "ledger page" motif — a nod to the paper
  * notebook the app replaces. Uses only semantic tokens so it themes correctly.
  */
-export function EmptyState({ icon: Icon, title, hint, action, compact }: Props) {
+export function EmptyState({ icon: Icon, title, hint, action, compact, className }: Props) {
   return (
     <div
       dir="rtl"
-      className={`flex flex-col items-center justify-center text-center ${compact ? "py-8" : "py-14"}`}
+      className={`flex flex-col items-center justify-center text-center ${compact ? "py-8" : "py-14"} ${className ?? ""}`}
     >
       <div className="relative mb-5">
         {/* ruled ledger sheet */}
