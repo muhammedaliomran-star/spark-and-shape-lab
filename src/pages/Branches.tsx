@@ -104,7 +104,7 @@ export default function BranchesPage() {
                 </Reveal>
               ))}
               {branches.length === 0 && !loading && (
-                <div className="py-20 text-center text-muted-foreground rounded-2xl border border-dashed border-foreground/10 bg-card/50 italic">
+                <div className="grid min-h-[280px] place-items-center py-12 sm:py-16 text-center text-muted-foreground rounded-2xl border border-dashed border-foreground/10 bg-card/50 italic p-6">
                   لا توجد فروع مسجلة حالياً
                 </div>
               )}
@@ -115,14 +115,14 @@ export default function BranchesPage() {
       </PageTransition>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-2xl border border-foreground/10 shadow-lg">
-          <div className="sticky top-0 z-10 border-b border-[var(--hairline)] bg-card px-8 py-6">
+        <DialogContent className="sm:max-w-[500px] overflow-hidden rounded-2xl border border-foreground/10 bg-card p-0 shadow-sm">
+          <div className="px-8 py-6">
             <DialogTitle className="text-2xl font-bold">
               {editingBranch ? "تعديل بيانات الفرع" : "إضافة فرع جديد"}
             </DialogTitle>
           </div>
-          <form onSubmit={handleSave} className="p-8 space-y-6">
-            <div className="space-y-4">
+          <form onSubmit={handleSave} className="p-6 sm:p-8 space-y-6">
+            <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="name">اسم الفرع</Label>
                 <Input id="name" name="name" defaultValue={editingBranch?.name} required placeholder="مثلاً: فرع وسط البلد" className="h-12 rounded-2xl" />
@@ -150,7 +150,7 @@ export default function BranchesPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between p-4 rounded-2xl border border-foreground/10 bg-card/50">
+              <div className="flex items-center justify-between py-3 border-t border-foreground/10">
                 <div className="space-y-0.5">
                   <Label>فرع رئيسي</Label>
                   <p className="text-xs text-muted-foreground">تعيين هذا الفرع كفرع أساسي للنظام</p>
