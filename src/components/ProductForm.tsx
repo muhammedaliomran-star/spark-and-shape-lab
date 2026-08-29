@@ -295,8 +295,8 @@ export function ProductForm({
                 className={cn(
                   "press rounded-full border px-4 py-1.5 text-xs transition-[background-color,color,border-color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
                   mode === m.value
-                    ? "bg-foreground border-foreground font-semibold text-background"
-                    : "border-foreground/10 text-muted-foreground hover:border-foreground/20 hover:text-foreground",
+                    ? "border-foreground bg-transparent font-semibold text-foreground"
+                    : "border-transparent text-muted-foreground hover:border-foreground/20 hover:text-foreground",
                 )}
               >
                 {m.label}
@@ -383,7 +383,7 @@ export function ProductForm({
       </div>
 
       {/* شريط sticky: الحساب + أزرار الحفظ — ظاهر دائمًا بدون تمرير */}
-      <div className="sticky bottom-0 z-10 -mx-1 mt-auto border-t border-foreground/10 bg-card px-1 pb-1 pt-3 supports-[padding:env(safe-area-inset-bottom)]:pb-[max(0.25rem,env(safe-area-inset-bottom))]">
+      <div className="sticky bottom-0 z-10 -mx-1 mt-auto px-1 pb-1 pt-3 supports-[padding:env(safe-area-inset-bottom)]:pb-[max(0.25rem,env(safe-area-inset-bottom))]">
         <div className="mb-3 flex items-center gap-2 px-1">
           <Calculator className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">حساب الصفقة</span>
