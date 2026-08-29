@@ -194,7 +194,7 @@ export default function CashboxPage() {
               
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="gap-2 rounded-2xl h-12 px-6 shadow-sm shadow-primary/20 hover:scale-105 transition-transform">
+                  <Button className="gap-2 rounded-2xl h-12 px-6 shadow-sm hover:scale-105 transition-transform">
                     <Plus className="w-5 h-5" /> تسجيل معاملة جديدة
                   </Button>
                 </DialogTrigger>
@@ -265,8 +265,8 @@ export default function CashboxPage() {
                           />
                         </div>
 
-                      <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[background-color,border-color,color,box-shadow,transform,opacity] hover:ring-primary/40 group/field">
-                        <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground group-focus-within/field:text-primary transition-colors">التصنيف</Label>
+                      <div className="space-y-3 p-4 rounded border border-foreground/10 group/field">
+                        <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">التصنيف</Label>
                         <Input 
                           value={newTransaction.category} 
                           onChange={(e) => setNewTransaction(prev => ({ ...prev, category: e.target.value }))} 
@@ -289,7 +289,7 @@ export default function CashboxPage() {
                       <Button 
 
                         className={cn(
-                          "w-full gap-2 py-8 text-xl rounded-2xl shadow-sm transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-500 font-black",
+                          "w-full gap-2 py-8 text-xl rounded-2xl shadow-sm transition-[background-color,border-color] duration-200 font-black",
                           newTransaction.type === 'in' 
                             ? "bg-success text-success-foreground hover:shadow-sm" 
                             : "bg-danger text-danger-foreground hover:shadow-sm"
@@ -405,8 +405,9 @@ export default function CashboxPage() {
                       <span className={cn("font-bold text-danger", blurCls)}>{fmt(totalOut)} ج.م</span>
                    </div>
                    
-                    <Button className="w-full gap-2 mt-4 rounded-xl py-6 shadow-sm shadow-primary/20 hover:scale-[1.02] transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-300 font-black relative overflow-hidden group" size="sm">
-                      <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                    <Button className="w-full gap-2 mt-4 rounded-xl py-6 shadow-sm hover:scale-[1.02] transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-200 font-black relative overflow-hidden group" size="sm">
+<div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 
+transition-transform" />
                       <Plus className="w-4 h-4 relative z-10" /> <span className="relative z-10">إضافة معاملة</span>
                     </Button>
                 </div>
@@ -447,7 +448,7 @@ export default function CashboxPage() {
 
             <div className="flex flex-col gap-3">
               {filtered.length === 0 ? (
-                <div className="rounded-2xl border border-foreground/10 bg-card/70">
+                <div className="rounded-2xl border border-foreground/10 bg-card p-6">
                   <div className=" px-6 py-10">
                     <EmptyState
                       icon={History}
@@ -460,7 +461,7 @@ export default function CashboxPage() {
                 filtered.map((t, idx) => (
                   <div
                     key={t.id}
-                    className="group rounded-2xl border border-foreground/10 bg-card/70  animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)] both"
+                    className="group rounded-2xl border border-foreground/10 bg-card p-4"
                     style={{ animationDelay: `${Math.min(idx, 12) * 45}ms` }}
                   >
                     <div className=" grid grid-cols-1 items-center gap-5 p-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] md:gap-6">
@@ -551,10 +552,9 @@ function MetricCard({ label, value, icon, color, privacy, isCount, glow }: { lab
   }[color as "success" | "danger" | "primary" | "warning" | "muted"] || "text-foreground";
 
   return (
-    <div className={cn("rounded-2xl border border-foreground/10 bg-card/70 p-5 flex flex-col items-center justify-center text-center")}>
+    <div className="rounded-2xl border border-foreground/10 bg-card p-5 flex flex-col items-center justify-center text-center">
       <div className="flex items-center gap-2 mb-1.5">
-        <div className="p-1.5 rounded-lg bg-muted/20 ring-1 ring-inset ring-[var(--hairline)]">
-          {icon}
+<div className="p-1.5 rounded-lg bg-muted/20 ring-1 ring-inset ring-[var(--hairline)]">
         </div>
         <span className="text-xs font-black text-muted-foreground uppercase tracking-[0.12em]">{label}</span>
       </div>
