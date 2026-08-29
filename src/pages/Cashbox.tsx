@@ -176,7 +176,7 @@ export default function CashboxPage() {
         <PageHeader
           title="الصندوق"
           subtitle="إدارة المعاملات النقدية اليومية والتدفق المالي."
-          icon={<Wallet className="w-8 h-8 text-primary" />}
+          icon={<Wallet className="w-8 h-8" />}
           action={
             <div className="flex items-center gap-3">
                <Select value={daysFilter} onValueChange={setDaysFilter}>
@@ -198,16 +198,15 @@ export default function CashboxPage() {
                     <Plus className="w-5 h-5" /> تسجيل معاملة جديدة
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl overflow-hidden p-0 border-none bg-card/95 ">
-                  <DialogHeader className="p-6 pb-2 sticky top-0 bg-card/50  z-20 border-b border-[var(--hairline)]">
+<DialogContent className="max-w-2xl overflow-hidden rounded-2xl border border-foreground/10 bg-card p-0 shadow-sm">
+<DialogHeader className="p-6 pb-4 border-b border-foreground/10">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center">
-                          <Wallet className="w-5 h-5 text-primary" />
+                        <div className="w-10 h-10 flex items-center justify-center text-muted-foreground">
+                          <Wallet className="w-5 h-5" />
                         </div>
                         <div>
                           <DialogTitle className="text-right text-xl font-black">تسجيل معاملة مالية</DialogTitle>
-                          <p className="text-xs text-muted-foreground uppercase tracking-[0.12em] font-bold mt-0.5">Register New Cash Transaction</p>
                         </div>
                       </div>
                     </div>
@@ -215,44 +214,36 @@ export default function CashboxPage() {
                   
                   <ScrollArea className="max-h-[80vh] p-6">
                     <div className="space-y-6 text-right" dir="rtl">
-                      {/* Type Selection */}
-                      <div className="space-y-3">
-                        <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">نوع المعاملة</Label>
-                        <div className="grid grid-cols-2 gap-2 p-1.5 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] relative overflow-hidden">
-                          <motion.div 
-                            layoutId="cash-active-tab"
-                            className={cn(
-                              "absolute inset-y-1 w-[calc(50%-6px)] rounded-xl shadow-lg z-0",
-                              newTransaction.type === "in" ? "bg-success left-1.5" : "bg-danger right-1.5"
-                            )}
-                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                          />
-                          <Button 
-                            variant="ghost"
-                            className={cn(
-                              "relative z-10 rounded-xl h-11 font-black transition-colors",
-                              newTransaction.type === "in" ? "text-success-foreground" : "text-muted-foreground hover:text-foreground"
-                            )}
-                            onClick={() => setNewTransaction(prev => ({ ...prev, type: "in" }))}
-                          >
-                            وارد (إيراد)
-                          </Button>
-                          <Button 
-                            variant="ghost"
-                            className={cn(
-                              "relative z-10 rounded-xl h-11 font-black transition-colors",
-                              newTransaction.type === "out" ? "text-danger-foreground" : "text-muted-foreground hover:text-foreground"
-                            )}
-                            onClick={() => setNewTransaction(prev => ({ ...prev, type: "out" }))}
-                          >
-                            صادر (مصروف)
-                          </Button>
-                        </div>
-                      </div>
+{/* Type Selection */}
+                  <div className="space-y-3">
+                    <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">نوع المعاملة</Label>
+                    <div className="grid grid-cols-2 gap-2 p-1.5 relative overflow-hidden">
+                      <Button 
+                        variant="ghost"
+                        className={cn(
+                          "relative z-10 rounded-xl h-11 font-black transition-colors",
+                          newTransaction.type === "in" ? "bg-foreground text-background font-semibold" : "text-muted-foreground hover:text-foreground"
+                        )}
+                        onClick={() => setNewTransaction(prev => ({ ...prev, type: "in" }))}
+                      >
+                        وارد (إيراد)
+                      </Button>
+                      <Button 
+                        variant="ghost"
+                        className={cn(
+                          "relative z-10 rounded-xl h-11 font-black transition-colors",
+                          newTransaction.type === "out" ? "bg-foreground text-background font-semibold" : "text-muted-foreground hover:text-foreground"
+                        )}
+                        onClick={() => setNewTransaction(prev => ({ ...prev, type: "out" }))}
+                      >
+                        صادر (مصروف)
+                      </Button>
+                    </div>
+                  </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[background-color,border-color,color,box-shadow,transform,opacity] hover:ring-primary/40 group/field">
-                          <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground group-focus-within/field:text-primary transition-colors">المبلغ</Label>
+                        <div className="space-y-3 py-3 border-b border-[var(--hairline)]">
+                          <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">المبلغ</Label>
                           <div className="relative">
                             <Input 
                               type="number" 
@@ -264,8 +255,8 @@ export default function CashboxPage() {
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground opacity-50">EGP</div>
                           </div>
                         </div>
-                        <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[background-color,border-color,color,box-shadow,transform,opacity] hover:ring-primary/40 group/field">
-                          <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground group-focus-within/field:text-primary transition-colors">التاريخ</Label>
+                        <div className="space-y-3 py-3 border-b border-[var(--hairline)]">
+                          <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">التاريخ</Label>
                           <Input 
                             type="date" 
                             value={newTransaction.date} 
@@ -273,7 +264,6 @@ export default function CashboxPage() {
                             className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-bold" 
                           />
                         </div>
-                      </div>
 
                       <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[background-color,border-color,color,box-shadow,transform,opacity] hover:ring-primary/40 group/field">
                         <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground group-focus-within/field:text-primary transition-colors">التصنيف</Label>
@@ -285,26 +275,25 @@ export default function CashboxPage() {
                         />
                       </div>
 
-                      <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[background-color,border-color,color,box-shadow,transform,opacity] hover:ring-primary/40 group/field">
-                        <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground group-focus-within/field:text-primary transition-colors">ملاحظات إضافية</Label>
-                        <Input 
-                          value={newTransaction.notes} 
-                          onChange={(e) => setNewTransaction(prev => ({ ...prev, notes: e.target.value }))} 
-                          placeholder="اكتب أي تفاصيل أخرى هنا..." 
-                          className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30" 
-                        />
+<div className="space-y-3 py-3 border-b border-[var(--hairline)]">
+                          <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">ملاحظات إضافية</Label>
+                          <Input 
+                            value={newTransaction.notes} 
+                            onChange={(e) => setNewTransaction(prev => ({ ...prev, notes: e.target.value }))} 
+                            placeholder="اكتب أي تفاصيل أخرى هنا..." 
+                            className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30" 
+                          />
                       </div>
 
                       <Button 
                         className={cn(
-                          "w-full gap-2 py-8 text-xl rounded-2xl shadow-lg transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-500 font-black relative overflow-hidden group",
+                          "w-full gap-2 py-8 text-xl rounded-2xl shadow-sm transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-500 font-black",
                           newTransaction.type === 'in' 
-                            ? "bg-success text-success-foreground hover:shadow-success/30" 
-                            : "bg-danger text-danger-foreground hover:shadow-danger/30"
+                            ? "bg-success text-success-foreground hover:shadow-sm" 
+                            : "bg-danger text-danger-foreground hover:shadow-sm"
                         )} 
                         onClick={handleAddTransaction}
                       >
-                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                         <Check className="w-6 h-6 relative z-10" /> <span className="relative z-10">تأكيد المعاملة</span>
                       </Button>
                     </div>
@@ -319,21 +308,14 @@ export default function CashboxPage() {
         <div className="mb-8">
           <BezelCard className="p-0 overflow-hidden  bg-foreground/[0.04] border-foreground/10 relative group">
             <div className="p-8 flex flex-col items-center justify-center text-center">
-              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-700 -rotate-12 group-hover:rotate-0">
-                <Wallet className="w-32 h-32" />
-              </div>
-              
               <span className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">الرصيد الحالي المتوفر</span>
-              <div className={cn("text-5xl md:text-7xl font-black tabular-nums tracking-tighter leading-none", netBalance >= 0 ? "text-primary" : "text-danger", blurCls)}>
+              <div className={cn("text-5xl md:text-7xl font-black tabular-nums tracking-tighter leading-none", netBalance >= 0 ? "text-success" : "text-danger", blurCls)}>
                 <CountUp value={netBalance} format={n => fmt(n)} />
                 <span className="text-xl md:text-2xl ml-2 font-bold opacity-50">ج.م</span>
               </div>
               
               <div className="mt-8 flex items-center gap-2 px-4 py-1.5 rounded-full bg-background/50 ring-1 ring-inset ring-[var(--hairline)]  shadow-sm">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
-                </span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
                 <span className="text-xs font-black uppercase text-muted-foreground tracking-[0.12em]">Live Sync Connected</span>
               </div>
             </div>
@@ -348,7 +330,6 @@ export default function CashboxPage() {
             icon={<ArrowUpRight className="w-4 h-4 text-success" />} 
             color="success" 
             privacy={privacy}
-            glow
           />
           <MetricCard 
             label="إجمالي المصروفات" 
@@ -356,7 +337,6 @@ export default function CashboxPage() {
             icon={<ArrowDownRight className="w-4 h-4 text-danger" />} 
             color="danger" 
             privacy={privacy}
-            glow
           />
           <MetricCard 
             label="صافي التدفق" 
@@ -364,7 +344,6 @@ export default function CashboxPage() {
             icon={<TrendingUp className="w-4 h-4 text-primary" />} 
             color="primary" 
             privacy={privacy}
-            glow
           />
           <MetricCard 
             label="متوسط يومي" 
@@ -372,7 +351,6 @@ export default function CashboxPage() {
             icon={<History className="w-4 h-4 text-muted-foreground" />} 
             color="muted" 
             privacy={privacy}
-            glow
           />
         </div>
 
@@ -433,23 +411,23 @@ export default function CashboxPage() {
              </BezelCard>
           </div>
 
-          {/* Transactions List */}
+{/* Transactions List */}
           <div className="lg:col-span-2">
             <div className="sticky-search-bar mb-4">
-              <div className="bg-card rounded-2xl border border-foreground/10 bg-card/70 p-4 flex flex-col md:flex-row gap-3">
+              <div className="bg-background/50 p-4 flex flex-col md:flex-row gap-3">
                 <div className="relative flex-1">
                   <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                  <Input
-                    placeholder="بحث في المعاملات..."
+                  <Input 
+                    placeholder="بحث في المعاملات..." 
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pr-9"
+                    className="pr-9 h-11 rounded-xl bg-background/50 border-none shadow-none focus-visible:ring-1 focus-visible:ring-primary/20"
                   />
                 </div>
                 <div className="flex gap-2">
                   <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
-                    <SelectTrigger className="w-[120px]">
-                      <Filter className="w-4 h-4 ml-2" />
+                    <SelectTrigger className="h-11 rounded-xl bg-background/50 border-none shadow-none focus-visible:ring-1 focus-visible:ring-primary/20">
+                      <Filter className="w-4 w-4 ml-2" />
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -570,22 +548,8 @@ function MetricCard({ label, value, icon, color, privacy, isCount, glow }: { lab
     muted: "text-muted-foreground"
   }[color as "success" | "danger" | "primary" | "warning" | "muted"] || "text-foreground";
 
-  const glowCls = glow ? {
-    success: "shadow-[0_0_30px_-10px_hsl(var(--success)/0.3)]",
-    danger: "shadow-[0_0_30px_-10px_hsl(var(--danger)/0.3)]",
-    primary: "shadow-[0_0_30px_-10px_hsl(var(--primary)/0.3)]",
-    warning: "shadow-[0_0_30px_-10px_hsl(var(--warning)/0.3)]",
-    muted: "shadow-none"
-  }[color as "success" | "danger" | "primary" | "warning" | "muted"] : "";
-
   return (
-    <div className={cn("rounded-2xl border border-foreground/10 bg-card/70 p-5 flex flex-col items-center justify-center text-center  group relative overflow-hidden", glowCls)}>
-      {glow && (
-        <div className={cn(
-          "absolute -right-4 -top-4 w-12 h-12 blur-2xl opacity-20 transition-opacity group-hover:opacity-40",
-          color === 'primary' ? "bg-primary" : color === 'success' ? "bg-success" : color === 'danger' ? "bg-danger" : "bg-muted"
-        )} />
-      )}
+    <div className={cn("rounded-2xl border border-foreground/10 bg-card/70 p-5 flex flex-col items-center justify-center text-center")}>
       <div className="flex items-center gap-2 mb-1.5">
         <div className="p-1.5 rounded-lg bg-muted/20 ring-1 ring-inset ring-[var(--hairline)]">
           {icon}
