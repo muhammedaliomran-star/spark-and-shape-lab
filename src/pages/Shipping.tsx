@@ -23,6 +23,12 @@ import { ar } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { printShipmentLabel, printCarrierManifest } from "@/lib/shipping-docs";
 import { renderShipmentOutForDelivery, waLink } from "@/lib/whatsapp-templates";
+import { FastBarcodeScanner } from "@/components/shipping/FastBarcodeScanner";
+import { SmartReturnModal } from "@/components/shipping/SmartReturnModal";
+import { CarrierReconciliationView } from "@/components/shipping/CarrierReconciliationView";
+import { CarrierExcelIntegrationModal } from "@/components/shipping/CarrierExcelIntegrationModal";
+import { WhatsAppMenu } from "@/components/shipping/WhatsAppMenu";
+import { QrCode, Calculator, FileSpreadsheet, Smartphone } from "lucide-react";
 
 const statusMap: Record<string, { label: string; color: string }> = {
   pending: { label: "قيد الانتظار", color: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
@@ -72,6 +78,11 @@ export default function Shipping() {
   const [isAddCarrierOpen, setIsAddCarrierOpen] = useState(false);
   const [isAddZoneOpen, setIsAddZoneOpen] = useState(false);
   const [isAddShipmentOpen, setIsAddShipmentOpen] = useState(false);
+  const [fastScannerOpen, setFastScannerOpen] = useState(false);
+  const [excelModalOpen, setExcelModalOpen] = useState(false);
+  const [smartReturnModalOpen, setSmartReturnModalOpen] = useState(false);
+  const [selectedReturnShipment, setSelectedReturnShipment] = useState<Shipment | null>(null);
+  const [whatsappModalShipment, setWhatsappModalShipment] = useState<Shipment | null>(null);
   const [editCarrier, setEditCarrier] = useState<ShipmentCarrier | null>(null);
   const [editZone, setEditZone] = useState<ShippingZone | null>(null);
   const [detail, setDetail] = useState<Shipment | null>(null);
@@ -293,8 +304,16 @@ export default function Shipping() {
   };
 
   const handleStatusChange = async (id: string, status: ShipmentStatus) => {
+    if (status === "returned") {
+      const target = shipments.find((s) => s.id === id);
+      if (target) {
+        setSelectedReturnShipment(target);
+        setSmartReturnModalOpen(true);
+        return;
+      }
+    }
     let reason: string | undefined;
-    if (status === "returned" || status === "cancelled") {
+    if (status === "cancelled") {
       const label = statusMap[status]?.label ?? status;
       if (!window.confirm(`تأكيد تغيير الحالة إلى «${label}»؟`)) return;
       reason = window.prompt(`اكتب سبب ${label}`)?.trim() || undefined;
@@ -412,6 +431,28 @@ export default function Shipping() {
           icon={<Truck className="h-7 w-7" />}
           action={
             <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                className="gap-1.5 font-bold border-primary/30 text-primary hover:bg-primary/10"
+                onClick={() => setFastScannerOpen(true)}
+              >
+                <QrCode className="h-4 w-4" />
+                الماسح السريع (باركون / كاميرا)
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-1.5 font-bold border-emerald-600/30 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+                onClick={() => setExcelModalOpen(true)}
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                تكامل إكسيل شركات الشحن
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="/delivery" target="_blank" rel="noopener noreferrer">
+                  <Smartphone className="ml-1.5 h-4 w-4 text-indigo-500" />
+                  بوابة المندوب (موبايل)
+                </a>
+              </Button>
               <Button variant="outline" asChild><Link to="/shipping/day"><CalendarDays className="ml-2 h-4 w-4" /> يوم الشحن</Link></Button>
               <Button variant="outline" asChild><Link to="/shipping/rescue"><ShieldAlert className="ml-2 h-4 w-4" /> إنقاذ الطلبات</Link></Button>
               <Dialog open={isAddShipmentOpen} onOpenChange={(open) => { setIsAddShipmentOpen(open); if (!open) resetShipmentForm(); }}>
@@ -498,7 +539,7 @@ export default function Shipping() {
                       <Label>رقم البوليصة / التتبع</Label>
                       <Input value={shipmentTracking} onChange={(e) => setShipmentTracking(e.target.value)} placeholder="اختياري" className="text-right" />
                     </div>
-                    <p className="rounded-xl bg-foreground/[0.04] p-3 text-xs text-muted-foreground">
+                    <p className="rounded-xl bg-primary/5 p-3 text-xs text-muted-foreground">
                       عند تسجيل «تم التوصيل» يتم تلقائيًا إضافة دفعة على الفاتورة بمبلغ التحصيل، وتسجيل مصروف بتكلفة الشحن.
                     </p>
                   </div>
@@ -513,13 +554,13 @@ export default function Shipping() {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: "شحنات نشطة", value: String(shipments.filter((s) => ["pending", "processing", "shipped"].includes(s.status)).length), icon: Truck, color: "text-foreground", bg: "bg-foreground/[0.06]" },
-            { label: "تم التوصيل", value: String(shipments.filter((s) => s.status === "delivered").length), icon: PackageCheck, color: "text-foreground", bg: "bg-foreground/[0.06]" },
-            { label: "شحنات متأخرة", value: String(analytics.lateCount), icon: AlertTriangle, color: "text-foreground", bg: "bg-foreground/[0.06]" },
-            { label: "مستحقات المناديب", value: egp(totalDue), icon: Wallet, color: "text-foreground", bg: "bg-foreground/[0.06]" },
+            { label: "شحنات نشطة", value: String(shipments.filter((s) => ["pending", "processing", "shipped"].includes(s.status)).length), icon: Truck, color: "text-blue-500", bg: "bg-blue-500/10" },
+            { label: "تم التوصيل", value: String(shipments.filter((s) => s.status === "delivered").length), icon: PackageCheck, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+            { label: "شحنات متأخرة", value: String(analytics.lateCount), icon: AlertTriangle, color: "text-rose-500", bg: "bg-rose-500/10" },
+            { label: "مستحقات المناديب", value: egp(totalDue), icon: Wallet, color: "text-amber-500", bg: "bg-amber-500/10" },
           ].map((metric, i) => (
             <Reveal key={metric.label} delay={i * 0.1}>
-              <div className="group relative overflow-hidden rounded-2xl border border-foreground/10 bg-card/70 p-6">
+              <BezelCard className="group relative overflow-hidden p-6 transition-all hover:translate-y-[-4px]">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">{metric.label}</p>
@@ -529,7 +570,7 @@ export default function Shipping() {
                     <metric.icon className="h-6 w-6" />
                   </div>
                 </div>
-              </div>
+              </BezelCard>
             </Reveal>
           ))}
         </div>
@@ -542,6 +583,9 @@ export default function Shipping() {
                   <TabsList className="h-12 w-fit rounded-2xl bg-muted/50 p-1 ring-1 ring-hairline backdrop-blur-md">
                     <TabsTrigger value="shipments" className="rounded-xl px-5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm">
                       <Truck className="ml-2 h-4 w-4" /> الشحنات
+                    </TabsTrigger>
+                    <TabsTrigger value="reconciliation" className="rounded-xl px-5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                      <Calculator className="ml-2 h-4 w-4 text-emerald-600" /> كشف الحساب والمطابقة
                     </TabsTrigger>
                     <TabsTrigger value="dues" className="rounded-xl px-5 font-bold data-[state=active]:bg-background data-[state=active]:shadow-sm">
                       <Wallet className="ml-2 h-4 w-4" /> المستحقات
@@ -668,6 +712,15 @@ export default function Shipping() {
                           <p className="text-sm font-bold">{format(new Date(s.createdAt), "dd MMMM yyyy", { locale: ar })}</p>
                         </div>
                         <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="إشعارات وقوالب واتساب التلقائية"
+                            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
+                            onClick={() => setWhatsappModalShipment(s)}
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </Button>
                           <Button variant="ghost" size="icon" title="بوليصة شحن" onClick={() => labelFor(s)}>
                             <Printer className="h-4 w-4" />
                           </Button>
@@ -686,6 +739,16 @@ export default function Shipping() {
                   ))
                 )}
               </div>
+            </TabsContent>
+
+            <TabsContent value="reconciliation">
+              <CarrierReconciliationView
+                carriers={carriers}
+                shipments={shipments}
+                onRefresh={async () => {
+                  // DB refresh if needed
+                }}
+              />
             </TabsContent>
 
             <TabsContent value="dues">
@@ -759,7 +822,7 @@ export default function Shipping() {
                 <Reveal delay={filteredCarriers.length * 0.1}>
                   <Dialog open={isAddCarrierOpen} onOpenChange={(open) => { setIsAddCarrierOpen(open); if (!open) resetCarrierForm(); }}>
                     <DialogTrigger asChild>
-                      <button className="group flex h-full min-h-[200px] w-full flex-col items-center justify-center gap-4 rounded-[1.75rem] border-2 border-dashed border-hairline p-8 transition-[background-color,border-color,color,box-shadow,transform,opacity] hover:border-primary/50 hover:bg-primary/5">
+                      <button className="group flex h-full min-h-[200px] w-full flex-col items-center justify-center gap-4 rounded-[1.75rem] border-2 border-dashed border-hairline p-8 transition-all hover:border-primary/50 hover:bg-primary/5">
                         <div className="rounded-full bg-muted p-4 transition-colors group-hover:bg-primary/10 group-hover:text-primary">
                           <Plus className="h-6 w-6" />
                         </div>
@@ -831,7 +894,7 @@ export default function Shipping() {
                 <Reveal delay={filteredZones.length * 0.1}>
                   <Dialog open={isAddZoneOpen} onOpenChange={(open) => { setIsAddZoneOpen(open); if (!open) resetZoneForm(); }}>
                     <DialogTrigger asChild>
-                      <button className="group flex h-full min-h-[200px] w-full flex-col items-center justify-center gap-4 rounded-[1.75rem] border-2 border-dashed border-hairline p-8 transition-[background-color,border-color,color,box-shadow,transform,opacity] hover:border-amber-500/50 hover:bg-amber-500/5">
+                      <button className="group flex h-full min-h-[200px] w-full flex-col items-center justify-center gap-4 rounded-[1.75rem] border-2 border-dashed border-hairline p-8 transition-all hover:border-amber-500/50 hover:bg-amber-500/5">
                         <div className="rounded-full bg-muted p-4 transition-colors group-hover:bg-amber-500/10 group-hover:text-amber-500">
                           <Plus className="h-6 w-6" />
                         </div>
@@ -1027,6 +1090,50 @@ export default function Shipping() {
             )}
           </SheetContent>
         </Sheet>
+        {/* الماسح السريع للباركود والكاميرا */}
+        <FastBarcodeScanner
+          open={fastScannerOpen}
+          onOpenChange={setFastScannerOpen}
+          carriers={carriers}
+          shipments={shipments}
+          onRefresh={async () => {
+            // DB refresh
+          }}
+        />
+
+        {/* تكامل إكسيل شركات الشحن */}
+        <CarrierExcelIntegrationModal
+          open={excelModalOpen}
+          onOpenChange={setExcelModalOpen}
+          carriers={carriers}
+          zones={zones}
+          shipments={shipments}
+          onRefresh={async () => {
+            // DB refresh
+          }}
+        />
+
+        {/* مودال المرتجع الذكي وإعادة التخزين */}
+        <SmartReturnModal
+          open={smartReturnModalOpen}
+          onOpenChange={setSmartReturnModalOpen}
+          shipment={selectedReturnShipment}
+          onSuccess={async () => {
+            // DB refresh
+          }}
+        />
+
+        {/* قائمة وقوالب رسائل واتساب */}
+        {whatsappModalShipment && (
+          <WhatsAppMenu
+            open={!!whatsappModalShipment}
+            onOpenChange={(open) => {
+              if (!open) setWhatsappModalShipment(null);
+            }}
+            shipment={whatsappModalShipment}
+            carrier={carriers.find((c) => c.id === whatsappModalShipment.carrierId)}
+          />
+        )}
       </div>
     </AppShell>
   );
