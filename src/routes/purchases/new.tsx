@@ -138,7 +138,7 @@ function NewPurchasePage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 mt-6">
             <div className="space-y-6">
               <Reveal>
-                <div className="rounded-2xl border border-foreground/10 bg-card/70 p-6 space-y-6">
+                <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-right">
                     <div className="space-y-2">
                       <Label>المورد</Label>
@@ -180,7 +180,7 @@ function NewPurchasePage() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="relative group grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-3 p-3 rounded-xl border border-foreground/10 bg-card/50"
+                            className="relative group grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-3 py-3 border-b border-[var(--hairline)]"
                           >
                             <div className="space-y-1 text-right">
                               <Label className="text-xs uppercase tracking-[0.12em] text-muted-foreground">اسم المنتج</Label>
@@ -251,7 +251,7 @@ function NewPurchasePage() {
 
             <aside className="space-y-4">
               <Reveal delay={100}>
-                <div className="rounded-2xl border border-foreground/10 bg-card/70 p-5 space-y-5 sticky top-24">
+                <div className="space-y-5 sticky top-24">
                   <div className="text-right">
                     <Label className="text-muted-foreground text-xs uppercase tracking-widest font-bold">ملخص الفاتورة</Label>
                     <div className={cn("text-4xl font-black mt-2 text-foreground tabular-nums", blurCls)}>
