@@ -284,8 +284,10 @@ export default function CashboxPage() {
                             className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30" 
                           />
                       </div>
+                      </div>
 
                       <Button 
+
                         className={cn(
                           "w-full gap-2 py-8 text-xl rounded-2xl shadow-sm transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-500 font-black",
                           newTransaction.type === 'in' 
