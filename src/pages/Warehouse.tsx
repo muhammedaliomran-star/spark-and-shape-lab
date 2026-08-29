@@ -479,7 +479,7 @@ function AddWarehouseDialog({ open, onOpenChange }: { open: boolean; onOpenChang
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl overflow-hidden rounded-2xl border border-foreground/10 bg-card p-0">
+      <DialogContent className="max-w-2xl overflow-hidden rounded-2xl border border-foreground/10 bg-card p-0 shadow-sm">
         <DialogHeader className="p-6 pb-4 border-b border-foreground/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
