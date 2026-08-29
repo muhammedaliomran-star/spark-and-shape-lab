@@ -14,7 +14,7 @@ function ExpandLink({ onNavigate }: { onNavigate: () => void }) {
     <Link
       to="/inventory/new"
       onClick={onNavigate}
-      className="press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--hairline)] px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+      className="press inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--hairline)] px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:border-foreground/20 hover:text-foreground"
       title="فتح الفورم في صفحة كاملة"
     >
       <Maximize2 className="h-3.5 w-3.5" />
@@ -44,7 +44,7 @@ export function AddProductDialog({ open, onOpenChange, prefillBarcode, existingB
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
       <div className="min-w-0 text-right">
         <div className="flex items-center gap-2 text-right text-lg font-bold">
-          <PackagePlus className="h-5 w-5 shrink-0 text-primary" />
+          <PackagePlus className="h-5 w-5 shrink-0 text-muted-foreground" />
           <span className="truncate">{TITLE}</span>
         </div>
         <p className="mt-1 text-right text-sm text-muted-foreground">{DESC}</p>
