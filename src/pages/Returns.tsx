@@ -115,12 +115,12 @@ function ReturnsPage() {
                   {/* Type Selection */}
                   <div className="space-y-3">
                     <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">نوع المرتجع</Label>
-                    <div className="grid grid-cols-2 gap-2 p-1.5 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] relative overflow-hidden">
+                    <div className="grid grid-cols-2 gap-2 p-1.5 relative overflow-hidden">
                       <motion.div 
                         layoutId="active-tab"
                         className={cn(
-                          "absolute inset-y-1 w-[calc(50%-6px)] rounded-xl shadow-lg z-0",
-                          returnType === "sale" ? "bg-primary left-1.5" : "bg-warning right-1.5"
+                          "absolute inset-y-1 w-[calc(50%-6px)] rounded-xl z-0",
+                          returnType === "sale" ? "bg-foreground left-1.5" : "bg-foreground right-1.5"
                         )}
                         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                       />
@@ -128,7 +128,7 @@ function ReturnsPage() {
                         variant="ghost"
                         className={cn(
                           "relative z-10 rounded-xl h-11 font-black transition-colors",
-                          returnType === "sale" ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                          returnType === "sale" ? "text-background" : "text-muted-foreground hover:text-foreground"
                         )}
                         onClick={() => setReturnType("sale")}
                       >
@@ -138,7 +138,7 @@ function ReturnsPage() {
                         variant="ghost"
                         className={cn(
                           "relative z-10 rounded-xl h-11 font-black transition-colors",
-                          returnType === "supplier" ? "text-warning-foreground" : "text-muted-foreground hover:text-foreground"
+                          returnType === "supplier" ? "text-background" : "text-muted-foreground hover:text-foreground"
                         )}
                         onClick={() => setReturnType("supplier")}
                       >
@@ -156,7 +156,7 @@ function ReturnsPage() {
                   {/* Add Items Section */}
                   <div className="space-y-4 border-t border-[var(--hairline)] pt-6">
                     <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">إضافة أصناف المرتجع</Label>
-                    <div className="space-y-4 p-5 bg-muted/10 rounded-2xl ring-1 ring-inset ring-[var(--hairline)]">
+                    <div className="space-y-4 bg-foreground/[0.02] p-4">
                       <div className="space-y-2 group/subfield">
                         <Label className="text-xs font-bold text-muted-foreground mr-2 group-focus-within/subfield:text-primary transition-colors">اسم الصنف</Label>
                         <Input placeholder="اسم الصنف" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} className="text-right h-11 bg-background/40 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-bold" />
@@ -218,7 +218,7 @@ function ReturnsPage() {
 
                   <Button 
                     className={cn(
-                      "w-full gap-2 py-8 text-xl rounded-2xl shadow-lg transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-500 font-black relative overflow-hidden group",
+                      "w-full gap-2 py-8 text-xl rounded-2xl shadow-sm transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-500 font-black relative overflow-hidden group",
                       returnType === 'sale' 
                         ? "bg-primary text-primary-foreground hover:shadow-primary/30" 
                         : "bg-warning text-warning-foreground hover:shadow-warning/30"
@@ -239,7 +239,7 @@ function ReturnsPage() {
       {/* Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <MetricCard label="إجمالي المرتجعات" value={data.returns.reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Undo2 className="w-4 h-4 text-muted-foreground" />} color="muted" privacy={privacy} />
-        <MetricCard label="مرتجعات مبيعات" value={data.returns.filter(r => r.type === "sale").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<TrendingUp className="w-4 h-4 text-warning" />} color="warning" privacy={privacy} glow />
+        <MetricCard label="مرتجعات مبيعات" value={data.returns.filter(r => r.type === "sale").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<TrendingUp className="w-4 h-4 text-warning" />} color="muted" privacy={privacy} />
         <MetricCard label="مرتجعات موردين" value={data.returns.filter(r => r.type === "supplier").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Package className="w-4 h-4 text-muted-foreground" />} color="muted" privacy={privacy} />
         <MetricCard label="عدد العمليات" value={data.returns.length} icon={<History className="w-4 h-4 text-muted-foreground" />} color="muted" privacy={privacy} isCount glow />
       </div>
