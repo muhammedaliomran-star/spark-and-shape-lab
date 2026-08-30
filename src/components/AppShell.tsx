@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "@/lib/router-compat";
 import type { ReactNode } from "react";
 import { LogOut, Undo2, Wallet, GitBranch, Banknote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutGrid, Users, FileText, Bell, Receipt, Truck, Package, BarChart3, Settings, CalendarDays, Warehouse, Store, ClipboardCheck, Crown } from "lucide-react";
+import { LayoutGrid, Users, FileText, Bell, Receipt, Truck, Package, BarChart3, Settings, CalendarDays, Warehouse, Store, ClipboardCheck, Crown, Percent, ShieldCheck, UserCheck, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDB, lowStockCount, useShopSettings, isDueSoonOrOverdue } from "@/lib/store";
 import { UserChip } from "@/components/UserChip";
@@ -14,9 +14,11 @@ import { useEffect } from "react";
 
 const nav = [
   { to: "/", label: "لوحة التحكم", icon: LayoutGrid },
+  { to: "/pos", label: "الكاشير (POS)", icon: ShoppingCart },
   { to: "/daily", label: "اليومية", icon: CalendarDays },
   { to: "/customers", label: "العملاء", icon: Users },
   { to: "/invoices", label: "الفواتير", icon: FileText },
+  { to: "/discounts", label: "العروض والكوبونات", icon: Percent },
   { to: "/shipping", label: "الشحن", icon: Truck },
   { to: "/purchases", label: "المشتريات", icon: Truck },
   { to: "/suppliers", label: "الموردين", icon: Users },
@@ -25,6 +27,7 @@ const nav = [
   { to: "/warehouse", label: "المخزن", icon: Warehouse },
   { to: "/storefront", label: "المتجر الإلكتروني", icon: Store },
   { to: "/branches", label: "الفروع", icon: GitBranch },
+  { to: "/staff", label: "فريق العمل والورديات", icon: UserCheck },
   { to: "/returns", label: "المرتجعات", icon: Undo2 },
   { to: "/cashbox", label: "الصندوق", icon: Wallet },
   { to: "/payments", label: "الدفعات", icon: Banknote },
@@ -32,6 +35,7 @@ const nav = [
   { to: "/alerts", label: "المنبه", icon: Bell, alertKey: true as const },
   { to: "/reports", label: "التقارير", icon: BarChart3 },
   { to: "/reconciliation", label: "المطابقة", icon: ClipboardCheck },
+  { to: "/audit", label: "سجل الرقابة والتدقيق", icon: ShieldCheck },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ];
 
