@@ -611,18 +611,19 @@ async function restoreStockByName(items: Array<{ name: string; quantity: number 
 export const db = {
 
   invalidate: fetchAll,
-  async addCustomer(c: Omit<Customer, "id" | "createdAt">) {
+  async addCustomer(c: Partial<Omit<Customer, "id" | "createdAt">> & { name: string }): Promise<Customer | undefined> {
     const user_id = await uid();
-    const { error } = await supabase.from("customers").insert({
-      user_id, name: c.name, phone: c.phone, rating: c.rating, status: c.status,
+    const { data: inserted, error } = await supabase.from("customers").insert({
+      user_id, name: c.name, phone: c.phone ?? "", rating: c.rating, status: c.status,
       customer_type: c.customerType ?? 'installment',
       notes: c.notes, frozen: c.frozen,
       address: c.address, joining_date: c.joiningDate,
       credit_limit: c.creditLimit, due_day: c.dueDay,
       opening_balance: c.openingBalance,
-    });
+    }).select("id").single();
     if (error) throw error;
     await fetchAll();
+    return inserted ? ({ ...(c as any), id: inserted.id, createdAt: new Date().toISOString() } as Customer) : undefined;
   },
   async updateCustomer(id: string, patch: Partial<Customer>) {
     const upd: any = {};

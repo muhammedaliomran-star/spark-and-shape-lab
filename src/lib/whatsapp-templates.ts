@@ -139,6 +139,31 @@ ${track}
 ${params.shop.shopName} 🚚`;
 }
 
+// 5) تذكير بقسط مستحق
+export function renderInstallmentReminder(params: {
+  shop: ShopInfo;
+  customerName: string;
+  invoiceNumber: string;
+  amount: string;
+  dueDate: string;
+  overdueDays?: number;
+}) {
+  const statusLine = params.overdueDays
+    ? `⚠️ متأخر منذ ${params.overdueDays} يوم`
+    : `📅 مستحق بتاريخ ${params.dueDate}`;
+  return `مرحباً ${params.customerName} 👋
+تذكير ودّي من *${params.shop.shopName}*
+
+• رقم الفاتورة: *${params.invoiceNumber}*
+• المبلغ المستحق: *${params.amount} ج.م*
+${statusLine}
+
+برجاء التواصل معنا لسداد المبلغ أو تحديد موعد مناسب.
+${params.shop.whatsapp || params.shop.shopPhone || ""}
+
+شكراً لتعاملك معنا 🌿`;
+}
+
 export const timelineLabels: Record<string, string> = {
   submitted: "تم استلام الطلب",
   under_review: "قيد المراجعة",

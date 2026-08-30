@@ -67,7 +67,7 @@ export function GeoShippingIntelligenceTab({
 
   const totalInstallments = useMemo(() => {
     return invoices
-      .filter((i) => i.type === "installment")
+      .filter((i) => (i.monthlyInstallment || 0) > 0)
       .reduce((s, i) => s + (i.total - i.paid), 0);
   }, [invoices]);
 
