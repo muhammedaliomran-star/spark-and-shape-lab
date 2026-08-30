@@ -664,21 +664,32 @@ export function useDiscounts() {
     if (!loyaltyConfig.enabled) return [];
 
     return customers.map((c) => {
-      const custInvoices = invoices.filter((i) => i.customerId === c.id && i.status === "paid");
-      const totalSpent = custInvoices.reduce((acc, i) => acc + Number(i.total || 0), 0);
-      const earnedPoints = Math.floor((totalSpent / 100) * loyaltyConfig.pointsPer100Egp);
+      // Calculate actual total spent from all active/paid invoices and customer payments
+      const custInvoices = invoices.filter((i) => i.customerId === c.id && i.status !== "cancelled");
+      const totalCharged = custInvoices.reduce((acc, i) => acc + Number(i.total || 0), 0);
+      const totalPaid = custInvoices.reduce((acc, i) => acc + Number(i.paid || 0), 0);
+      const totalSpent = Math.max(totalCharged, totalPaid);
+
+      const earnedPoints = Math.floor((totalSpent / 100) * (loyaltyConfig.pointsPer100Egp || 2));
 
       // Points used in loyalty coupons
       const redeemedVouchers = coupons.filter(
         (cp) => cp.isLoyaltyReward && cp.customerId === c.id && cp.usedCount > 0
       );
       const redeemedPoints = redeemedVouchers.reduce(
-        (acc, cp) => acc + Math.floor(cp.discountValue / loyaltyConfig.pointValueEgp),
+        (acc, cp) => acc + Math.floor(cp.discountValue / (loyaltyConfig.pointValueEgp || 1)),
         0
       );
 
       const availablePoints = Math.max(0, earnedPoints - redeemedPoints);
-      const redeemableValueEgp = availablePoints * loyaltyConfig.pointValueEgp;
+      const availableDiscountEgp = availablePoints * (loyaltyConfig.pointValueEgp || 1);
+      const redeemableValueEgp = availableDiscountEgp;
+
+      // Calculate Tier
+      let tier: "bronze" | "silver" | "gold" | "platinum" = "bronze";
+      if (earnedPoints >= 500 || totalSpent >= 25000) tier = "platinum";
+      else if (earnedPoints >= 200 || totalSpent >= 10000) tier = "gold";
+      else if (earnedPoints >= 50 || totalSpent >= 2500) tier = "silver";
 
       return {
         customer: c,
@@ -686,8 +697,10 @@ export function useDiscounts() {
         earnedPoints,
         redeemedPoints,
         availablePoints,
+        availableDiscountEgp,
         redeemableValueEgp,
-        canRedeem: availablePoints >= loyaltyConfig.minPointsToRedeem,
+        tier,
+        canRedeem: availablePoints >= (loyaltyConfig.minPointsToRedeem || 25),
       };
     }).sort((a, b) => b.availablePoints - a.availablePoints);
   }, [customers, invoices, coupons, loyaltyConfig]);

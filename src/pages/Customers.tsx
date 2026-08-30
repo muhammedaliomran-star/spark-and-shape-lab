@@ -27,13 +27,14 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, Dr
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Search, MessageCircle, Pencil, Trash2, Sparkles, Star, Info, User, Eye, EyeOff, FileDown, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, History, Share2, Wallet, Printer, ShoppingBag, Receipt, CreditCard, Banknote } from "lucide-react";
+import { Plus, Search, MessageCircle, Pencil, Trash2, Sparkles, Star, Info, User, Eye, EyeOff, FileDown, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, History, Share2, Wallet, Printer, ShoppingBag, Receipt, CreditCard, Banknote, Coins } from "lucide-react";
 import type { Payment } from "@/lib/store";
 import { toArabicDigits } from "@/lib/arabic-digits";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { pdfDocument, openPdfDocument } from "@/lib/pdf-doc";
 import { usePrivacy } from "@/lib/privacy";
+import { useDiscounts } from "@/lib/discounts";
 
 const EG_PHONE_RE = /^01[0125]\d{8}$/;
 
@@ -125,6 +126,7 @@ function escapeHtml(s: string): string {
 
 function CustomersPage() {
   const data = useDB();
+  const { loyaltyConfig, customerLoyaltyStats } = useDiscounts();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<FilterTab>("all");
   const [scriptFor, setScriptFor] = useState<Customer | null>(null);
@@ -133,6 +135,14 @@ function CustomersPage() {
   const { privacy, toggle } = usePrivacy();
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  const loyaltyMap = useMemo(() => {
+    const map = new Map<string, (typeof customerLoyaltyStats)[0]>();
+    for (const stat of customerLoyaltyStats) {
+      map.set(stat.customer.id, stat);
+    }
+    return map;
+  }, [customerLoyaltyStats]);
 
   const enriched = useMemo(
     () => data.customers.map((c) => ({ c, m: customerMetrics(data.invoices, c) })),
@@ -253,10 +263,7 @@ function CustomersPage() {
     <>
       <PageHeader
         title="العملاء"
-        subtitle={`'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
-                                        
-                                            
-                                            تحقق من أن جميع النصوص المضافة في صفحة العملاء تظهر بالضبط كما طلبت بدون أي تغيير بصري آخر.`}
+        subtitle="سجل العملاء، المديونيات، وسجل المشتريات والدفعات."
         action={
           <div className="flex items-center gap-2">
             <TooltipProvider>
@@ -427,10 +434,16 @@ function CustomersPage() {
                   >
                     <div className="bezel-core grid grid-cols-1 items-center gap-5 p-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] md:gap-6">
                       {/* الهوية */}
-                      <div className="flex min-w-0 items-center gap-3">
+                      <div
+                        className="flex min-w-0 items-center gap-3 cursor-pointer select-none"
+                        onClick={() => setViewFor(c)}
+                        role="button"
+                        tabIndex={0}
+                        title="انقر لعرض تفاصيل العميل ونقاط الولاء"
+                      >
                         <span
                           className={cn(
-                            "text-display grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-lg font-bold",
+                            "text-display grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-lg font-bold transition-transform group-hover:scale-105",
                             c.status === "defaulter"
                               ? "bg-danger/12 text-danger ring-1 ring-danger/25"
                               : c.status === "committed"
@@ -441,9 +454,9 @@ function CustomersPage() {
                           {initial}
                         </span>
                         <div className="min-w-0">
-                          <div className="truncate font-bold leading-tight">{c.name}</div>
+                          <div className="truncate font-bold leading-tight hover:text-primary transition-colors">{c.name}</div>
                           <div className="text-numeric mt-0.5 truncate text-xs text-muted-foreground" dir="ltr">{c.phone}</div>
-                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <div className="mt-2 flex flex-wrap items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             {c.status === "defaulter" && c.notes ? (
                               <TooltipProvider>
                                 <Tooltip>
@@ -461,6 +474,41 @@ function CustomersPage() {
                             )}
                             <CustomerTypeBadge type={c.customerType} />
                             <StarRating value={c.rating} />
+                            {loyaltyConfig.enabled && (() => {
+                              const lStat = loyaltyMap.get(c.id);
+                              const pts = lStat?.availablePoints || 0;
+                              const discountVal = lStat?.availableDiscountEgp || 0;
+                              return (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setViewFor(c);
+                                        }}
+                                        className={cn(
+                                          "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold cursor-pointer transition-all",
+                                          pts > 0
+                                            ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/30 hover:bg-amber-500/25"
+                                            : "bg-muted/40 text-muted-foreground ring-1 ring-border/50 hover:bg-muted/60"
+                                        )}
+                                      >
+                                        <Coins className="h-3 w-3 text-amber-500" />
+                                        <span>{pts} نقطة</span>
+                                        {pts > 0 && <span className="text-[9px] opacity-80">({fmt(discountVal)} ج.م)</span>}
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="text-right">
+                                      <div className="text-xs">
+                                        رصيد الولاء: <strong>{pts} نقطة</strong> ({fmt(discountVal)} ج.م خصم متاح)
+                                        <div className="text-[10px] text-muted-foreground mt-0.5">انقر لفتح التفاصيل واستبدال النقاط</div>
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>
