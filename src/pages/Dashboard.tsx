@@ -393,7 +393,7 @@ export function Dashboard() {
   // Storefront calculated metrics
   const storefrontStats = useMemo(() => {
     const totalOrders = storeOrders.length;
-    const pendingOrders = storeOrders.filter((o) => o.status === "pending" || o.status === "processing").length;
+    const pendingOrders = storeOrders.filter((o) => o.status === "submitted" || o.status === "under_review").length;
     const completedOrders = storeOrders.filter((o) => o.status === "delivered" || o.status === "shipped").length;
     const storeRevenue = storeOrders
       .filter((o) => o.status !== "cancelled")
@@ -401,7 +401,7 @@ export function Dashboard() {
 
     // Orders in today
     const todayOrders = storeOrders.filter((o) => {
-      const d = new Date(o.createdAt);
+      const d = new Date(o.created_at);
       return d.toDateString() === today.toDateString();
     });
     const todayRevenue = todayOrders
@@ -990,7 +990,7 @@ export function Dashboard() {
                               </span>
                             </div>
                             <div className="text-[11px] text-muted-foreground">
-                              {storefront.subdomain ? `${storefront.subdomain}.segilly.com` : "المتجر الإلكتروني"}
+                              {storefront.slug ? `${storefront.slug}.segilly.com` : "المتجر الإلكتروني"}
                             </div>
                           </div>
                         </div>

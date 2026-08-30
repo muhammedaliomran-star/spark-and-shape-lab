@@ -15,8 +15,11 @@ import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BranchesRouteImport } from './routes/branches'
 import { Route as CashboxRouteImport } from './routes/cashbox'
+import { Route as CourierRouteImport } from './routes/courier'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as DailyRouteImport } from './routes/daily'
+import { Route as DeliveryRouteImport } from './routes/delivery'
+import { Route as DriverRouteImport } from './routes/driver'
 import { Route as ExpensesRouteImport } from './routes/expenses'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as InvoicesRouteImport } from './routes/invoices'
@@ -33,6 +36,7 @@ import { Route as StorefrontRouteImport } from './routes/storefront'
 import { Route as SuppliersRouteImport } from './routes/suppliers'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TrackRouteImport } from './routes/track'
 import { Route as WarehouseRouteImport } from './routes/warehouse'
 import { Route as InventoryNewRouteImport } from './routes/inventory_.new'
 import { Route as InvoicesNewRouteImport } from './routes/invoices_.new'
@@ -40,6 +44,7 @@ import { Route as PurchasesIndexRouteImport } from './routes/purchases/index'
 import { Route as PurchasesNewRouteImport } from './routes/purchases/new'
 import { Route as ReportsIndexRouteImport } from './routes/reports/index'
 import { Route as ShippingIndexRouteImport } from './routes/shipping.index'
+import { Route as ShippingCourierRouteImport } from './routes/shipping.courier'
 import { Route as ShippingDayRouteImport } from './routes/shipping.day'
 import { Route as ShippingRescueRouteImport } from './routes/shipping.rescue'
 import { Route as ShopSlugRouteImport } from './routes/shop.$slug'
@@ -79,6 +84,11 @@ const CashboxRoute = CashboxRouteImport.update({
   path: '/cashbox',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CourierRoute = CourierRouteImport.update({
+  id: '/courier',
+  path: '/courier',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CustomersRoute = CustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
@@ -87,6 +97,16 @@ const CustomersRoute = CustomersRouteImport.update({
 const DailyRoute = DailyRouteImport.update({
   id: '/daily',
   path: '/daily',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeliveryRoute = DeliveryRouteImport.update({
+  id: '/delivery',
+  path: '/delivery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DriverRoute = DriverRouteImport.update({
+  id: '/driver',
+  path: '/driver',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExpensesRoute = ExpensesRouteImport.update({
@@ -169,6 +189,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TrackRoute = TrackRouteImport.update({
+  id: '/track',
+  path: '/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WarehouseRoute = WarehouseRouteImport.update({
   id: '/warehouse',
   path: '/warehouse',
@@ -202,6 +227,11 @@ const ReportsIndexRoute = ReportsIndexRouteImport.update({
 const ShippingIndexRoute = ShippingIndexRouteImport.update({
   id: '/shipping/',
   path: '/shipping/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShippingCourierRoute = ShippingCourierRouteImport.update({
+  id: '/shipping/courier',
+  path: '/shipping/courier',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShippingDayRoute = ShippingDayRouteImport.update({
@@ -252,8 +282,11 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/branches': typeof BranchesRoute
   '/cashbox': typeof CashboxRoute
+  '/courier': typeof CourierRoute
   '/customers': typeof CustomersRoute
   '/daily': typeof DailyRoute
+  '/delivery': typeof DeliveryRoute
+  '/driver': typeof DriverRoute
   '/expenses': typeof ExpensesRoute
   '/inventory': typeof InventoryRoute
   '/invoices': typeof InvoicesRoute
@@ -270,10 +303,12 @@ export interface FileRoutesByFullPath {
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/track': typeof TrackRoute
   '/warehouse': typeof WarehouseRoute
   '/inventory/new': typeof InventoryNewRoute
   '/invoices/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
+  '/shipping/courier': typeof ShippingCourierRoute
   '/shipping/day': typeof ShippingDayRoute
   '/shipping/rescue': typeof ShippingRescueRoute
   '/shop/$slug': typeof ShopSlugRouteWithChildren
@@ -293,8 +328,11 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/branches': typeof BranchesRoute
   '/cashbox': typeof CashboxRoute
+  '/courier': typeof CourierRoute
   '/customers': typeof CustomersRoute
   '/daily': typeof DailyRoute
+  '/delivery': typeof DeliveryRoute
+  '/driver': typeof DriverRoute
   '/expenses': typeof ExpensesRoute
   '/inventory': typeof InventoryRoute
   '/invoices': typeof InvoicesRoute
@@ -310,10 +348,12 @@ export interface FileRoutesByTo {
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/track': typeof TrackRoute
   '/warehouse': typeof WarehouseRoute
   '/inventory/new': typeof InventoryNewRoute
   '/invoices/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
+  '/shipping/courier': typeof ShippingCourierRoute
   '/shipping/day': typeof ShippingDayRoute
   '/shipping/rescue': typeof ShippingRescueRoute
   '/shop/$slug': typeof ShopSlugRouteWithChildren
@@ -334,8 +374,11 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/branches': typeof BranchesRoute
   '/cashbox': typeof CashboxRoute
+  '/courier': typeof CourierRoute
   '/customers': typeof CustomersRoute
   '/daily': typeof DailyRoute
+  '/delivery': typeof DeliveryRoute
+  '/driver': typeof DriverRoute
   '/expenses': typeof ExpensesRoute
   '/inventory': typeof InventoryRoute
   '/invoices': typeof InvoicesRoute
@@ -352,10 +395,12 @@ export interface FileRoutesById {
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/track': typeof TrackRoute
   '/warehouse': typeof WarehouseRoute
   '/inventory_/new': typeof InventoryNewRoute
   '/invoices_/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
+  '/shipping/courier': typeof ShippingCourierRoute
   '/shipping/day': typeof ShippingDayRoute
   '/shipping/rescue': typeof ShippingRescueRoute
   '/shop/$slug': typeof ShopSlugRouteWithChildren
@@ -377,8 +422,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/branches'
     | '/cashbox'
+    | '/courier'
     | '/customers'
     | '/daily'
+    | '/delivery'
+    | '/driver'
     | '/expenses'
     | '/inventory'
     | '/invoices'
@@ -395,10 +443,12 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/support'
     | '/terms'
+    | '/track'
     | '/warehouse'
     | '/inventory/new'
     | '/invoices/new'
     | '/purchases/new'
+    | '/shipping/courier'
     | '/shipping/day'
     | '/shipping/rescue'
     | '/shop/$slug'
@@ -418,8 +468,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/branches'
     | '/cashbox'
+    | '/courier'
     | '/customers'
     | '/daily'
+    | '/delivery'
+    | '/driver'
     | '/expenses'
     | '/inventory'
     | '/invoices'
@@ -435,10 +488,12 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/support'
     | '/terms'
+    | '/track'
     | '/warehouse'
     | '/inventory/new'
     | '/invoices/new'
     | '/purchases/new'
+    | '/shipping/courier'
     | '/shipping/day'
     | '/shipping/rescue'
     | '/shop/$slug'
@@ -458,8 +513,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/branches'
     | '/cashbox'
+    | '/courier'
     | '/customers'
     | '/daily'
+    | '/delivery'
+    | '/driver'
     | '/expenses'
     | '/inventory'
     | '/invoices'
@@ -476,10 +534,12 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/support'
     | '/terms'
+    | '/track'
     | '/warehouse'
     | '/inventory_/new'
     | '/invoices_/new'
     | '/purchases/new'
+    | '/shipping/courier'
     | '/shipping/day'
     | '/shipping/rescue'
     | '/shop/$slug'
@@ -500,8 +560,11 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BranchesRoute: typeof BranchesRoute
   CashboxRoute: typeof CashboxRoute
+  CourierRoute: typeof CourierRoute
   CustomersRoute: typeof CustomersRoute
   DailyRoute: typeof DailyRoute
+  DeliveryRoute: typeof DeliveryRoute
+  DriverRoute: typeof DriverRoute
   ExpensesRoute: typeof ExpensesRoute
   InventoryRoute: typeof InventoryRoute
   InvoicesRoute: typeof InvoicesRoute
@@ -518,10 +581,12 @@ export interface RootRouteChildren {
   SuppliersRoute: typeof SuppliersRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
+  TrackRoute: typeof TrackRoute
   WarehouseRoute: typeof WarehouseRoute
   InventoryNewRoute: typeof InventoryNewRoute
   InvoicesNewRoute: typeof InvoicesNewRoute
   PurchasesNewRoute: typeof PurchasesNewRoute
+  ShippingCourierRoute: typeof ShippingCourierRoute
   ShippingDayRoute: typeof ShippingDayRoute
   ShippingRescueRoute: typeof ShippingRescueRoute
   ShopSlugRoute: typeof ShopSlugRouteWithChildren
@@ -573,6 +638,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CashboxRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/courier': {
+      id: '/courier'
+      path: '/courier'
+      fullPath: '/courier'
+      preLoaderRoute: typeof CourierRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/customers': {
       id: '/customers'
       path: '/customers'
@@ -585,6 +657,20 @@ declare module '@tanstack/react-router' {
       path: '/daily'
       fullPath: '/daily'
       preLoaderRoute: typeof DailyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/delivery': {
+      id: '/delivery'
+      path: '/delivery'
+      fullPath: '/delivery'
+      preLoaderRoute: typeof DeliveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/driver': {
+      id: '/driver'
+      path: '/driver'
+      fullPath: '/driver'
+      preLoaderRoute: typeof DriverRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/expenses': {
@@ -699,6 +785,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/track': {
+      id: '/track'
+      path: '/track'
+      fullPath: '/track'
+      preLoaderRoute: typeof TrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/warehouse': {
       id: '/warehouse'
       path: '/warehouse'
@@ -746,6 +839,13 @@ declare module '@tanstack/react-router' {
       path: '/shipping'
       fullPath: '/shipping/'
       preLoaderRoute: typeof ShippingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shipping/courier': {
+      id: '/shipping/courier'
+      path: '/shipping/courier'
+      fullPath: '/shipping/courier'
+      preLoaderRoute: typeof ShippingCourierRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shipping/day': {
@@ -855,8 +955,11 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BranchesRoute: BranchesRoute,
   CashboxRoute: CashboxRoute,
+  CourierRoute: CourierRoute,
   CustomersRoute: CustomersRoute,
   DailyRoute: DailyRoute,
+  DeliveryRoute: DeliveryRoute,
+  DriverRoute: DriverRoute,
   ExpensesRoute: ExpensesRoute,
   InventoryRoute: InventoryRoute,
   InvoicesRoute: InvoicesRoute,
@@ -873,10 +976,12 @@ const rootRouteChildren: RootRouteChildren = {
   SuppliersRoute: SuppliersRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
+  TrackRoute: TrackRoute,
   WarehouseRoute: WarehouseRoute,
   InventoryNewRoute: InventoryNewRoute,
   InvoicesNewRoute: InvoicesNewRoute,
   PurchasesNewRoute: PurchasesNewRoute,
+  ShippingCourierRoute: ShippingCourierRoute,
   ShippingDayRoute: ShippingDayRoute,
   ShippingRescueRoute: ShippingRescueRoute,
   ShopSlugRoute: ShopSlugRouteWithChildren,

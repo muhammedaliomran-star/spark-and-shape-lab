@@ -195,7 +195,7 @@ function ExpensesPage() {
 
   const handlePrintVoucher = (e: Expense) => {
     const meta = getExpenseMeta(e);
-    const ok = printPaymentVoucherPdf(e, meta, shopSettings?.name || "سِجلّي لإدارة المتاجر والأقساط");
+    const ok = printPaymentVoucherPdf(e, meta, shopSettings?.shopName || "سِجلّي لإدارة المتاجر والأقساط");
     if (!ok) {
       toast.error("يرجى السماح بفتح النوافذ المنبثقة للطباعة");
     }
@@ -508,7 +508,7 @@ function ExpensesPage() {
                       تصدير التقرير
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" dir="rtl">
+                  <DropdownMenuContent align="start">
                     <DropdownMenuItem onClick={exportCSV} className="gap-2 text-xs">
                       <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> تصدير كـ Excel (CSV)
                     </DropdownMenuItem>
