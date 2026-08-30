@@ -1,8 +1,7 @@
 import { useState, useMemo } from "react";
 import { AppShell } from "@/components/AppShell";
 import { PageTransition } from "@/components/PageTransition";
-import { MetricCard } from "@/components/MetricCard";
-import { CountUp } from "@/components/CountUp";
+import { CountUp as BaseCountUp } from "@/components/CountUp";
 import { usePrivacy } from "@/lib/privacy";
 import {
   useDB,
@@ -66,7 +65,7 @@ export default function OwnerCockpit() {
     stockItems,
     branches,
     payments,
-    returnRecords,
+    returns: returnRecords,
     purchases,
     supplierPayments,
   } = useDB();
@@ -160,7 +159,7 @@ export default function OwnerCockpit() {
 
     // 5. Total customers debt
     const totalReceivables = customers.reduce((sum, c) => {
-      const bal = customerBalance(c.id, invoices);
+      const bal = customerBalance(invoices, c.id);
       return sum + (bal > 0 ? bal : 0);
     }, 0);
 
@@ -238,7 +237,7 @@ export default function OwnerCockpit() {
           type: "discount",
           severity: inv.discountAmount > 500 ? "danger" : "warning",
           title: `خصم استثنائي بقيمة ${fmt(inv.discountAmount)} ج.م`,
-          description: `فاتورة ${invoiceNumber(inv.id)} — العميل: ${customers.find((c) => c.id === inv.customerId)?.name || "عميل"}`,
+          description: `فاتورة ${invoiceNumber(invoices, inv.id)} — العميل: ${customers.find((c) => c.id === inv.customerId)?.name || "عميل"}`,
           date: inv.createdAt.slice(0, 10),
           amount: inv.discountAmount,
           link: "/invoices",
@@ -356,7 +355,7 @@ export default function OwnerCockpit() {
     const text = renderInstallmentReminder({
       shop: { shopName: settings.shopName || "سِجلّي" },
       customerName: custName,
-      invoiceNumber: invoiceNumber(invId),
+      invoiceNumber: invoiceNumber(invoices, invId),
       amount: fmt(remaining),
       dueDate: dueDate || todayStr,
       overdueDays: dueDays > 0 ? dueDays : undefined,
@@ -686,7 +685,7 @@ export default function OwnerCockpit() {
                                 {cust?.name || "عميل بدون اسم"}
                               </div>
                               <div className="text-xs text-muted-foreground">
-                                فاتورة {invoiceNumber(inv.id)} — إجمالي: {fmt(inv.total)} ج.م
+                                فاتورة {invoiceNumber(invoices, inv.id)} — إجمالي: {fmt(inv.total)} ج.م
                               </div>
                             </div>
                           </div>
@@ -764,7 +763,7 @@ export default function OwnerCockpit() {
                                 {cust?.name || "عميل بدون اسم"}
                               </h4>
                               <p className="text-xs text-muted-foreground">
-                                فاتورة {invoiceNumber(inv.id)} — استحقاق {inv.firstDueDate || "غير محدد"}
+                                فاتورة {invoiceNumber(invoices, inv.id)} — استحقاق {inv.firstDueDate || "غير محدد"}
                               </p>
                             </div>
                             <span
