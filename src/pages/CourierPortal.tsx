@@ -128,7 +128,7 @@ export default function CourierPortal() {
         const phone = (s.recipientPhone || "").toLowerCase();
         const addr = (s.deliveryAddress || "").toLowerCase();
         const inv = s.invoiceId ? invoiceMap.get(s.invoiceId) : null;
-        const invNum = (inv?.invoiceNumber || "").toLowerCase();
+        const invNum = (inv?.id || "").toLowerCase();
 
         return (
           tracking.includes(q) ||
@@ -190,7 +190,7 @@ export default function CourierPortal() {
 
       await codeReader.decodeFromVideoDevice(
         selectedDeviceId,
-        videoRef.current,
+        videoRef.current ?? undefined,
         (result, err) => {
           if (result) {
             const text = result.getText().trim();
@@ -543,7 +543,7 @@ _تم الإنشاء عبر بوابة المندوب - سِجلّي_`;
             filteredShipments.map((s) => {
               const cod = Number(s.codAmount || s.shippingCost || 0);
               const inv = s.invoiceId ? invoiceMap.get(s.invoiceId) : null;
-              const carrier = carrierMap.get(s.carrierId);
+              const carrier = carrierMap.get(s.carrierId ?? "");
               const zone = s.zoneId ? zoneMap.get(s.zoneId) : null;
               const isDelivered = s.status === "delivered";
               const isFailed = ["returned", "failed"].includes(s.status);
@@ -584,8 +584,8 @@ _تم الإنشاء عبر بوابة المندوب - سِجلّي_`;
                         <span className="font-mono text-slate-300">
                           #{s.trackingNumber || s.id.slice(0, 8)}
                         </span>
-                        {inv?.invoiceNumber && (
-                          <span>· فاتورة #{inv.invoiceNumber}</span>
+                        {inv?.id && (
+                          <span>· فاتورة #{inv.id.slice(0, 8)}</span>
                         )}
                         {zone && <span>· منطقة: {zone.name}</span>}
                       </div>
@@ -620,10 +620,10 @@ _تم الإنشاء عبر بوابة المندوب - سِجلّي_`;
                   )}
 
                   {/* Status Reason / Note if any */}
-                  {s.statusReason && (
+                  {s.notes && (
                     <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 flex items-center gap-1.5">
                       <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                      <span>{s.statusReason}</span>
+                      <span>{s.notes}</span>
                     </div>
                   )}
 
@@ -686,7 +686,7 @@ _تم الإنشاء عبر بوابة المندوب - سِجلّي_`;
                   {/* Reset back to active if delivered or returned */}
                   {(isDelivered || isFailed) && (
                     <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
-                      <span>تاريخ التحديث: {new Date(s.updatedAt || s.createdAt).toLocaleDateString("ar-EG")}</span>
+                      <span>تاريخ التحديث: {new Date(s.createdAt).toLocaleDateString("ar-EG")}</span>
                       <button
                         type="button"
                         onClick={() => void updateShipmentStatus(s.id, "shipped", "إعادة المحاولة مع المندوب")}
@@ -849,8 +849,8 @@ _تم الإنشاء عبر بوابة المندوب - سِجلّي_`;
             orderNumber: whatsAppShipment.trackingNumber || whatsAppShipment.id.slice(0, 8),
             address: whatsAppShipment.deliveryAddress || undefined,
             total: Number(whatsAppShipment.codAmount || whatsAppShipment.shippingCost || 0),
-            carrierName: activeCarrier?.name || carrierMap.get(whatsAppShipment.carrierId)?.name || "مندوب التوصيل",
-            carrierPhone: activeCarrier?.phone || carrierMap.get(whatsAppShipment.carrierId)?.phone || undefined,
+            carrierName: activeCarrier?.name || carrierMap.get(whatsAppShipment.carrierId ?? "")?.name || "مندوب التوصيل",
+            carrierPhone: activeCarrier?.phone || carrierMap.get(whatsAppShipment.carrierId ?? "")?.phone || undefined,
           }}
         />
       )}
