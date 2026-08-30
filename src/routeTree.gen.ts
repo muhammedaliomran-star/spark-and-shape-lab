@@ -25,7 +25,10 @@ import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as InvoicesRouteImport } from './routes/invoices'
 import { Route as LandingRouteImport } from './routes/landing'
 import { Route as OrderTrackingRouteImport } from './routes/order-tracking'
+import { Route as OwnerRouteImport } from './routes/owner'
 import { Route as PaymentsRouteImport } from './routes/payments'
+import { Route as PosRouteImport } from './routes/pos'
+import { Route as PosDisplayRouteImport } from './routes/pos-display'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReconciliationRouteImport } from './routes/reconciliation'
 import { Route as ReportsRouteImport } from './routes/reports'
@@ -134,9 +137,24 @@ const OrderTrackingRoute = OrderTrackingRouteImport.update({
   path: '/order-tracking',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OwnerRoute = OwnerRouteImport.update({
+  id: '/owner',
+  path: '/owner',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PaymentsRoute = PaymentsRouteImport.update({
   id: '/payments',
   path: '/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PosRoute = PosRouteImport.update({
+  id: '/pos',
+  path: '/pos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PosDisplayRoute = PosDisplayRouteImport.update({
+  id: '/pos-display',
+  path: '/pos-display',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -292,7 +310,10 @@ export interface FileRoutesByFullPath {
   '/invoices': typeof InvoicesRoute
   '/landing': typeof LandingRoute
   '/order-tracking': typeof OrderTrackingRoute
+  '/owner': typeof OwnerRoute
   '/payments': typeof PaymentsRoute
+  '/pos': typeof PosRoute
+  '/pos-display': typeof PosDisplayRoute
   '/privacy': typeof PrivacyRoute
   '/reconciliation': typeof ReconciliationRoute
   '/reports': typeof ReportsRouteWithChildren
@@ -338,7 +359,10 @@ export interface FileRoutesByTo {
   '/invoices': typeof InvoicesRoute
   '/landing': typeof LandingRoute
   '/order-tracking': typeof OrderTrackingRoute
+  '/owner': typeof OwnerRoute
   '/payments': typeof PaymentsRoute
+  '/pos': typeof PosRoute
+  '/pos-display': typeof PosDisplayRoute
   '/privacy': typeof PrivacyRoute
   '/reconciliation': typeof ReconciliationRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -384,7 +408,10 @@ export interface FileRoutesById {
   '/invoices': typeof InvoicesRoute
   '/landing': typeof LandingRoute
   '/order-tracking': typeof OrderTrackingRoute
+  '/owner': typeof OwnerRoute
   '/payments': typeof PaymentsRoute
+  '/pos': typeof PosRoute
+  '/pos-display': typeof PosDisplayRoute
   '/privacy': typeof PrivacyRoute
   '/reconciliation': typeof ReconciliationRoute
   '/reports': typeof ReportsRouteWithChildren
@@ -432,7 +459,10 @@ export interface FileRouteTypes {
     | '/invoices'
     | '/landing'
     | '/order-tracking'
+    | '/owner'
     | '/payments'
+    | '/pos'
+    | '/pos-display'
     | '/privacy'
     | '/reconciliation'
     | '/reports'
@@ -478,7 +508,10 @@ export interface FileRouteTypes {
     | '/invoices'
     | '/landing'
     | '/order-tracking'
+    | '/owner'
     | '/payments'
+    | '/pos'
+    | '/pos-display'
     | '/privacy'
     | '/reconciliation'
     | '/reset-password'
@@ -523,7 +556,10 @@ export interface FileRouteTypes {
     | '/invoices'
     | '/landing'
     | '/order-tracking'
+    | '/owner'
     | '/payments'
+    | '/pos'
+    | '/pos-display'
     | '/privacy'
     | '/reconciliation'
     | '/reports'
@@ -570,7 +606,10 @@ export interface RootRouteChildren {
   InvoicesRoute: typeof InvoicesRoute
   LandingRoute: typeof LandingRoute
   OrderTrackingRoute: typeof OrderTrackingRoute
+  OwnerRoute: typeof OwnerRoute
   PaymentsRoute: typeof PaymentsRoute
+  PosRoute: typeof PosRoute
+  PosDisplayRoute: typeof PosDisplayRoute
   PrivacyRoute: typeof PrivacyRoute
   ReconciliationRoute: typeof ReconciliationRoute
   ReportsRoute: typeof ReportsRouteWithChildren
@@ -708,11 +747,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrderTrackingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/owner': {
+      id: '/owner'
+      path: '/owner'
+      fullPath: '/owner'
+      preLoaderRoute: typeof OwnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/payments': {
       id: '/payments'
       path: '/payments'
       fullPath: '/payments'
       preLoaderRoute: typeof PaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pos': {
+      id: '/pos'
+      path: '/pos'
+      fullPath: '/pos'
+      preLoaderRoute: typeof PosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pos-display': {
+      id: '/pos-display'
+      path: '/pos-display'
+      fullPath: '/pos-display'
+      preLoaderRoute: typeof PosDisplayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -965,7 +1025,10 @@ const rootRouteChildren: RootRouteChildren = {
   InvoicesRoute: InvoicesRoute,
   LandingRoute: LandingRoute,
   OrderTrackingRoute: OrderTrackingRoute,
+  OwnerRoute: OwnerRoute,
   PaymentsRoute: PaymentsRoute,
+  PosRoute: PosRoute,
+  PosDisplayRoute: PosDisplayRoute,
   PrivacyRoute: PrivacyRoute,
   ReconciliationRoute: ReconciliationRoute,
   ReportsRoute: ReportsRouteWithChildren,
