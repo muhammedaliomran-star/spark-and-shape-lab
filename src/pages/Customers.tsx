@@ -27,14 +27,14 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, Dr
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Search, MessageCircle, Pencil, Trash2, Sparkles, Star, Info, User, Eye, EyeOff, FileDown, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, History, Share2, Wallet, Printer, ShoppingBag, Receipt, CreditCard, Banknote, Coins } from "lucide-react";
+import { Plus, Search, MessageCircle, Pencil, Trash2, Sparkles, Star, Info, User, Eye, EyeOff, FileDown, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, History, Share2, Wallet, Printer, ShoppingBag, Receipt, CreditCard, Banknote, Coins, Award, Gift, Copy, Check } from "lucide-react";
 import type { Payment } from "@/lib/store";
 import { toArabicDigits } from "@/lib/arabic-digits";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { pdfDocument, openPdfDocument } from "@/lib/pdf-doc";
 import { usePrivacy } from "@/lib/privacy";
-import { useDiscounts } from "@/lib/discounts";
+import { useDiscounts, generateCustomerLoyaltyVoucher } from "@/lib/discounts";
 
 const EG_PHONE_RE = /^01[0125]\d{8}$/;
 
@@ -126,27 +126,44 @@ function escapeHtml(s: string): string {
 
 function CustomersPage() {
   const data = useDB();
-  const { loyaltyConfig, customerLoyaltyStats } = useDiscounts();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<FilterTab>("all");
   const [scriptFor, setScriptFor] = useState<Customer | null>(null);
   const [viewFor, setViewFor] = useState<Customer | null>(null);
   const [historyFor, setHistoryFor] = useState<Customer | null>(null);
+  const [redeemedVoucher, setRedeemedVoucher] = useState<{ customer: Customer; coupon: any } | null>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
   const { privacy, toggle } = usePrivacy();
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const { loyaltyConfig, customerLoyaltyStats, generateCustomerLoyaltyVoucher } = useDiscounts();
 
   const loyaltyMap = useMemo(() => {
-    const map = new Map<string, (typeof customerLoyaltyStats)[0]>();
+    const map = new Map<string, typeof customerLoyaltyStats[0]>();
     for (const stat of customerLoyaltyStats) {
       map.set(stat.customer.id, stat);
     }
     return map;
   }, [customerLoyaltyStats]);
 
+  // Generate sequential customer code (1, 2, 3...) based on creation order
+  const customerCodeMap = useMemo(() => {
+    const sorted = [...data.customers].sort((a, b) => {
+      const tA = new Date(a.createdAt || 0).getTime();
+      const tB = new Date(b.createdAt || 0).getTime();
+      if (tA !== tB) return tA - tB;
+      return a.id.localeCompare(b.id);
+    });
+    const map = new Map<string, number>();
+    sorted.forEach((c, idx) => {
+      map.set(c.id, idx + 1);
+    });
+    return map;
+  }, [data.customers]);
+
   const enriched = useMemo(
-    () => data.customers.map((c) => ({ c, m: customerMetrics(data.invoices, c) })),
-    [data.customers, data.invoices],
+    () => data.customers.map((c) => ({ c, m: customerMetrics(data.invoices, c), code: customerCodeMap.get(c.id) || 1 })),
+    [data.customers, data.invoices, customerCodeMap],
   );
 
   const counts = useMemo(() => {
@@ -176,8 +193,9 @@ function CustomersPage() {
   }, [enriched, data.payments]);
 
   const list = useMemo(() => {
+    const qClean = q.trim().toLowerCase();
     const filtered = enriched
-      .filter(({ c, m }) => {
+      .filter(({ c, m, code }) => {
         if (filter === "installment") return c.customerType !== "cash";
         if (filter === "cash") return c.customerType === "cash";
         if (filter === "overdue") return m.worstLate > 1;
@@ -185,7 +203,16 @@ function CustomersPage() {
         if (filter === "settled") return m.balance <= 0;
         return true;
       })
-      .filter(({ c }) => (q ? c.name.includes(q) || c.phone.includes(q) : true));
+      .filter(({ c, code }) => {
+        if (!qClean) return true;
+        const codeStr = String(code);
+        return (
+          c.name.toLowerCase().includes(qClean) ||
+          c.phone.includes(qClean) ||
+          codeStr === qClean.replace(/^[#\s]+/, "") ||
+          `#${codeStr}`.includes(qClean)
+        );
+      });
     const dir = sortDir === "asc" ? 1 : -1;
     return [...filtered].sort((a, b) => {
       if (sortKey === "balance") return (a.m.balance - b.m.balance) * dir;
@@ -418,7 +445,7 @@ function CustomersPage() {
         ) : (
           <ScrollArea className="max-h-[64vh]">
             <div className="flex flex-col gap-3 pl-1">
-              {list.map(({ c, m }, idx) => {
+              {list.map(({ c, m, code }, idx) => {
                 const overdue7 = m.worstLate > 7;
                 const lateLabel = m.worstLate > 0 ? `متأخر ${m.worstLate} يوم` : null;
                 const message = aiScript(c, m.balance, m.worstLate);
@@ -432,7 +459,7 @@ function CustomersPage() {
                     className="group bezel-shell bezel-lift animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)_both]"
                     style={{ animationDelay: `${Math.min(idx, 12) * 45}ms` }}
                   >
-                    <div className="bezel-core grid grid-cols-1 items-center gap-5 p-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] md:gap-6">
+                    <div className="bezel-core grid grid-cols-1 items-center gap-5 p-5 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_auto] md:gap-6">
                       {/* الهوية */}
                       <div
                         className="flex min-w-0 items-center gap-3 cursor-pointer select-none"
@@ -443,7 +470,7 @@ function CustomersPage() {
                       >
                         <span
                           className={cn(
-                            "text-display grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-lg font-bold transition-transform group-hover:scale-105",
+                            "text-display grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-lg font-bold transition-transform group-hover:scale-105",
                             c.status === "defaulter"
                               ? "bg-danger/12 text-danger ring-1 ring-danger/25"
                               : c.status === "committed"
@@ -454,7 +481,18 @@ function CustomersPage() {
                           {initial}
                         </span>
                         <div className="min-w-0">
-                          <div className="truncate font-bold leading-tight hover:text-primary transition-colors">{c.name}</div>
+                          {/* كود العميل فوق الاسم */}
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="inline-flex items-center gap-0.5 rounded-md bg-primary/10 border border-primary/25 px-1.5 py-0.2 text-[10px] font-mono font-extrabold text-primary tracking-wide">
+                              كود: #{code}
+                            </span>
+                            {c.frozen && (
+                              <span className="inline-flex items-center rounded-md bg-warning/15 border border-warning/30 px-1.5 py-0.2 text-[9px] font-bold text-warning">
+                                مجمد
+                              </span>
+                            )}
+                          </div>
+                          <div className="truncate font-bold text-base leading-tight hover:text-primary transition-colors">{c.name}</div>
                           <div className="text-numeric mt-0.5 truncate text-xs text-muted-foreground" dir="ltr">{c.phone}</div>
                           <div className="mt-2 flex flex-wrap items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             {c.status === "defaulter" && c.notes ? (
@@ -515,41 +553,61 @@ function CustomersPage() {
 
                       {/* المديونية */}
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <div className={cn("text-numeric text-xl font-extrabold leading-none", overdue7 ? "text-danger" : "text-foreground", privacy && "privacy-blur")}>
-                            {fmt(m.balance)} <span className="text-xs font-bold text-muted-foreground">ج.م</span>
+                        {m.balance <= 0 ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <div className={cn("text-numeric text-xl font-extrabold leading-none text-emerald-600 dark:text-emerald-400", privacy && "privacy-blur")}>
+                                0 <span className="text-xs font-bold text-muted-foreground">ج.م</span>
+                              </div>
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                                <Check className="h-3 w-3" />
+                                الحساب خالص
+                              </span>
+                            </div>
+                            <div className={cn("text-[11px] text-muted-foreground", privacy && "privacy-blur")}>
+                              إجمالي التعاملات: {fmt(m.totalCharged)} ج.م (مسدد بالكامل)
+                            </div>
                           </div>
-                          {lateLabel && (
-                            <span className="rounded-full bg-danger/12 px-2 py-0.5 text-[10px] font-bold text-danger ring-1 ring-danger/25">{lateLabel}</span>
-                          )}
-                          {overLimit && (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="grid h-6 w-6 shrink-0 cursor-help place-items-center rounded-full bg-danger/15 text-danger ring-1 ring-danger/40" aria-label="تجاوز سقف المديونية">
-                                    <AlertTriangle className="h-3.5 w-3.5" />
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-xs text-right">
-                                  <div className="mb-0.5 font-bold text-danger">⚠ تجاوز سقف المديونية</div>
-                                  <div className="text-xs">المديونية ({fmt(m.balance)} ج.م) وصلت لسقف الائتمان ({fmt(c.creditLimit)} ج.م). يُمنع البيع الآجل لهذا العميل.</div>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          )}
-                        </div>
-                        <Progress value={m.paidPct} className="mt-2.5 h-1" />
-                        <div className={cn("mt-1.5 text-[11px] text-muted-foreground", privacy && "privacy-blur")}>
-                          مسدد {m.paidPct}٪ من {fmt(m.totalCharged)}
-                        </div>
+                        ) : (
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <div className={cn("text-numeric text-xl font-extrabold leading-none", overdue7 ? "text-danger" : "text-foreground", privacy && "privacy-blur")}>
+                                {fmt(m.balance)} <span className="text-xs font-bold text-muted-foreground">ج.م</span>
+                              </div>
+                              {lateLabel && (
+                                <span className="rounded-full bg-danger/12 px-2 py-0.5 text-[10px] font-bold text-danger ring-1 ring-danger/25">{lateLabel}</span>
+                              )}
+                              {overLimit && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="grid h-6 w-6 shrink-0 cursor-help place-items-center rounded-full bg-danger/15 text-danger ring-1 ring-danger/40" aria-label="تجاوز سقف المديونية">
+                                        <AlertTriangle className="h-3.5 w-3.5" />
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="max-w-xs text-right">
+                                      <div className="mb-0.5 font-bold text-danger">⚠ تجاوز سقف المديونية</div>
+                                      <div className="text-xs">المديونية ({fmt(m.balance)} ج.م) وصلت لسقف الائتمان ({fmt(c.creditLimit)} ج.م). يُمنع البيع الآجل لهذا العميل.</div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
+                            <Progress value={m.paidPct} className="mt-2.5 h-1.5" />
+                            <div className={cn("mt-1.5 text-[11px] text-muted-foreground flex items-center justify-between", privacy && "privacy-blur")}>
+                              <span>مسدد {m.paidPct}٪</span>
+                              <span>من {fmt(m.totalCharged)} ج.م</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
-                      {/* الإجراءات */}
-                      <div className="flex flex-wrap items-center justify-end gap-1.5 md:opacity-70 md:transition-opacity md:duration-500 md:ease-[cubic-bezier(0.32,0.72,0,1)] md:group-hover:opacity-100 md:focus-within:opacity-100">
+                      {/* الإجراءات السريعة */}
+                      <div className="flex flex-wrap items-center justify-end gap-1.5">
                         <button
                           type="button"
                           onClick={() => setScriptFor(c)}
-                          className="island-btn group/cta bg-primary/12 text-primary ring-1 ring-primary/25 hover:bg-primary/18"
+                          className="island-btn group/cta bg-primary/12 text-primary ring-1 ring-primary/25 hover:bg-primary/20"
                         >
                           هقوله إيه؟
                           <span className="island-btn-icon bg-primary/20 text-primary transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover/cta:-translate-x-0.5 group-hover/cta:scale-105">
@@ -563,7 +621,7 @@ function CustomersPage() {
                                 href={waUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="action-btn grid h-9 w-9 place-items-center rounded-full text-success hover:bg-success/10"
+                                className="action-btn grid h-9 w-9 place-items-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20"
                                 aria-label="إرسال واتساب"
                               >
                                 <WhatsAppIcon className="h-4 w-4" />
@@ -575,7 +633,7 @@ function CustomersPage() {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button size="icon" variant="ghost" className="action-btn rounded-full text-primary hover:bg-primary/10" onClick={() => setHistoryFor(c)} aria-label="سجل المدفوعات">
+                              <Button size="icon" variant="ghost" className="action-btn rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20" onClick={() => setHistoryFor(c)} aria-label="سجل المدفوعات">
                                 <Eye className="h-4 w-4" />
                               </Button>
                             </TooltipTrigger>
@@ -585,25 +643,26 @@ function CustomersPage() {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:bg-muted/50" onClick={() => setViewFor(c)} aria-label="تفاصيل العميل">
+                              <Button size="icon" variant="ghost" className="action-btn rounded-full bg-muted/40 text-foreground border border-border/60 hover:bg-muted/80" onClick={() => setViewFor(c)} aria-label="تفاصيل العميل">
                                 <Info className="h-4 w-4" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="top">تفاصيل العميل وكشف الحساب</TooltipContent>
+                            <TooltipContent side="top">تفاصيل العميل وكشف الحساب والولاء</TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                         <CustomerDialog
                           customer={c}
-                          trigger={<Button size="icon" variant="ghost" className="action-btn rounded-full" aria-label="تعديل"><Pencil className="h-4 w-4" /></Button>}
+                          customerCode={code}
+                          trigger={<Button size="icon" variant="ghost" className="action-btn rounded-full bg-muted/40 text-foreground border border-border/60 hover:bg-muted/80" aria-label="تعديل"><Pencil className="h-4 w-4" /></Button>}
                         />
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="icon" variant="ghost" className="action-btn danger rounded-full text-danger hover:bg-danger/10 hover:text-danger" aria-label="حذف"><Trash2 className="h-4 w-4" /></Button>
+                            <Button size="icon" variant="ghost" className="action-btn danger rounded-full bg-danger/10 text-danger border border-danger/25 hover:bg-danger/20" aria-label="حذف"><Trash2 className="h-4 w-4" /></Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>حذف العميل</AlertDialogTitle>
-                              <AlertDialogDescription>هل أنت متأكد من حذف {c.name}؟ سيتم حذف كل فواتيره أيضاً.</AlertDialogDescription>
+                              <AlertDialogTitle className="text-right">حذف العميل</AlertDialogTitle>
+                              <AlertDialogDescription className="text-right">هل أنت متأكد من حذف {c.name}؟ سيتم حذف كل فواتيره وسجلاته أيضاً.</AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>إلغاء</AlertDialogCancel>
@@ -751,8 +810,13 @@ function CustomersPage() {
                       <AvatarFallback className="bg-primary/15 text-primary font-bold">{initials || <User className="w-5 h-5" />}</AvatarFallback>
                     </Avatar>
                     <div className="text-right flex-1">
-                      <DrawerTitle className="text-lg">{viewFor.name}</DrawerTitle>
-                      <DrawerDescription dir="ltr" className="text-right">{viewFor.phone}</DrawerDescription>
+                      <div className="flex items-center justify-between gap-2">
+                        <DrawerTitle className="text-lg">{viewFor.name}</DrawerTitle>
+                        <Badge variant="outline" className="font-mono font-bold text-xs bg-primary/10 text-primary border-primary/25">
+                          كود: #{customerCodeMap.get(viewFor.id) || 1}
+                        </Badge>
+                      </div>
+                      <DrawerDescription dir="ltr" className="text-right mt-0.5">{viewFor.phone}</DrawerDescription>
                     </div>
                   </div>
                   <div className="mt-3 grid grid-cols-3 gap-2">
@@ -824,6 +888,83 @@ function CustomersPage() {
                     <div className="flex justify-between items-center"><span className="text-muted-foreground">التقييم</span><StarRating value={viewFor.rating} /></div>
                     {viewFor.frozen && <Badge variant="outline" className="bg-warning/15 text-warning border-warning/30">حساب مجمّد</Badge>}
                   </div>
+
+                  {/* Loyalty & Rewards Card */}
+                  {loyaltyConfig.enabled && (() => {
+                    const lStat = loyaltyMap.get(viewFor.id);
+                    const points = lStat?.availablePoints || 0;
+                    const val = lStat?.availableDiscountEgp || 0;
+                    const tier = lStat?.tier || "bronze";
+                    const tierMeta =
+                      tier === "platinum"
+                        ? { label: "بلاتيني VIP", cls: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30" }
+                        : tier === "gold"
+                        ? { label: "ذهبي مميز", cls: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30" }
+                        : tier === "silver"
+                        ? { label: "فضي نشط", cls: "bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30" }
+                        : { label: "برونزي", cls: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30" };
+
+                    return (
+                      <div className="rounded-2xl border border-warning/30 bg-gradient-to-br from-warning/10 via-warning/5 to-transparent p-3.5 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline" className={tierMeta.cls}>
+                            <Award className="w-3 h-3 ml-1" />
+                            مستوى {tierMeta.label}
+                          </Badge>
+                          <span className="flex items-center gap-1.5 font-bold text-sm text-warning-foreground">
+                            <Coins className="w-4 h-4 text-warning" />
+                            برنامج نقاط الولاء والمكافآت
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-center">
+                          <div className="rounded-xl bg-background/80 p-2 hairline">
+                            <div className="text-[11px] text-muted-foreground">النقاط المتاحة</div>
+                            <div className="font-extrabold text-lg text-warning">{points} <span className="text-xs">نقطة</span></div>
+                          </div>
+                          <div className="rounded-xl bg-background/80 p-2 hairline">
+                            <div className="text-[11px] text-muted-foreground">القيمة الشرائية</div>
+                            <div className={cn("font-extrabold text-lg text-success", privacy && "privacy-blur")}>{fmt(val)} <span className="text-xs">ج.م</span></div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={!lStat || !lStat.canRedeem}
+                            className="flex-1 gap-1.5 bg-warning text-warning-foreground hover:bg-warning/90"
+                            onClick={() => {
+                              if (!lStat || !lStat.canRedeem) {
+                                toast.error(`الحد الأدنى لاستبدال النقاط هو ${loyaltyConfig.minPointsToRedeem} نقطة`);
+                                return;
+                              }
+                              const coupon = generateCustomerLoyaltyVoucher(viewFor, points);
+                              setRedeemedVoucher({ customer: viewFor, coupon });
+                              toast.success(`تم استبدال ${points} نقطة بنجاح وتوليد كوبون خصم!`);
+                            }}
+                          >
+                            <Gift className="w-3.5 h-3.5" />
+                            استبدال بكوبون خصم
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="gap-1 border-warning/40 text-warning hover:bg-warning/10"
+                            onClick={() => {
+                              const waPhone = viewFor.phone.replace(/^0/, "20");
+                              const msg = `مرحباً ${viewFor.name} ✨\nيسعدنا إعلامك بأن رصيدك الحالي في برنامج المكافآت هو *${points} نقطة ولاء* (بقيمة *${fmt(val)} ج.م* خصم مباشر على مشترياتك القادمة).\nشكراً لثقتك الدائمة بنا!`;
+                              window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, "_blank");
+                            }}
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                            إرسال الرصيد
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Unified Transaction Timeline */}
                   <div>
@@ -933,6 +1074,67 @@ function CustomersPage() {
           })()}
         </DrawerContent>
       </Drawer>
+
+      {/* Dialog for newly generated Loyalty Voucher */}
+      <Dialog open={!!redeemedVoucher} onOpenChange={(o) => !o && setRedeemedVoucher(null)}>
+        <DialogContent className="max-w-md text-right">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 justify-end text-warning">
+              كوبون مكافأة ولاء جاهز!
+              <Gift className="w-5 h-5" />
+            </DialogTitle>
+            <DialogDescription className="text-right">
+              تم تحويل نقاط العميل إلى كود خصم مخصص ومربوط بحسابه.
+            </DialogDescription>
+          </DialogHeader>
+          {redeemedVoucher && (
+            <div className="space-y-4">
+              <div className="rounded-2xl border-2 border-dashed border-warning/50 bg-warning/5 p-4 text-center space-y-2">
+                <div className="text-xs text-muted-foreground">كود الخصم للعميل {redeemedVoucher.customer.name}</div>
+                <div className="font-mono text-2xl font-black text-warning tracking-widest selection:bg-warning selection:text-black">
+                  {redeemedVoucher.coupon.code}
+                </div>
+                <div className="text-sm font-bold text-success">
+                  قيمة الخصم: {redeemedVoucher.coupon.discountValue} {redeemedVoucher.coupon.discountType === "percentage" ? "%" : "ج.م"}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1 gap-2"
+                  onClick={() => {
+                    navigator.clipboard.writeText(redeemedVoucher.coupon.code);
+                    setCopiedCode(true);
+                    toast.success("تم نسخ كود الخصم بنجاح!");
+                    setTimeout(() => setCopiedCode(false), 2000);
+                  }}
+                >
+                  {copiedCode ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
+                  {copiedCode ? "تم النسخ" : "نسخ الكود"}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2 border-success/40 text-success hover:bg-success/10"
+                  onClick={() => {
+                    const waPhone = redeemedVoucher.customer.phone.replace(/^0/, "20");
+                    const msg = `مرحباً ${redeemedVoucher.customer.name} 🎁\nهدية خاصة لك من متجرنا تقديراً لولائك!\nتم إصدار كود خصم بقيمة *${redeemedVoucher.coupon.discountValue} ج.م*.\nكود الخصم: *${redeemedVoucher.coupon.code}*\nاستخدم الكود عند شرائك القادم للحصول على الخصم فوراً!`;
+                    window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, "_blank");
+                  }}
+                >
+                  <WhatsAppIcon className="w-4 h-4" />
+                  إرسال عبر واتساب
+                </Button>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" className="w-full" onClick={() => setRedeemedVoucher(null)}>
+              تم الإغلاق
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -1410,7 +1612,8 @@ function DeleteTimelineEntry({ kind, id }: { kind: "invoice" | "payment"; id: st
   );
 }
 
-function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: React.ReactNode }) {
+function CustomerDialog({ customer, customerCode, trigger }: { customer?: Customer; customerCode?: number; trigger: React.ReactNode }) {
+  const { data } = useDB();
   const today = new Date().toISOString().slice(0, 10);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(customer?.name ?? "");
@@ -1421,7 +1624,6 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
   const [notes, setNotes] = useState(customer?.notes ?? "");
   const [frozen, setFrozen] = useState(customer?.frozen ?? false);
   const [address, setAddress] = useState(customer?.address ?? "");
-  const [joiningDate, setJoiningDate] = useState(customer?.joiningDate ?? today);
   const [creditLimit, setCreditLimit] = useState<string>(String(customer?.creditLimit ?? 0));
   const [openingBalance, setOpeningBalance] = useState<string>(String(customer?.openingBalance ?? 0));
   const [dueDay, setDueDay] = useState<number>(customer?.dueDay ?? 1);
@@ -1430,10 +1632,18 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
 
   const phoneValid = EG_PHONE_RE.test(phone);
   const initials = name.trim() ? name.trim().split(/\s+/).slice(0, 2).map((s) => s[0]).join("") : "";
+  const assignedCode = customerCode ?? (data.customers.length + 1);
+
+  // Real-time duplicate phone validation
+  const duplicateCustomer = useMemo(() => {
+    if (!phone || phone.length < 11) return null;
+    return data.customers.find((c) => c.phone === phone && c.id !== customer?.id);
+  }, [phone, data.customers, customer]);
 
   const submit = () => {
     if (!name.trim()) return toast.error("الاسم مطلوب");
     if (!phoneValid) return toast.error("رقم الهاتف يجب أن يبدأ بـ 010 أو 011 أو 012 أو 015 ويتكون من 11 رقم");
+    if (duplicateCustomer) return toast.error(`رقم الهاتف مسجل مسبقاً للعميل (${duplicateCustomer.name})`);
     const iso = ddmmyyyyToIso(joiningDateInput);
     if (!iso) return toast.error("تاريخ الانضمام غير صحيح. الصيغة: يوم/شهر/سنة");
     const payload = {
@@ -1445,114 +1655,149 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
     };
     if (customer) {
       db.updateCustomer(customer.id, payload);
-      toast.success("تم التحديث");
+      toast.success("تم تحديث بيانات العميل");
     } else {
       db.addCustomer(payload);
-      toast.success("تم إضافة العميل");
+      toast.success(`تم إضافة العميل بنجاح (كود: #${assignedCode})`);
     }
     setOpen(false);
   };
 
-  const tip = RATING_TIPS[rating];
+  const tip = RATING_TIPS[rating] || RATING_TIPS[3];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-right">{customer ? "تعديل العميل" : "عميل جديد"}</DialogTitle>
-          <DialogDescription className="text-right">أدخل تفاصيل العميل والتقييم الائتماني.</DialogDescription>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto p-5 sm:p-6">
+        <DialogHeader className="border-b border-border/40 pb-3">
+          <div className="flex items-center justify-between">
+            <Badge variant="outline" className="font-mono font-bold text-xs bg-primary/10 text-primary border-primary/25 px-2.5 py-1">
+              كود العميل: #{assignedCode}
+            </Badge>
+            <DialogTitle className="text-right text-lg font-bold">
+              {customer ? "تعديل بيانات العميل" : "إضافة عميل جديد"}
+            </DialogTitle>
+          </div>
+          <DialogDescription className="text-right text-xs text-muted-foreground mt-1">
+            {customer ? `تعديل بيانات العميل ${customer.name} والتصنيف الائتماني.` : "سجل عميلاً جديداً بالمنظومة مع ربط تسلسلي فوري."}
+          </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          {/* Name + avatar */}
-          <div>
-            <Label>الاسم</Label>
-            <div className="flex items-center gap-3">
-              <Avatar className="h-11 w-11 hairline">
-                <AvatarFallback className="bg-foreground/[0.06] text-muted-foreground font-bold ring-1 ring-border">
-                  {initials || <User className="w-5 h-5" />}
-                </AvatarFallback>
-              </Avatar>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="اسم العميل" maxLength={100} className="flex-1" />
+
+        <div className="space-y-4 py-2">
+          {/* Duplicate phone alert */}
+          {duplicateCustomer && (
+            <div className="rounded-xl bg-danger/10 border border-danger/30 p-2.5 text-right text-xs text-danger flex items-center justify-between gap-2">
+              <span className="font-medium">⚠️ هذا الرقم مسجل بالفعل للعميل: <strong>{duplicateCustomer.name}</strong></span>
+              <AlertTriangle className="w-4 h-4 shrink-0" />
             </div>
-          </div>
+          )}
 
-          {/* Phone */}
-          <div>
-            <Label>رقم الهاتف</Label>
-            <Input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-              placeholder="01XXXXXXXXX"
-              maxLength={11}
-              dir="ltr"
-              className={cn(phone && !phoneValid && "border-danger focus-visible:ring-danger")}
-              inputMode="numeric"
-            />
-            {phone && !phoneValid && (
-              <p className="text-xs text-danger mt-1">يجب أن يبدأ بـ 010 / 011 / 012 / 015 ويكون 11 رقم.</p>
-            )}
-          </div>
-
-          {/* Address */}
-          <div>
-            <Label>عنوان العميل</Label>
-            <Textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="الشارع، المدينة..." maxLength={300} rows={2} />
-          </div>
-
-          {/* Customer type — نفس تصميم نوع الفاتورة */}
-          <div className="space-y-2">
-            <Label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">نوع العميل</Label>
-            <div className="grid grid-cols-2 gap-1.5 rounded-2xl bg-foreground/[0.04] p-1.5">
-              {([
-                { key: "installment" as const, label: "أقساط", hint: "بيع آجل بدفعات شهرية" },
-                { key: "cash" as const, label: "فوري (نقدي)", hint: "سداد كامل عند الشراء" },
-              ]).map((opt) => {
-                const active = customerType === opt.key;
-                return (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    onClick={() => {
-                      setCustomerType(opt.key);
-                      if (opt.key === "cash") { setCreditLimit("0"); setDueDay(1); }
-                    }}
-                    aria-pressed={active}
-                    className={cn(
-                      "rounded-[1.1rem] px-4 py-3 text-center transition-[transform,background-color,color] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]",
-                      active
-                        ? "bg-foreground text-background ring-1 ring-border"
-                        : "text-muted-foreground hover:bg-foreground/[0.04]",
-                    )}
-                  >
-                    <span className="block text-sm font-extrabold">{opt.label}</span>
-                    <span className="mt-0.5 block text-[11px] opacity-70">{opt.hint}</span>
-                  </button>
-                );
-              })}
+          {/* 2-Column Responsive Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {/* الاسم */}
+            <div className="sm:col-span-2">
+              <Label className="text-xs font-bold text-foreground">اسم العميل *</Label>
+              <div className="flex items-center gap-2.5 mt-1">
+                <Avatar className="h-10 w-10 hairline shrink-0">
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                    {initials || <User className="w-4 h-4" />}
+                  </AvatarFallback>
+                </Avatar>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="مثال: أحمد محمود إبراهيم"
+                  maxLength={100}
+                  className="flex-1"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Joining date */}
-          <div>
-            <Label>تاريخ الانضمام</Label>
-            <Input
-              type="text"
-              inputMode="numeric"
-              value={joiningDateInput}
-              onChange={(e) => {
-                let v = e.target.value.replace(/[^\d/]/g, "").slice(0, 10);
-                // Auto-insert slashes
-                const digits = v.replace(/\//g, "");
-                if (digits.length >= 5) v = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
-                else if (digits.length >= 3) v = `${digits.slice(0, 2)}/${digits.slice(2)}`;
-                else v = digits;
-                setJoiningDateInput(v);
-              }}
-              placeholder="يوم/شهر/سنة"
-              dir="ltr"
-              maxLength={10}
-            />
+            {/* الهاتف */}
+            <div>
+              <Label className="text-xs font-bold text-foreground">رقم الهاتف (11 رقم) *</Label>
+              <Input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                placeholder="01XXXXXXXXX"
+                maxLength={11}
+                dir="ltr"
+                className={cn("mt-1", phone && (!phoneValid || duplicateCustomer) && "border-danger focus-visible:ring-danger")}
+                inputMode="numeric"
+              />
+              {phone && !phoneValid && (
+                <p className="text-[11px] text-danger mt-1">يجب أن يبدأ بـ 010 / 011 / 012 / 015</p>
+              )}
+            </div>
+
+            {/* تاريخ الانضمام */}
+            <div>
+              <Label className="text-xs font-bold text-foreground">تاريخ الانضمام</Label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                value={joiningDateInput}
+                onChange={(e) => {
+                  let v = e.target.value.replace(/[^\d/]/g, "").slice(0, 10);
+                  const digits = v.replace(/\//g, "");
+                  if (digits.length >= 5) v = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+                  else if (digits.length >= 3) v = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+                  else v = digits;
+                  setJoiningDateInput(v);
+                }}
+                placeholder="يوم/شهر/سنة"
+                dir="ltr"
+                maxLength={10}
+                className="mt-1"
+              />
+            </div>
+
+            {/* العنوان */}
+            <div className="sm:col-span-2">
+              <Label className="text-xs font-bold text-foreground">العنوان / المنطقة</Label>
+              <Input
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="الشارع، الحي، المحافظة..."
+                maxLength={300}
+                className="mt-1"
+              />
+            </div>
+
+            {/* نوع المعاملات */}
+            <div className="sm:col-span-2">
+              <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                نوع المعاملات
+              </Label>
+              <div className="grid grid-cols-2 gap-1.5 rounded-2xl bg-foreground/[0.04] p-1.5">
+                {([
+                  { key: "installment" as const, label: "أقساط", hint: "بيع آجل بدفعات شهرية" },
+                  { key: "cash" as const, label: "فوري (نقدي)", hint: "سداد كامل عند الشراء" },
+                ]).map((opt) => {
+                  const active = customerType === opt.key;
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => {
+                        setCustomerType(opt.key);
+                        if (opt.key === "cash") { setCreditLimit("0"); setDueDay(1); }
+                      }}
+                      aria-pressed={active}
+                      className={cn(
+                        "rounded-[1.1rem] px-3 py-2 text-center transition-all duration-300",
+                        active
+                          ? "bg-foreground text-background shadow-sm ring-1 ring-border"
+                          : "text-muted-foreground hover:bg-foreground/[0.04]",
+                      )}
+                    >
+                      <span className="block text-sm font-extrabold">{opt.label}</span>
+                      <span className="text-[10px] opacity-75 block">{opt.hint}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* لوح خاص بنوع العميل */}
@@ -1560,154 +1805,117 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
             {customerType === "installment" ? (
               <motion.div
                 key="type-installment"
-                initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
-                transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
-                className="space-y-3 border-t border-border/30 pt-4"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className="rounded-2xl border border-border/50 bg-muted/20 p-3.5 space-y-3.5"
               >
-                <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
-                  <CreditCard className="h-3.5 w-3.5" /> إعدادات التقسيط
+                <div className="flex items-center gap-1.5 text-xs font-bold text-primary">
+                  <CreditCard className="h-4 w-4" />
+                  <span>إعدادات الائتمان والأقساط الشهرية</span>
                 </div>
-                <div>
-                  <Label>يوم القسط من الشهر</Label>
-                  <Select value={String(dueDay)} onValueChange={(v) => setDueDay(Number(v))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent className="max-h-60">
-                      {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
-                        <SelectItem key={d} value={String(d)}>يوم {d}</SelectItem>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs font-bold">يوم القسط من الشهر</Label>
+                    <Select value={String(dueDay)} onValueChange={(v) => setDueDay(Number(v))}>
+                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent className="max-h-56">
+                        {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
+                          <SelectItem key={d} value={String(d)}>يوم {d} من كل شهر</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs font-bold">سقف المديونية (ج.م)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={creditLimit}
+                      onChange={(e) => setCreditLimit(e.target.value)}
+                      placeholder="0 = بدون حد أقصى"
+                      dir="ltr"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                {/* حالة الالتزام والتقييم المتزامن */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-border/30">
+                  <div>
+                    <Label className="text-xs font-bold mb-1 block">حالة الالتزام المالي</Label>
+                    <Tabs 
+                      value={status} 
+                      onValueChange={(v) => {
+                        const newStatus = v as CustomerStatus;
+                        setStatus(newStatus);
+                        if (newStatus === "committed") setRating(5);
+                        else if (newStatus === "neutral") setRating(3);
+                        else if (newStatus === "defaulter") setRating(1);
+                      }}
+                    >
+                      <TabsList className="grid grid-cols-3 w-full">
+                        {STATUS_TABS.map((t) => (
+                          <TabsTrigger key={t.value} value={t.value} className={cn("gap-1 text-xs py-1", t.active)}>
+                            <span className={cn("w-1.5 h-1.5 rounded-full", t.dot)} />
+                            {t.label}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                    </Tabs>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs font-bold mb-1 block">التقييم الائتماني (النجوم)</Label>
+                    <div className="flex items-center gap-1.5 mt-1" dir="ltr">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => {
+                            setRating(n);
+                            if (n >= 4) setStatus("committed");
+                            else if (n === 3) setStatus("neutral");
+                            else setStatus("defaulter");
+                          }}
+                          className="p-0.5 hover:scale-110 transition-transform"
+                          aria-label={`${n} stars`}
+                        >
+                          <Star
+                            className={cn("w-5 h-5 transition-colors", n <= rating ? "fill-warning text-warning" : "text-muted-foreground/30")}
+                          />
+                        </button>
                       ))}
-                    </SelectContent>
-                  </Select>
+                      <span className="text-xs font-bold text-muted-foreground mr-1.5 font-mono">({rating}/5)</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <Label>سقف المديونية (ج.م)</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={creditLimit}
-                    onChange={(e) => setCreditLimit(e.target.value)}
-                    placeholder="0 = بدون حد"
-                    dir="ltr"
-                  />
+
+                <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 bg-background/80 p-2 rounded-xl border border-border/40">
+                  <Sparkles className="w-3.5 h-3.5 shrink-0 text-primary" />
+                  <span>{tip.text}</span>
                 </div>
               </motion.div>
             ) : (
               <motion.div
                 key="type-cash"
-                initial={{ opacity: 0, y: 8, filter: "blur(4px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -8, filter: "blur(4px)" }}
-                transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
-                className="flex items-start gap-2 border-t border-border/30 pt-4 text-[12px] leading-relaxed text-muted-foreground"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3 flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300"
               >
-                <Banknote className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                <span>عميل فوري: يدفع كامل المبلغ عند الشراء، فلا حاجة ليوم قسط أو سقف مديونية.</span>
+                <Check className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <span>عميل فوري: يسدد الفاتورة فورياً نقداً، لا يتطلب تحديد يوم قسط أو سقف ائتماني.</span>
               </motion.div>
             )}
           </AnimatePresence>
 
-
-          {/* Opening balance */}
-          <div>
-            <Label className="flex items-center gap-1.5 justify-end">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button" aria-label="معلومات">
-                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    لتسجيل مديونية قديمة من الدفاتر الورقية بدون إنشاء فاتورة وهمية. يضاف فوراً إلى إجمالي ديون العميل.
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <span>رصيد افتتاحي / مديونية سابقة (ج.م)</span>
-            </Label>
-            <Input
-              type="number"
-              min={0}
-              value={openingBalance}
-              onChange={(e) => setOpeningBalance(e.target.value)}
-              placeholder="0"
-              dir="ltr"
-            />
-          </div>
-
-          {/* لوح خاص بحالة الالتزام والتقييم - يختفي عند العميل الفوري */}
-          <AnimatePresence mode="wait" initial={false}>
-            {customerType === "installment" && (
-              <motion.div
-                key="rating-section"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                className="space-y-4 overflow-hidden origin-top"
-              >
-                {/* Status tabs */}
-                <div>
-                  <Label>حالة الالتزام</Label>
-                  <Tabs 
-                    value={status} 
-                    onValueChange={(v) => {
-                      const newStatus = v as CustomerStatus;
-                      setStatus(newStatus);
-                      // Link status to rating: committed -> 5, neutral -> 3, defaulter -> 1
-                      if (newStatus === "committed") setRating(5);
-                      else if (newStatus === "neutral") setRating(3);
-                      else if (newStatus === "defaulter") setRating(1);
-                    }}
-                  >
-                    <TabsList className="grid grid-cols-3 w-full">
-                      {STATUS_TABS.map((t) => (
-                        <TabsTrigger key={t.value} value={t.value} className={cn("gap-1.5", t.active)}>
-                          <span className={cn("w-2 h-2 rounded-full", t.dot)} />
-                          {t.label}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                  </Tabs>
-                </div>
-
-                {/* Star rating */}
-                <div>
-                  <Label>التقييم</Label>
-                  <div className="flex items-center gap-1" dir="ltr">
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setRating(n)}
-                        className="p-1 hover:scale-110 transition-transform"
-                        aria-label={`${n} stars`}
-                      >
-                        <Star
-                          className={cn("w-6 h-6 transition-colors duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]", n <= rating ? "fill-warning text-warning" : "text-muted-foreground/40")}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                  <div className={cn("mt-2 flex items-start gap-2 text-xs text-muted-foreground ps-1")}>
-                    <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground" />
-                    <span className="text-right flex-1">{tip.text}</span>
-                  </div>
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <Label>ملاحظات (اختياري)</Label>
-                  <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="أي ملاحظات إضافية..." maxLength={300} />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Freeze */}
-          <div className="border-t border-border/30 pt-4">
-            <div className="flex items-center justify-between">
-              <Switch checked={frozen} onCheckedChange={setFrozen} />
-              <div className="text-right flex items-center gap-1.5">
+          {/* رصيد افتتاحي وملاحظات */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs font-bold flex items-center gap-1.5 justify-end">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -1716,19 +1924,46 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="top">
-                      سيمنع هذا إنشاء أي فواتير جديدة لهذا العميل.
+                      لتسجيل مديونية قديمة من الدفاتر الورقية بدون إنشاء فاتورة وهمية. يضاف فوراً إلى إجمالي ديون العميل.
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                <span className="text-sm font-medium">تجميد الحساب</span>
-              </div>
+                <span>رصيد افتتاحي / ديون قديمة (ج.م)</span>
+              </Label>
+              <Input
+                type="number"
+                min={0}
+                value={openingBalance}
+                onChange={(e) => setOpeningBalance(e.target.value)}
+                placeholder="0"
+                dir="ltr"
+                className="mt-1"
+              />
             </div>
-            <p className="text-xs text-muted-foreground mt-2 text-right">
-              سيمنع هذا إنشاء أي فواتير جديدة لهذا العميل.
-            </p>
+
+            <div>
+              <Label className="text-xs font-bold">ملاحظات إضافية (اختياري)</Label>
+              <Input
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="أي ملاحظات حول العميل..."
+                maxLength={300}
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          {/* تجميد الحساب */}
+          <div className="flex items-center justify-between rounded-xl bg-muted/20 border border-border/40 p-2.5">
+            <Switch checked={frozen} onCheckedChange={setFrozen} />
+            <div className="text-right">
+              <span className="text-xs font-bold block">تجميد حساب العميل</span>
+              <span className="text-[10px] text-muted-foreground">يمنع إصدار أي فواتير جديدة لهذا العميل</span>
+            </div>
           </div>
         </div>
-        <DialogFooter>
+
+        <DialogFooter className="pt-2">
           <Button
             onClick={submit}
             onMouseDown={() => setPressed(true)}
@@ -1736,9 +1971,9 @@ function CustomerDialog({ customer, trigger }: { customer?: Customer; trigger: R
             onMouseLeave={() => setPressed(false)}
             onTouchStart={() => setPressed(true)}
             onTouchEnd={() => setPressed(false)}
-            className={cn("w-full transition-transform duration-100", pressed && "scale-95")}
+            className={cn("w-full py-2.5 font-bold transition-transform duration-100", pressed && "scale-95")}
           >
-            {customer ? "حفظ" : "إضافة العميل"}
+            {customer ? "حفظ التعديلات" : `إضافة العميل (كود #${assignedCode})`}
           </Button>
         </DialogFooter>
       </DialogContent>
