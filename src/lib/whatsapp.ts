@@ -236,7 +236,7 @@ export function openWhatsAppReceipt(params: {
   invoiceCode: string;
   customerName?: string;
   customerPhone?: string;
-  invoiceDate?: string;
+  invoiceDate?: string | Date;
   isCash?: boolean;
   total: number;
   downPayment?: number;

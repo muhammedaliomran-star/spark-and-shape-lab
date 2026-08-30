@@ -614,7 +614,7 @@ export const db = {
   async addCustomer(c: Partial<Omit<Customer, "id" | "createdAt">> & { name: string }): Promise<Customer | undefined> {
     const user_id = await uid();
     const { data: inserted, error } = await supabase.from("customers").insert({
-      user_id, name: c.name, phone: c.phone, rating: c.rating, status: c.status,
+      user_id, name: c.name, phone: c.phone ?? "", rating: c.rating, status: c.status,
       customer_type: c.customerType ?? 'installment',
       notes: c.notes, frozen: c.frozen,
       address: c.address, joining_date: c.joiningDate,
