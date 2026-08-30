@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AlertsRouteImport } from './routes/alerts'
+import { Route as AuditRouteImport } from './routes/audit'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BranchesRouteImport } from './routes/branches'
 import { Route as CashboxRouteImport } from './routes/cashbox'
@@ -19,6 +20,7 @@ import { Route as CourierRouteImport } from './routes/courier'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as DailyRouteImport } from './routes/daily'
 import { Route as DeliveryRouteImport } from './routes/delivery'
+import { Route as DiscountsRouteImport } from './routes/discounts'
 import { Route as DriverRouteImport } from './routes/driver'
 import { Route as ExpensesRouteImport } from './routes/expenses'
 import { Route as InventoryRouteImport } from './routes/inventory'
@@ -35,6 +37,7 @@ import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as StaffRouteImport } from './routes/staff'
 import { Route as StorefrontRouteImport } from './routes/storefront'
 import { Route as SuppliersRouteImport } from './routes/suppliers'
 import { Route as SupportRouteImport } from './routes/support'
@@ -72,6 +75,11 @@ const AlertsRoute = AlertsRouteImport.update({
   path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuditRoute = AuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -105,6 +113,11 @@ const DailyRoute = DailyRouteImport.update({
 const DeliveryRoute = DeliveryRouteImport.update({
   id: '/delivery',
   path: '/delivery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiscountsRoute = DiscountsRouteImport.update({
+  id: '/discounts',
+  path: '/discounts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DriverRoute = DriverRouteImport.update({
@@ -185,6 +198,11 @@ const ReturnsRoute = ReturnsRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffRoute = StaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StorefrontRoute = StorefrontRouteImport.update({
@@ -297,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/alerts': typeof AlertsRoute
+  '/audit': typeof AuditRoute
   '/auth': typeof AuthRoute
   '/branches': typeof BranchesRoute
   '/cashbox': typeof CashboxRoute
@@ -304,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/customers': typeof CustomersRoute
   '/daily': typeof DailyRoute
   '/delivery': typeof DeliveryRoute
+  '/discounts': typeof DiscountsRoute
   '/driver': typeof DriverRoute
   '/expenses': typeof ExpensesRoute
   '/inventory': typeof InventoryRoute
@@ -320,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
+  '/staff': typeof StaffRoute
   '/storefront': typeof StorefrontRouteWithChildren
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
@@ -346,6 +367,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/alerts': typeof AlertsRoute
+  '/audit': typeof AuditRoute
   '/auth': typeof AuthRoute
   '/branches': typeof BranchesRoute
   '/cashbox': typeof CashboxRoute
@@ -353,6 +375,7 @@ export interface FileRoutesByTo {
   '/customers': typeof CustomersRoute
   '/daily': typeof DailyRoute
   '/delivery': typeof DeliveryRoute
+  '/discounts': typeof DiscountsRoute
   '/driver': typeof DriverRoute
   '/expenses': typeof ExpensesRoute
   '/inventory': typeof InventoryRoute
@@ -368,6 +391,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
+  '/staff': typeof StaffRoute
   '/storefront': typeof StorefrontRouteWithChildren
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
@@ -395,6 +419,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/alerts': typeof AlertsRoute
+  '/audit': typeof AuditRoute
   '/auth': typeof AuthRoute
   '/branches': typeof BranchesRoute
   '/cashbox': typeof CashboxRoute
@@ -402,6 +427,7 @@ export interface FileRoutesById {
   '/customers': typeof CustomersRoute
   '/daily': typeof DailyRoute
   '/delivery': typeof DeliveryRoute
+  '/discounts': typeof DiscountsRoute
   '/driver': typeof DriverRoute
   '/expenses': typeof ExpensesRoute
   '/inventory': typeof InventoryRoute
@@ -418,6 +444,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/settings': typeof SettingsRoute
+  '/staff': typeof StaffRoute
   '/storefront': typeof StorefrontRouteWithChildren
   '/suppliers': typeof SuppliersRoute
   '/support': typeof SupportRoute
@@ -446,6 +473,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/alerts'
+    | '/audit'
     | '/auth'
     | '/branches'
     | '/cashbox'
@@ -453,6 +481,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/daily'
     | '/delivery'
+    | '/discounts'
     | '/driver'
     | '/expenses'
     | '/inventory'
@@ -469,6 +498,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/returns'
     | '/settings'
+    | '/staff'
     | '/storefront'
     | '/suppliers'
     | '/support'
@@ -495,6 +525,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/alerts'
+    | '/audit'
     | '/auth'
     | '/branches'
     | '/cashbox'
@@ -502,6 +533,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/daily'
     | '/delivery'
+    | '/discounts'
     | '/driver'
     | '/expenses'
     | '/inventory'
@@ -517,6 +549,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/returns'
     | '/settings'
+    | '/staff'
     | '/storefront'
     | '/suppliers'
     | '/support'
@@ -543,6 +576,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/alerts'
+    | '/audit'
     | '/auth'
     | '/branches'
     | '/cashbox'
@@ -550,6 +584,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/daily'
     | '/delivery'
+    | '/discounts'
     | '/driver'
     | '/expenses'
     | '/inventory'
@@ -566,6 +601,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/returns'
     | '/settings'
+    | '/staff'
     | '/storefront'
     | '/suppliers'
     | '/support'
@@ -593,6 +629,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AlertsRoute: typeof AlertsRoute
+  AuditRoute: typeof AuditRoute
   AuthRoute: typeof AuthRoute
   BranchesRoute: typeof BranchesRoute
   CashboxRoute: typeof CashboxRoute
@@ -600,6 +637,7 @@ export interface RootRouteChildren {
   CustomersRoute: typeof CustomersRoute
   DailyRoute: typeof DailyRoute
   DeliveryRoute: typeof DeliveryRoute
+  DiscountsRoute: typeof DiscountsRoute
   DriverRoute: typeof DriverRoute
   ExpensesRoute: typeof ExpensesRoute
   InventoryRoute: typeof InventoryRoute
@@ -616,6 +654,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ReturnsRoute: typeof ReturnsRoute
   SettingsRoute: typeof SettingsRoute
+  StaffRoute: typeof StaffRoute
   StorefrontRoute: typeof StorefrontRouteWithChildren
   SuppliersRoute: typeof SuppliersRoute
   SupportRoute: typeof SupportRoute
@@ -654,6 +693,13 @@ declare module '@tanstack/react-router' {
       path: '/alerts'
       fullPath: '/alerts'
       preLoaderRoute: typeof AlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/audit': {
+      id: '/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AuditRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -703,6 +749,13 @@ declare module '@tanstack/react-router' {
       path: '/delivery'
       fullPath: '/delivery'
       preLoaderRoute: typeof DeliveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/discounts': {
+      id: '/discounts'
+      path: '/discounts'
+      fullPath: '/discounts'
+      preLoaderRoute: typeof DiscountsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/driver': {
@@ -815,6 +868,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff': {
+      id: '/staff'
+      path: '/staff'
+      fullPath: '/staff'
+      preLoaderRoute: typeof StaffRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/storefront': {
@@ -1012,6 +1072,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AlertsRoute: AlertsRoute,
+  AuditRoute: AuditRoute,
   AuthRoute: AuthRoute,
   BranchesRoute: BranchesRoute,
   CashboxRoute: CashboxRoute,
@@ -1019,6 +1080,7 @@ const rootRouteChildren: RootRouteChildren = {
   CustomersRoute: CustomersRoute,
   DailyRoute: DailyRoute,
   DeliveryRoute: DeliveryRoute,
+  DiscountsRoute: DiscountsRoute,
   DriverRoute: DriverRoute,
   ExpensesRoute: ExpensesRoute,
   InventoryRoute: InventoryRoute,
@@ -1035,6 +1097,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ReturnsRoute: ReturnsRoute,
   SettingsRoute: SettingsRoute,
+  StaffRoute: StaffRoute,
   StorefrontRoute: StorefrontRouteWithChildren,
   SuppliersRoute: SuppliersRoute,
   SupportRoute: SupportRoute,
