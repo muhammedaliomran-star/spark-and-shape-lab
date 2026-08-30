@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   Plus, AlertTriangle, ShieldAlert, Trash2, CalendarIcon, Package, ScanLine,
-  Receipt, Banknote, ArrowRight, Eye, EyeOff, Truck, Undo2
+  Receipt, Banknote, ArrowRight, Eye, EyeOff, Truck, Undo2, Tag, FileText, ChevronDown, ChevronUp
 } from "lucide-react";
 
 
@@ -163,7 +163,9 @@ function NewInvoicePage() {
   const blocked = customer && (customer.frozen || customer.status === "defaulter");
 
   const totalCost = products.reduce((s, p) => s + Number(p.cost || 0) * Number(p.quantity || 1), 0);
-  const subtotal = products.reduce((s, p) => s + Number(p.price || 0) * Number(p.quantity || 1), 0);
+  const rawSubtotal = products.reduce((s, p) => s + Number(p.price || 0) * Number(p.quantity || 1), 0);
+  const itemDiscountsTotal = products.reduce((s, p) => s + Math.min(Number(p.price || 0) * Number(p.quantity || 1), Number(p.discount || 0)), 0);
+  const subtotal = Math.max(0, rawSubtotal - itemDiscountsTotal);
   const discountValue = Math.min(subtotal, Math.max(0, Number(discountAmt || 0)));
   const afterDiscount = Math.max(0, subtotal - discountValue);
   const taxValue = Math.max(0, (afterDiscount * Number(taxPct || 0)) / 100);
@@ -263,11 +265,19 @@ function NewInvoicePage() {
       return toast.error(`تجاوز سقف المديونية (${fmt(customerInfo.limit)} ج.م) — عدّل المقدم أو ارفع السقف`);
     }
     const iso = isCash ? format(new Date(), "yyyy-MM-dd") : format(date as Date, "yyyy-MM-dd");
-    const summary = validProducts.map((p) => `${p.name.trim()}${Number(p.quantity) > 1 ? ` ×${p.quantity}` : ""}`).join("، ");
+    const summary = validProducts.map((p) => {
+      const qty = Number(p.quantity || 1);
+      const qtyStr = qty > 1 ? ` ×${qty}` : "";
+      const disc = Number(p.discount || 0);
+      const discStr = disc > 0 ? ` (خصم ${fmt(disc)} ج.م)` : "";
+      const noteStr = p.notes ? ` [${p.notes}]` : "";
+      return `${p.name.trim()}${qtyStr}${discStr}${noteStr}`;
+    }).join("، ");
     const productNotes = `${summary}${notes ? ` — ${notes}` : ""}`;
     try {
+      const user_id = await uid();
       const { data: invData, error: invErr } = await (supabase.from as any)("invoices").insert({
-        user_id: await uid(),
+        user_id,
         customer_id: customerId,
         total: t,
         down_payment: isCash ? t : d,
@@ -289,7 +299,7 @@ function NewInvoicePage() {
         const itemRows = validProducts.flatMap((p) => {
           const qty = Math.max(1, Number(p.quantity || 1));
           return [{
-            user_id: invData.user_id,
+            user_id,
             invoice_id: invData.id,
             name: p.name.trim(),
             cost: Number(p.cost || 0),
@@ -304,7 +314,7 @@ function NewInvoicePage() {
       // Add Shipment if carrier selected
       if (shippingCarrierId && invData?.id) {
         const { error: shipErr } = await (supabase.from as any)("shipments").insert({
-          user_id: await uid(),
+          user_id,
           invoice_id: invData.id,
           carrier_id: shippingCarrierId,
           zone_id: shippingZoneId || null,
@@ -321,7 +331,8 @@ function NewInvoicePage() {
         .filter((p) => p.stockId)
         .map((p) => ({ stockId: p.stockId!, quantity: Number(p.quantity || 0) }));
       if (deductions.length > 0) await db.deductStock(deductions);
-      toast.success(isCash ? "تم إنشاء فاتورة بيع نقدي ✓ مسددة" : "تم إنشاء الفاتورة");
+      await db.invalidate();
+      toast.success(isCash ? "تم إنشاء فاتورة بيع نقدي ✓ مسددة" : "تم إنشاء الفاتورة بنجاح");
     } catch (e: any) {
       toast.error(e?.message ?? "تعذّر إنشاء الفاتورة");
       return;
@@ -539,7 +550,10 @@ function NewInvoicePage() {
                 {products.map((p, idx) => {
                   const s = p.stockId ? data.stockItems.find((x) => x.id === p.stockId) : undefined;
                   const qty = Number(p.quantity || 0);
-                  const lineTotal = Number(p.price || 0) * Number(p.quantity || 1);
+                  const lineGross = Number(p.price || 0) * Number(p.quantity || 1);
+                  const itemDisc = Math.min(lineGross, Number(p.discount || 0));
+                  const lineNet = Math.max(0, lineGross - itemDisc);
+                  const hasDetails = Boolean(p.discount || p.notes);
                   return (
                     <motion.div
                       key={p.id}
@@ -548,7 +562,7 @@ function NewInvoicePage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -6 }}
                       transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-                      className="divide-y divide-border/30 px-3 py-2.5"
+                      className="rounded-2xl border border-border/40 bg-white/[0.02] p-3 space-y-2"
                     >
                       <div className="grid grid-cols-1 items-end gap-2 sm:grid-cols-[minmax(0,1fr)_76px_96px_96px_32px]">
                         <div className="min-w-0">
@@ -589,10 +603,43 @@ function NewInvoicePage() {
                           </Button>
                         </div>
                       </div>
-                      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
-                        <span className="font-bold text-muted-foreground">
-                          الإجمالي: {fmt(lineTotal)} ج.م
-                        </span>
+
+                      {/* Row discount and item notes */}
+                      <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-2 pt-1 border-t border-border/20">
+                        <div className="flex items-center gap-1.5 bg-white/[0.02] rounded-lg px-2 border border-white/5">
+                          <Tag className="w-3 h-3 text-muted-foreground shrink-0" />
+                          <Input
+                            type="number"
+                            min="0"
+                            placeholder="خصم بالبند..."
+                            value={p.discount || ""}
+                            onChange={(e) => updateProduct(p.id, { discount: e.target.value })}
+                            className="h-7 border-0 bg-transparent text-xs p-0 text-right focus-visible:ring-0"
+                          />
+                          <span className="text-[10px] text-muted-foreground">ج.م</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-white/[0.02] rounded-lg px-2 border border-white/5">
+                          <FileText className="w-3 h-3 text-muted-foreground shrink-0" />
+                          <Input
+                            placeholder="ملاحظات البند (سيريال، لون، ضمان...)"
+                            value={p.notes || ""}
+                            onChange={(e) => updateProduct(p.id, { notes: e.target.value })}
+                            className="h-7 border-0 bg-transparent text-xs p-0 text-right focus-visible:ring-0"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] pt-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-muted-foreground">
+                            صافي البند: <span className="text-foreground">{fmt(lineNet)} ج.م</span>
+                          </span>
+                          {itemDisc > 0 && (
+                            <span className="text-[10px] text-success font-medium">
+                              (مخصوم {fmt(itemDisc)} ج.م)
+                            </span>
+                          )}
+                        </div>
                         {s && (
                           <span className={cn("flex items-center gap-1", s.quantity >= qty && qty > 0 ? "text-success" : "text-danger")}>
                             <Package className="h-3 w-3" /> المتوفر: {s.quantity}

@@ -28,7 +28,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Search, Wallet, AlertTriangle, Printer, ShieldAlert, Eye, Pencil, Trash2, Bell, History, TrendingUp, CalendarDays, AlertCircle, MessageCircle, EyeOff, Download, FileSpreadsheet, FileText, X, ChevronsUpDown, Check, Package, ScanLine, Info, CreditCard, Receipt, Undo2, Copy, Share2, MoreVertical, Layers, CheckCircle2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { InstallmentScheduleMatrix } from "@/components/InstallmentScheduleMatrix";
+import { CreateInvoiceShipmentDialog } from "@/components/CreateInvoiceShipmentDialog";
+import { InvoicePrintCustomizerDialog } from "@/components/InvoicePrintCustomizerDialog";
+import { Plus, Search, Wallet, AlertTriangle, Printer, ShieldAlert, Eye, Pencil, Trash2, Bell, History, TrendingUp, CalendarDays, AlertCircle, MessageCircle, EyeOff, Download, FileSpreadsheet, FileText, X, ChevronsUpDown, Check, Package, ScanLine, Info, CreditCard, Receipt, Undo2, Copy, Share2, MoreVertical, Layers, CheckCircle2, Truck, CheckSquare, Square } from "lucide-react";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { EmptyState } from "@/components/EmptyState";
 import { TableSkeleton } from "@/components/LoadingSkeletons";
@@ -73,9 +77,193 @@ function InvoicesPage() {
   const { privacy, toggle } = usePrivacy();
   const blurCls = privacy ? "privacy-blur" : "privacy-clear";
   const { settings: shopSettings } = useShopSettings();
-  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
-  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
-  const [searchScanOpen, setSearchScanOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [customPrintInv, setCustomPrintInv] = useState<Invoice | null>(null);
+  const [shipmentInv, setShipmentInv] = useState<Invoice | null>(null);
+  const [directPayState, setDirectPayState] = useState<{
+    invoiceId: string;
+    max: number;
+    invoiceNo?: string;
+    customerName?: string;
+    initialAmount?: number;
+  } | null>(null);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === list.length && list.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(list.map((i) => i.id)));
+    }
+  };
+
+  const handleBulkPrint = () => {
+    if (selectedIds.size === 0) return toast.error("حدد فواتير للطباعة أولاً");
+    const targetInvoices = list.filter((i) => selectedIds.has(i.id));
+    const cur = shopSettings.currency || "ج.م";
+    const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+    let sumTotal = 0;
+    let sumPaid = 0;
+    let sumRemaining = 0;
+
+    const invoicesHtml = targetInvoices.map((inv, idx) => {
+      const cust = findCustomer(inv.customerId);
+      const remaining = Math.max(0, inv.total - inv.paid);
+      sumTotal += inv.total;
+      sumPaid += inv.paid;
+      sumRemaining += remaining;
+      const invItems = data.invoiceItems.filter((it) => it.invoiceId === inv.id);
+
+      return `
+        <div style="page-break-after: always; padding: 20px 0; border-bottom: 2px dashed #cbd5e1; margin-bottom: 30px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 14px;">
+            <div>
+              <h3 style="margin: 0; font-size: 16px; color: #0f172a;">فاتورة مبيعات #${invoiceNumber(data.invoices, inv.id, shopSettings.invoicePrefix)}</h3>
+              <span style="font-size: 11px; color: #64748b;">تاريخ: ${format(new Date(inv.createdAt), "dd/MM/yyyy")}</span>
+            </div>
+            <div style="text-align: left;">
+              <b style="font-size: 14px; color: #0f172a;">${escapeHtml(cust?.name || "عميل")}</b>
+              <span style="font-size: 11px; color: #64748b; display: block;" dir="ltr">${escapeHtml(cust?.phone || "—")}</span>
+            </div>
+          </div>
+
+          <table style="width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 14px;">
+            <thead>
+              <tr style="background: #f8fafc; text-align: right;">
+                <th style="padding: 6px 8px; border: 1px solid #e2e8f0;">الصنف</th>
+                <th style="padding: 6px 8px; border: 1px solid #e2e8f0; text-align: center;">الكمية</th>
+                <th style="padding: 6px 8px; border: 1px solid #e2e8f0;">السعر</th>
+                <th style="padding: 6px 8px; border: 1px solid #e2e8f0;">الإجمالي</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${invItems.length > 0 ? invItems.map((it) => `
+                <tr>
+                  <td style="padding: 6px 8px; border: 1px solid #e2e8f0;">${escapeHtml(it.name)}</td>
+                  <td style="padding: 6px 8px; border: 1px solid #e2e8f0; text-align: center;">${it.quantity || 1}</td>
+                  <td style="padding: 6px 8px; border: 1px solid #e2e8f0;">${fmt(it.price)} ${cur}</td>
+                  <td style="padding: 6px 8px; border: 1px solid #e2e8f0; font-weight: bold;">${fmt(it.price * (it.quantity || 1))} ${cur}</td>
+                </tr>
+              `).join("") : `
+                <tr>
+                  <td colspan="4" style="padding: 6px 8px; border: 1px solid #e2e8f0; text-align: center;">${escapeHtml(inv.notes || "مبيعات عامة")}</td>
+                </tr>
+              `}
+            </tbody>
+          </table>
+
+          <div style="display: flex; justify-content: space-between; background: #f1f5f9; padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: bold;">
+            <span>الإجمالي: ${fmt(inv.total)} ${cur}</span>
+            <span style="color: #16a34a;">المدفوع: ${fmt(inv.paid)} ${cur}</span>
+            <span style="color: ${remaining > 0 ? '#dc2626' : '#16a34a'};">المتبقي: ${fmt(remaining)} ${cur}</span>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    const html = pdfDocument({
+      docTitle: `طباعة مجمعة — ${targetInvoices.length} فاتورة`,
+      badge: "طباعة مجمعة",
+      title: "دفتر الفواتير المحددة",
+      lede: `طباعة مجمعة لعدد ${targetInvoices.length} فاتورة مختارة.`,
+      brandSub: shopSettings.shopName || undefined,
+      meta: [
+        { label: "تاريخ الطباعة", value: today },
+        { label: "عدد الفواتير", value: String(targetInvoices.length) },
+      ],
+      kpis: [
+        { label: "إجمالي المبيعات", value: `${fmt(sumTotal)} ${cur}`, tone: "brand" },
+        { label: "إجمالي المحصل", value: `${fmt(sumPaid)} ${cur}` },
+        { label: "إجمالي المتبقي", value: `${fmt(sumRemaining)} ${cur}`, tone: sumRemaining > 0 ? "danger" : "brand" },
+      ],
+      body: invoicesHtml,
+      footerNote: shopSettings.footerNote || undefined,
+    });
+
+    openPdfDocument(html, { autoPrint: true });
+  };
+
+  const handleBulkExportCSV = () => {
+    if (selectedIds.size === 0) return toast.error("حدد فواتير للتصدير أولاً");
+    const targetInvoices = list.filter((i) => selectedIds.has(i.id));
+    const headers = ["رقم الفاتورة", "العميل", "الهاتف", "العنوان", "الإجمالي", "المسدد", "المتبقي", "القسط الشهري", "تاريخ الاستحقاق", "تاريخ الإنشاء", "الحالة"];
+    const rows = targetInvoices.map((inv) => {
+      const c = findCustomer(inv.customerId);
+      const remaining = inv.total - inv.paid;
+      const late = daysLate(inv);
+      const status = remaining === 0 ? "مسددة" : late > 0 ? `متأخرة ${late} يوم` : "نشطة";
+      return [
+        invoiceNumber(data.invoices, inv.id, shopSettings.invoicePrefix),
+        c?.name ?? "—",
+        c?.phone ?? "—",
+        c?.address ?? "—",
+        inv.total,
+        inv.paid,
+        remaining,
+        inv.monthlyInstallment,
+        isoToDDMMYYYY(inv.firstDueDate),
+        format(new Date(inv.createdAt), "dd/MM/yyyy"),
+        status,
+      ];
+    });
+
+    const csv = "\uFEFF" + [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `selected-invoices-${format(new Date(), "yyyy-MM-dd-HHmm")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`تم تصدير ${targetInvoices.length} فاتورة بنجاح`);
+  };
+
+  const handleBulkWhatsApp = () => {
+    if (selectedIds.size === 0) return toast.error("حدد فواتير أولاً");
+    const targetInvoices = list.filter((i) => selectedIds.has(i.id));
+    const overdueOnes = targetInvoices.filter((i) => (i.total - i.paid) > 0);
+
+    if (overdueOnes.length === 0) {
+      return toast.info("جميع الفواتير المحددة مسددة بالكامل ولا توجد عليها مديونيات!");
+    }
+
+    // Prepare reminders and copy or open first one
+    const firstOverdue = overdueOnes[0];
+    const firstCust = findCustomer(firstOverdue.customerId);
+    if (firstCust?.phone) {
+      const remaining = firstOverdue.total - firstOverdue.paid;
+      const msg = `مرحباً ${firstCust.name}، نود تذكيركم بموعد سداد القسط المستحق على فاتورتكم #${invoiceNumber(data.invoices, firstOverdue.id, shopSettings.invoicePrefix)} بقيمة ${fmt(remaining)} ج.م لدى ${shopSettings.shopName || "المحل"}. شكراً لتعاملكم معنا.`;
+      const cleanPhone = firstCust.phone.replace(/\D/g, "");
+      const waPhone = cleanPhone.startsWith("0") ? "2" + cleanPhone : cleanPhone;
+      window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, "_blank");
+      toast.success(`تم فتح واتساب للعميل ${firstCust.name} (${overdueOnes.length} فاتورة عليها متبقي)`);
+    } else {
+      toast.error("لا يوجد رقم هاتف مسجل لأول فاتورة متأخرة");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    const count = selectedIds.size;
+    try {
+      for (const id of Array.from(selectedIds)) {
+        await db.deleteInvoice(id);
+      }
+      setSelectedIds(new Set());
+      toast.success(`تم حذف ${count} فاتورة بنجاح`);
+    } catch (err: any) {
+      toast.error(err?.message || "حدث خطأ أثناء الحذف الجماعي");
+    }
+  };
   const handleCloneInvoice = (inv: Invoice) => {
     const invItems = data.invoiceItems.filter((it) => it.invoiceId === inv.id);
     const monthsCount = inv.monthlyInstallment > 0
@@ -356,10 +544,105 @@ function InvoicesPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {list.length > 0 && (
+            <div className="flex items-center gap-2 px-2 py-1 rounded-xl bg-foreground/[0.03] border border-border/50 text-xs">
+              <Checkbox
+                checked={selectedIds.size === list.length && list.length > 0}
+                onCheckedChange={toggleSelectAll}
+                id="select-all-invoices"
+              />
+              <label htmlFor="select-all-invoices" className="cursor-pointer text-muted-foreground font-medium select-none">
+                تحديد الكل ({list.length})
+              </label>
+            </div>
+          )}
+
           <div className="md:ms-auto text-xs text-muted-foreground">
             {list.length} فاتورة
           </div>
         </div>
+
+        {/* شريط الإجراءات الجماعية العائم */}
+        <AnimatePresence>
+          {selectedIds.size > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.98 }}
+              className="p-3 rounded-2xl bg-foreground/95 text-background shadow-xl flex flex-wrap items-center justify-between gap-3 border border-border"
+            >
+              <div className="flex items-center gap-2.5">
+                <Badge variant="secondary" className="font-bold text-xs bg-background text-foreground">
+                  {selectedIds.size} فاتورة محددة
+                </Badge>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedIds(new Set())}
+                  className="h-7 text-xs text-background/70 hover:text-background hover:bg-background/10"
+                >
+                  إلغاء التحديد
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleBulkPrint}
+                  className="h-8 gap-1.5 text-xs font-bold bg-background text-foreground hover:bg-background/90"
+                >
+                  <Printer className="w-3.5 h-3.5 text-primary" /> طباعة مجمعة
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleBulkExportCSV}
+                  className="h-8 gap-1.5 text-xs font-bold bg-background text-foreground hover:bg-background/90"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-success" /> تصدير إكسل
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleBulkWhatsApp}
+                  className="h-8 gap-1.5 text-xs font-bold bg-background text-foreground hover:bg-background/90"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-success" /> تذكير واتساب
+                </Button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-8 gap-1.5 text-xs font-bold"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> حذف المحدد
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-right">حذف الفواتير المحددة ({selectedIds.size})</AlertDialogTitle>
+                      <AlertDialogDescription className="text-right">
+                        هل أنت متأكد من حذف {selectedIds.size} فاتورة نهائياً؟ سيتم إرجاع كميات المخزون وحذف كافة السجلات المالية المرتبطة بها.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-2">
+                      <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleBulkDelete} className="bg-danger text-danger-foreground">
+                        نعم، حذف الكل
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <Reveal delay={140}>
@@ -379,16 +662,25 @@ function InvoicesPage() {
               const isOverdue = remaining > 0 && late > 0;
               const status = remaining === 0 ? "مسددة" : isOverdue ? `متأخرة (${late} يوم)` : "نشطة";
               const cust = findCustomer(inv.customerId);
+              const isSelected = selectedIds.has(inv.id);
               
               return (
                 <div
                   key={inv.id}
-                  className="group bezel-shell bezel-lift animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)] both"
+                  className={cn(
+                    "group bezel-shell bezel-lift animate-[fade-in_0.5s_cubic-bezier(0.32,0.72,0,1)] both transition-all",
+                    isSelected ? "ring-2 ring-primary bg-primary/[0.02]" : ""
+                  )}
                   style={{ animationDelay: `${Math.min(idx, 12) * 45}ms` }}
                 >
                   <div className="bezel-core grid grid-cols-1 items-center gap-5 p-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_auto] md:gap-6">
                     {/* الهوية */}
                     <div className="flex min-w-0 items-center gap-3">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelect(inv.id)}
+                        className="shrink-0"
+                      />
                       <div className={cn(
                         "text-display grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-lg font-bold ring-1",
                         remaining === 0 ? "bg-success/12 text-success ring-success/25" : 
@@ -426,7 +718,7 @@ function InvoicesPage() {
                               <Info className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>تفاصيل البنود</TooltipContent>
+                          <TooltipContent>تفاصيل البنود والتقسيط</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                       <TooltipProvider>
@@ -442,11 +734,11 @@ function InvoicesPage() {
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => printReceipt(inv, cust?.name ?? "—", cust?.phone ?? "—", data.invoices)}>
+                            <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => setCustomPrintInv(inv)}>
                               <Printer className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>طباعة</TooltipContent>
+                          <TooltipContent>تخصيص وطباعة الفاتورة</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                       {remaining > 0 && (
@@ -464,10 +756,18 @@ function InvoicesPage() {
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="text-right w-48">
+                        <DropdownMenuContent align="end" className="text-right w-52">
                           <DropdownMenuItem onClick={() => setViewInv(inv)} className="gap-2 justify-end">
-                            <span>عرض التفاصيل والبنود</span>
+                            <span>عرض التفاصيل وجدول الأقساط</span>
                             <Eye className="w-4 h-4 text-primary" />
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setCustomPrintInv(inv)} className="gap-2 justify-end">
+                            <span>تخصيص وطباعة الإيصال (حراري/A4)</span>
+                            <Printer className="w-4 h-4 text-primary" />
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setShipmentInv(inv)} className="gap-2 justify-end">
+                            <span>تحويل إلى شحنة وبوليصة توصيل</span>
+                            <Truck className="w-4 h-4 text-indigo-500" />
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => setReturnInv(inv)} className="gap-2 justify-end">
                             <span>مرتجع بضاعة من الفاتورة</span>
@@ -529,8 +829,21 @@ function InvoicesPage() {
         onClose={() => setViewInv(null)}
         onOpenReturn={(i) => { setViewInv(null); setReturnInv(i); }}
         onOpenShare={(i) => { setViewInv(null); setShareInv(i); }}
+        onOpenCustomPrint={(i) => { setViewInv(null); setCustomPrintInv(i); }}
+        onOpenShipment={(i) => { setViewInv(null); setShipmentInv(i); }}
         onClone={(i) => handleCloneInvoice(i)}
         onEdit={(i) => { setViewInv(null); setEditInv(i); }}
+        onDirectPay={(i, amount) => {
+          const cust = findCustomer(i.customerId);
+          const remaining = Math.max(0, i.total - i.paid);
+          setDirectPayState({
+            invoiceId: i.id,
+            max: remaining,
+            invoiceNo: invoiceNumber(data.invoices, i.id, shopSettings.invoicePrefix),
+            customerName: cust?.name,
+            initialAmount: Math.min(amount, remaining),
+          });
+        }}
       />
       <InvoiceReturnDialog
         inv={returnInv}
@@ -545,6 +858,30 @@ function InvoicesPage() {
         shopSettings={shopSettings}
         onClose={() => setShareInv(null)}
       />
+      <CreateInvoiceShipmentDialog
+        invoice={shipmentInv}
+        customer={shipmentInv ? findCustomer(shipmentInv.customerId) ?? null : null}
+        invoiceNumber={shipmentInv ? invoiceNumber(data.invoices, shipmentInv.id, shopSettings.invoicePrefix) : ""}
+        onClose={() => setShipmentInv(null)}
+      />
+      <InvoicePrintCustomizerDialog
+        invoice={customPrintInv}
+        customer={customPrintInv ? findCustomer(customPrintInv.customerId) ?? null : null}
+        items={data.invoiceItems}
+        invoices={data.invoices}
+        onClose={() => setCustomPrintInv(null)}
+      />
+      {directPayState && (
+        <PaymentDialog
+          invoiceId={directPayState.invoiceId}
+          max={directPayState.max}
+          invoiceNo={directPayState.invoiceNo}
+          customerName={directPayState.customerName}
+          initialAmount={directPayState.initialAmount}
+          controlledOpen={true}
+          onControlledClose={() => setDirectPayState(null)}
+        />
+      )}
       <EditInvoiceDialog inv={editInv} onClose={() => setEditInv(null)} />
       <ReminderDialog inv={reminderInv} customer={reminderInv ? findCustomer(reminderInv.customerId) ?? null : null} onClose={() => setReminderInv(null)} />
       <BarcodeScanner
@@ -1094,8 +1431,11 @@ function ViewInvoiceDialog({
   onClose,
   onOpenReturn,
   onOpenShare,
+  onOpenCustomPrint,
+  onOpenShipment,
   onClone,
   onEdit,
+  onDirectPay,
 }: {
   inv: Invoice | null;
   customer: Customer | null;
@@ -1104,8 +1444,11 @@ function ViewInvoiceDialog({
   onClose: () => void;
   onOpenReturn?: (i: Invoice) => void;
   onOpenShare?: (i: Invoice) => void;
+  onOpenCustomPrint?: (i: Invoice) => void;
+  onOpenShipment?: (i: Invoice) => void;
   onClone?: (i: Invoice) => void;
   onEdit?: (i: Invoice) => void;
+  onDirectPay?: (i: Invoice, amount: number) => void;
 }) {
   const { privacy } = usePrivacy();
   const { settings: shop } = useShopSettings();
@@ -1125,7 +1468,7 @@ function ViewInvoiceDialog({
 
   return (
     <Dialog open={!!inv} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
             <div className="flex items-center gap-2">
@@ -1150,6 +1493,22 @@ function ViewInvoiceDialog({
           <Button
             size="sm"
             variant="outline"
+            onClick={() => onOpenCustomPrint?.(inv)}
+            className="gap-1.5 text-xs text-primary border-primary/30 hover:bg-primary/10 font-bold"
+          >
+            <Printer className="w-3.5 h-3.5" /> تخصيص وطباعة
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onOpenShipment?.(inv)}
+            className="gap-1.5 text-xs text-indigo-600 border-indigo-500/30 hover:bg-indigo-500/10 font-bold"
+          >
+            <Truck className="w-3.5 h-3.5" /> تحويل لشحنة
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
             onClick={() => onOpenShare?.(inv)}
             className="gap-1.5 text-xs text-success border-success/30 hover:bg-success/10 font-bold"
           >
@@ -1169,15 +1528,7 @@ function ViewInvoiceDialog({
             onClick={() => onClone?.(inv)}
             className="gap-1.5 text-xs text-blue-500 border-blue-500/30 hover:bg-blue-500/10 font-bold"
           >
-            <Copy className="w-3.5 h-3.5" /> استنساخ الفاتورة
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => printReceipt(inv, customer?.name ?? "—", customer?.phone ?? "—", [inv])}
-            className="gap-1.5 text-xs text-foreground/80 hover:bg-foreground/5 font-bold"
-          >
-            <Printer className="w-3.5 h-3.5" /> طباعة إيصال
+            <Copy className="w-3.5 h-3.5" /> استنساخ
           </Button>
           <Button
             size="sm"
@@ -1268,6 +1619,16 @@ function ViewInvoiceDialog({
             </div>
           )}
         </div>
+
+        {/* مصفوفة وجدول الأقساط المحسوب تلقائياً */}
+        {inv.monthlyInstallment > 0 && (
+          <div className="pt-2">
+            <InstallmentScheduleMatrix
+              invoice={inv}
+              onPayInstallment={(amt) => onDirectPay?.(inv, amt)}
+            />
+          </div>
+        )}
 
         {/* تفاصيل الدفع والأقساط */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-right text-xs">
@@ -1604,16 +1965,38 @@ function PaymentDialog({
   max,
   invoiceNo,
   customerName,
+  controlledOpen,
+  onControlledClose,
+  initialAmount,
 }: {
   invoiceId: string;
   max: number;
   invoiceNo?: string;
   customerName?: string;
+  controlledOpen?: boolean;
+  onControlledClose?: () => void;
+  initialAmount?: number;
 }) {
-  const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState("");
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = typeof controlledOpen === "boolean";
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = (o: boolean) => {
+    if (isControlled) {
+      if (!o) onControlledClose?.();
+    } else {
+      setInternalOpen(o);
+    }
+  };
+
+  const [amount, setAmount] = useState(initialAmount ? String(initialAmount) : "");
   const accounts = useMemo(() => getTreasuryAccounts().filter((a) => a.active), [open]);
   const [accountId, setAccountId] = useState(accounts[0]?.id || "acc-cash-main");
+
+  useEffect(() => {
+    if (open && initialAmount) {
+      setAmount(String(initialAmount));
+    }
+  }, [open, initialAmount]);
 
   const handleConfirm = async () => {
     const n = Number(amount);
@@ -1645,11 +2028,13 @@ function PaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="gap-1.5 h-8 border-success/40 text-success hover:bg-success/10 font-bold">
-          <Wallet className="w-3.5 h-3.5" /> دفع
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline" className="gap-1.5 h-8 border-success/40 text-success hover:bg-success/10 font-bold">
+            <Wallet className="w-3.5 h-3.5" /> دفع
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-right">تسجيل دفعة للفاتورة</DialogTitle>
@@ -1698,7 +2083,16 @@ function PaymentDialog({
   );
 }
 
-export type ProductRow = { id: string; name: string; cost: string; price: string; stockId?: string; quantity: string };
+export type ProductRow = {
+  id: string;
+  name: string;
+  cost: string;
+  price: string;
+  stockId?: string;
+  quantity: string;
+  discount?: string;
+  notes?: string;
+};
 
 export function StockProductPicker({ value, name, stockItems, onPick, onClear }: {
   value?: string;
