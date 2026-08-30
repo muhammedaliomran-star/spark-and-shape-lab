@@ -254,7 +254,7 @@ export function useStaffAndShifts() {
 
     // Invoices created after shift opened
     const shiftInvoices = invoices.filter((inv) => {
-      const invTime = new Date(inv.date || inv.id).getTime();
+      const invTime = new Date(inv.createdAt || inv.id).getTime();
       return !isNaN(invTime) ? invTime >= openTime : true;
     });
 
@@ -270,7 +270,7 @@ export function useStaffAndShifts() {
       totalDiscountsGiven += discount;
 
       // Classify payment method
-      const pMethod = (inv.paymentMethod || "cash").toLowerCase();
+      const pMethod = (((inv as any).paymentMethod as string) || "cash").toLowerCase();
       if (pMethod === "visa" || pMethod === "card" || pMethod === "bank" || pMethod === "instapay") {
         totalCardSales += paid;
       } else {
@@ -284,7 +284,7 @@ export function useStaffAndShifts() {
 
     // Expenses during shift
     const shiftExpenses = expenses.filter((exp) => {
-      const expTime = new Date(exp.date || exp.id).getTime();
+      const expTime = new Date(exp.expenseDate || exp.id).getTime();
       return !isNaN(expTime) ? expTime >= openTime : false;
     });
     const totalExpensesAmount = shiftExpenses.reduce((acc, exp) => acc + Number(exp.amount || 0), 0);

@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { pdfDocument, openPdfDocument } from "@/lib/pdf-doc";
 import { usePrivacy } from "@/lib/privacy";
-import { useDiscounts, generateCustomerLoyaltyVoucher } from "@/lib/discounts";
+import { useDiscounts } from "@/lib/discounts";
 
 const EG_PHONE_RE = /^01[0125]\d{8}$/;
 
