@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { PageTransition } from "@/components/PageTransition";
 import { Reveal } from "@/components/Reveal";
 import { BezelCard } from "@/components/BezelCard";
@@ -14,7 +14,8 @@ import { format, addMonths } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
-import { useDB, db, daysLate, fmt, customerBalance, getShopSettings, invoiceNumber, useShopSettings, type Invoice, type Customer } from "@/lib/store";
+import { useDB, db, daysLate, fmt, customerBalance, getShopSettings, invoiceNumber, useShopSettings, type Invoice, type Customer, type InvoiceItem } from "@/lib/store";
+import { getTreasuryAccounts, addManualTransaction } from "@/lib/cashbox-system";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Search, Wallet, AlertTriangle, Printer, ShieldAlert, Eye, Pencil, Trash2, Bell, History, TrendingUp, CalendarDays, AlertCircle, MessageCircle, EyeOff, Download, FileSpreadsheet, FileText, X, ChevronsUpDown, Check, Package, ScanLine, Info, CreditCard, Receipt } from "lucide-react";
+import { Plus, Search, Wallet, AlertTriangle, Printer, ShieldAlert, Eye, Pencil, Trash2, Bell, History, TrendingUp, CalendarDays, AlertCircle, MessageCircle, EyeOff, Download, FileSpreadsheet, FileText, X, ChevronsUpDown, Check, Package, ScanLine, Info, CreditCard, Receipt, Undo2, Copy, Share2, MoreVertical, Layers, CheckCircle2 } from "lucide-react";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { EmptyState } from "@/components/EmptyState";
 import { TableSkeleton } from "@/components/LoadingSkeletons";
@@ -37,7 +38,7 @@ import { findStockByBarcode } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 import { Banknote } from "lucide-react";
 import { usePrivacy } from "@/lib/privacy";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { toArabicDigits } from "@/lib/arabic-digits";
 import { cn } from "@/lib/utils";
@@ -60,19 +61,45 @@ function escapeHtml(s: string): string {
 
 function InvoicesPage() {
   const data = useDB();
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<Tab>("active");
   const [historyFor, setHistoryFor] = useState<Customer | null>(null);
   const [viewInv, setViewInv] = useState<Invoice | null>(null);
   const [editInv, setEditInv] = useState<Invoice | null>(null);
   const [reminderInv, setReminderInv] = useState<Invoice | null>(null);
+  const [returnInv, setReturnInv] = useState<Invoice | null>(null);
+  const [shareInv, setShareInv] = useState<Invoice | null>(null);
   const { privacy, toggle } = usePrivacy();
+  const blurCls = privacy ? "privacy-blur" : "privacy-clear";
   const { settings: shopSettings } = useShopSettings();
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [searchScanOpen, setSearchScanOpen] = useState(false);
-  const mask = (s: string) => s;
-  const blurCls = privacy ? "privacy-blur" : "privacy-clear";
+  const handleCloneInvoice = (inv: Invoice) => {
+    const invItems = data.invoiceItems.filter((it) => it.invoiceId === inv.id);
+    const monthsCount = inv.monthlyInstallment > 0
+      ? Math.max(1, Math.round((inv.total - inv.downPayment) / Math.max(1, inv.monthlyInstallment)))
+      : 6;
+    const payload = {
+      customerId: inv.customerId,
+      products: invItems.map((it) => ({
+        name: it.name,
+        cost: it.cost,
+        price: it.price,
+        quantity: it.quantity || 1,
+      })),
+      notes: inv.notes,
+      saleType: inv.monthlyInstallment > 0 ? "installments" : "cash",
+      down: inv.downPayment,
+      monthly: inv.monthlyInstallment,
+      count: monthsCount,
+      discountPct: inv.discountPct,
+      taxPct: inv.taxPct,
+    };
+    sessionStorage.setItem("segilly_clone_invoice", JSON.stringify(payload));
+    navigate({ to: "/invoices/new" });
+  };
 
   const counts = useMemo(() => {
     let active = 0, overdue = 0, settled = 0;
@@ -399,17 +426,17 @@ function InvoicesPage() {
                               <Info className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>تفاصيل</TooltipContent>
+                          <TooltipContent>تفاصيل البنود</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-warning hover:bg-warning/10" onClick={() => setEditInv(inv)}>
-                              <Pencil className="w-4 h-4" />
+                            <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:text-success hover:bg-success/10" onClick={() => setShareInv(inv)}>
+                              <MessageCircle className="w-4 h-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>تعديل</TooltipContent>
+                          <TooltipContent>مشاركة واتساب</TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                       <TooltipProvider>
@@ -423,8 +450,68 @@ function InvoicesPage() {
                         </Tooltip>
                       </TooltipProvider>
                       {remaining > 0 && (
-                        <PaymentDialog invoiceId={inv.id} max={remaining} />
+                        <PaymentDialog
+                          invoiceId={inv.id}
+                          max={remaining}
+                          invoiceNo={invoiceNumber(data.invoices, inv.id, shopSettings.invoicePrefix)}
+                          customerName={cust?.name}
+                        />
                       )}
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="icon" variant="ghost" className="action-btn rounded-full text-muted-foreground hover:bg-foreground/5">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="text-right w-48">
+                          <DropdownMenuItem onClick={() => setViewInv(inv)} className="gap-2 justify-end">
+                            <span>عرض التفاصيل والبنود</span>
+                            <Eye className="w-4 h-4 text-primary" />
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setReturnInv(inv)} className="gap-2 justify-end">
+                            <span>مرتجع بضاعة من الفاتورة</span>
+                            <Undo2 className="w-4 h-4 text-warning" />
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setShareInv(inv)} className="gap-2 justify-end">
+                            <span>إيصال رقمي / واتساب</span>
+                            <Share2 className="w-4 h-4 text-success" />
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleCloneInvoice(inv)} className="gap-2 justify-end">
+                            <span>استنساخ / تكرار الفاتورة</span>
+                            <Copy className="w-4 h-4 text-blue-500" />
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setEditInv(inv)} className="gap-2 justify-end">
+                            <span>تعديل الفاتورة</span>
+                            <Pencil className="w-4 h-4 text-amber-500" />
+                          </DropdownMenuItem>
+                          {remaining > 0 && (
+                            <DropdownMenuItem onClick={() => setReminderInv(inv)} className="gap-2 justify-end">
+                              <span>تذكير بالقسط المستحق</span>
+                              <Bell className="w-4 h-4 text-danger" />
+                            </DropdownMenuItem>
+                          )}
+                          {cust && (
+                            <DropdownMenuItem onClick={() => setHistoryFor(cust)} className="gap-2 justify-end">
+                              <span>سجل حساب العميل</span>
+                              <History className="w-4 h-4 text-indigo-500" />
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              if (confirm("هل أنت متأكد من حذف هذه الفاتورة؟ سيتم إرجاع المنتجات للمخزن وحذف القيود المتعلقة بها.")) {
+                                db.removeInvoice(inv.id);
+                                toast.success("تم حذف الفاتورة");
+                              }
+                            }}
+                            className="gap-2 justify-end text-danger focus:text-danger focus:bg-danger/10"
+                          >
+                            <span>حذف الفاتورة</span>
+                            <Trash2 className="w-4 h-4" />
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </div>
@@ -434,7 +521,30 @@ function InvoicesPage() {
         </div>
       </Reveal>
       <HistoryDialog customer={historyFor} onClose={() => setHistoryFor(null)} invoices={data.invoices} payments={data.payments} items={data.invoiceItems} blurCls={blurCls} onEditInvoice={(i) => { setHistoryFor(null); setEditInv(i); }} />
-      <ViewInvoiceDialog inv={viewInv} customer={viewInv ? findCustomer(viewInv.customerId) ?? null : null} onClose={() => setViewInv(null)} />
+      <ViewInvoiceDialog
+        inv={viewInv}
+        customer={viewInv ? findCustomer(viewInv.customerId) ?? null : null}
+        items={data.invoiceItems}
+        payments={data.payments}
+        onClose={() => setViewInv(null)}
+        onOpenReturn={(i) => { setViewInv(null); setReturnInv(i); }}
+        onOpenShare={(i) => { setViewInv(null); setShareInv(i); }}
+        onClone={(i) => handleCloneInvoice(i)}
+        onEdit={(i) => { setViewInv(null); setEditInv(i); }}
+      />
+      <InvoiceReturnDialog
+        inv={returnInv}
+        customer={returnInv ? findCustomer(returnInv.customerId) ?? null : null}
+        items={data.invoiceItems}
+        onClose={() => setReturnInv(null)}
+      />
+      <ShareInvoiceDialog
+        inv={shareInv}
+        customer={shareInv ? findCustomer(shareInv.customerId) ?? null : null}
+        items={data.invoiceItems}
+        shopSettings={shopSettings}
+        onClose={() => setShareInv(null)}
+      />
       <EditInvoiceDialog inv={editInv} onClose={() => setEditInv(null)} />
       <ReminderDialog inv={reminderInv} customer={reminderInv ? findCustomer(reminderInv.customerId) ?? null : null} onClose={() => setReminderInv(null)} />
       <BarcodeScanner
@@ -691,38 +801,528 @@ function EditInvoiceItemDialog({ item, onClose }: { item: import("@/lib/store").
   );
 }
 
-function ViewInvoiceDialog({ inv, customer, onClose }: { inv: Invoice | null; customer: Customer | null; onClose: () => void }) {
+function InvoiceReturnDialog({
+  inv,
+  customer,
+  items,
+  onClose,
+}: {
+  inv: Invoice | null;
+  customer: Customer | null;
+  items: InvoiceItem[];
+  onClose: () => void;
+}) {
+  const [selectedItems, setSelectedItems] = useState<{ [itemId: string]: { selected: boolean; quantity: number } }>({});
+  const [reason, setReason] = useState("رغبة العميل");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const invItems = useMemo(() => {
+    if (!inv) return [];
+    return items.filter((it) => it.invoiceId === inv.id);
+  }, [inv, items]);
+
+  useEffect(() => {
+    if (inv && invItems.length > 0) {
+      const initial: { [itemId: string]: { selected: boolean; quantity: number } } = {};
+      invItems.forEach((it) => {
+        initial[it.id] = { selected: false, quantity: it.quantity || 1 };
+      });
+      setSelectedItems(initial);
+      setReason("رغبة العميل");
+      setNotes("");
+    }
+  }, [inv, invItems]);
+
   if (!inv) return null;
-  const remaining = inv.total - inv.paid;
-  const late = daysLate(inv);
-  const rows: [string, string, boolean?][] = [
-    ["العميل", customer?.name ?? "—"],
-    ["الهاتف", customer?.phone ?? "—", true],
-    ["إجمالي الفاتورة", `${fmt(inv.total)} ج.م`],
-    ["المقدم", `${fmt(inv.downPayment)} ج.م`],
-    ["المسدد", `${fmt(inv.paid)} ج.م`],
-    ["المتبقي", `${fmt(remaining)} ج.م`],
-    ["القسط الشهري", `${fmt(inv.monthlyInstallment)} ج.م`],
-    ["تاريخ أول قسط", isoToDDMMYYYY(inv.firstDueDate), true],
-    ["تاريخ الإنشاء", format(new Date(inv.createdAt), "dd/MM/yyyy"), true],
-    ["الحالة", remaining === 0 ? "مسددة" : late > 0 ? `متأخرة ${late} يوم` : "نشطة"],
-    ["ملاحظات", inv.notes || "—"],
-  ];
+
+  const returnPayload = invItems
+    .filter((it) => selectedItems[it.id]?.selected && (selectedItems[it.id]?.quantity || 0) > 0)
+    .map((it) => ({
+      name: it.name,
+      unitPrice: it.price,
+      quantity: Math.min(it.quantity || 1, selectedItems[it.id]?.quantity || 1),
+    }));
+
+  const totalReturnValue = returnPayload.reduce((sum, it) => sum + it.unitPrice * it.quantity, 0);
+
+  const handleSubmitReturn = async () => {
+    if (returnPayload.length === 0) {
+      toast.error("حدد صنفاً واحداً على الأقل لإرجاعه");
+      return;
+    }
+    setLoading(true);
+    try {
+      await db.addReturn({
+        invoiceId: inv.id,
+        type: "sale",
+        totalAmount: totalReturnValue,
+        reason: notes ? `${reason} - ${notes}` : reason,
+        notes: notes || null,
+        items: returnPayload,
+      });
+      toast.success(`تم تسجيل مرتجع بقيمة ${fmt(totalReturnValue)} ج.م وإعادة الأصناف للمخزن بنجاح`);
+      onClose();
+    } catch (err: any) {
+      toast.error(err?.message || "تعذر تسجيل المرتجع");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Dialog open={!!inv} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle className="text-right">تفاصيل الفاتورة #{inv.id.slice(0, 6)}</DialogTitle>
-          <DialogDescription className="text-right">{customer?.name ?? "—"}</DialogDescription>
+          <DialogTitle className="flex items-center gap-2 justify-end text-right">
+            مرتجع بضاعة — فاتورة #{inv.id.slice(0, 6)}
+            <Undo2 className="w-5 h-5 text-warning" />
+          </DialogTitle>
+          <DialogDescription className="text-right">
+            حدد الأصناف والكميات المراد إرجاعها إلى المخزن وتسوية حساب الفاتورة مع العميل {customer?.name}.
+          </DialogDescription>
         </DialogHeader>
-        <div className="space-y-1 text-right text-sm">
-          {rows.map(([k, v, ltr]) => (
-            <div key={k} className="flex items-center justify-between border-b border-[var(--hairline)] py-1.5">
-              <span className="font-bold tabular-nums" dir={ltr ? "ltr" : "rtl"}>{v}</span>
-              <span className="text-muted-foreground">{k}</span>
+
+        <div className="space-y-4 text-right">
+          <div className="space-y-2">
+            <Label className="text-xs font-bold text-muted-foreground">أصناف الفاتورة المتاحة للإرجاع</Label>
+            {invItems.length === 0 ? (
+              <div className="text-xs text-muted-foreground p-3 border rounded-xl text-center">
+                لا توجد أصناف مفصلة لهذه الفاتورة.
+              </div>
+            ) : (
+              <div className="border rounded-2xl divide-y overflow-hidden max-h-56 overflow-y-auto">
+                {invItems.map((it) => {
+                  const state = selectedItems[it.id] || { selected: false, quantity: it.quantity || 1 };
+                  return (
+                    <div key={it.id} className={cn("p-3 flex items-center justify-between gap-3 transition-colors", state.selected ? "bg-warning/10" : "bg-card")}>
+                      <div className="flex items-center gap-2">
+                        {state.selected && (
+                          <div className="flex items-center gap-1.5">
+                            <Input
+                              type="number"
+                              min={1}
+                              max={it.quantity || 1}
+                              value={state.quantity}
+                              onChange={(e) => {
+                                const q = Math.max(1, Math.min(it.quantity || 1, Number(e.target.value) || 1));
+                                setSelectedItems((prev) => ({
+                                  ...prev,
+                                  [it.id]: { ...prev[it.id], quantity: q },
+                                }));
+                              }}
+                              className="w-16 h-8 text-center text-xs"
+                            />
+                            <span className="text-[11px] text-muted-foreground">من {it.quantity || 1}</span>
+                          </div>
+                        )}
+                        <span className="font-bold text-xs tabular-nums text-muted-foreground">
+                          {fmt(it.price * (state.selected ? state.quantity : (it.quantity || 1)))} ج.م
+                        </span>
+                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer flex-1 justify-end">
+                        <span className="text-sm font-medium">{it.name}</span>
+                        <input
+                          type="checkbox"
+                          checked={state.selected}
+                          onChange={(e) => {
+                            setSelectedItems((prev) => ({
+                              ...prev,
+                              [it.id]: { ...prev[it.id], selected: e.target.checked },
+                            }));
+                          }}
+                          className="h-4 w-4 rounded border-gray-300 text-warning focus:ring-warning"
+                        />
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">سبب الإرجاع</Label>
+              <Select value={reason} onValueChange={setReason}>
+                <SelectTrigger className="text-right">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="رغبة العميل">رغبة العميل (استرجاع عادي)</SelectItem>
+                  <SelectItem value="عيب صناعة / تالف">عيب صناعة / تالف</SelectItem>
+                  <SelectItem value="تبديل مقاس / لون">تبديل مقاس أو مواصفات</SelectItem>
+                  <SelectItem value="خطأ في الطلب">خطأ في الطلب أو الشحن</SelectItem>
+                  <SelectItem value="أخرى">أسباب أخرى</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          ))}
+            <div>
+              <Label className="text-xs">ملاحظات إضافية</Label>
+              <Input
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="تفاصيل العيب أو المرتجع..."
+                className="text-xs"
+                maxLength={100}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-warning/10 border border-warning/30 p-3 flex items-center justify-between">
+            <span className="font-extrabold text-warning text-lg tabular-nums">{fmt(totalReturnValue)} ج.م</span>
+            <span className="text-xs font-bold text-warning-foreground">إجمالي قيمة المرتجع المسترد:</span>
+          </div>
         </div>
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose} disabled={loading}>
+            إلغاء
+          </Button>
+          <Button
+            onClick={handleSubmitReturn}
+            disabled={loading || returnPayload.length === 0}
+            className="gap-1.5 bg-warning text-warning-foreground hover:bg-warning/90 font-bold"
+          >
+            <Undo2 className="w-4 h-4" /> تأكيد المرتجع واسترداد للمخزن
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ShareInvoiceDialog({
+  inv,
+  customer,
+  items,
+  shopSettings,
+  onClose,
+}: {
+  inv: Invoice | null;
+  customer: Customer | null;
+  items: InvoiceItem[];
+  shopSettings: any;
+  onClose: () => void;
+}) {
+  if (!inv || !customer) return null;
+
+  const invItems = items.filter((it) => it.invoiceId === inv.id);
+  const remaining = inv.total - inv.paid;
+  const invNo = inv.id.slice(0, 6);
+  const shopName = shopSettings?.shopName || "المتجر";
+  const cur = shopSettings?.currency || "ج.م";
+
+  const itemsText = invItems.length > 0
+    ? invItems.map((it) => `• ${it.name} (الكمية: ${it.quantity || 1}) - ${fmt(it.price * (it.quantity || 1))} ${cur}`).join("\n")
+    : `• ${inv.notes || "مبيعات عامة"} - ${fmt(inv.total)} ${cur}`;
+
+  const message =
+    `🧾 *فاتورة مبيعات رقم #${invNo}*\n` +
+    `🏢 *${shopName}*\n` +
+    `👤 *العميل:* ${customer.name}\n` +
+    `📅 *التاريخ:* ${format(new Date(inv.createdAt), "dd/MM/yyyy")}\n` +
+    `──────────────────\n` +
+    `📦 *المنتجات:*\n` +
+    `${itemsText}\n` +
+    `──────────────────\n` +
+    `💵 *إجمالي الفاتورة:* ${fmt(inv.total)} ${cur}\n` +
+    `💰 *المسدد حتى الآن:* ${fmt(inv.paid)} ${cur}\n` +
+    `⏳ *المتبقي المستحق:* ${fmt(remaining)} ${cur}\n` +
+    (inv.monthlyInstallment > 0
+      ? `📅 *القسط الشهري:* ${fmt(inv.monthlyInstallment)} ${cur} (أول استحقاق: ${isoToDDMMYYYY(inv.firstDueDate)})\n`
+      : `✅ *طريقة الدفع:* نقدي (كاش فوري)\n`) +
+    (shopSettings?.phone ? `📞 *خدمة العملاء:* ${shopSettings.phone}\n` : "") +
+    `\nشكراً لتعاملكم معنا ونرحب بكم دائماً! 🌸`;
+
+  const cleanPhone = (customer.phone || "").replace(/[^\d]/g, "");
+  const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+
+  return (
+    <Dialog open={!!inv} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 justify-end text-right">
+            مشاركة الفاتورة الرقمية
+            <MessageCircle className="w-5 h-5 text-success" />
+          </DialogTitle>
+          <DialogDescription className="text-right">
+            إيصال رقمي منسق جاهز للمشاركة مع العميل {customer.name} عبر واتساب أو الرسائل.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3 text-right">
+          <div className="bg-foreground/[0.035] p-3.5 rounded-2xl hairline max-h-60 overflow-y-auto font-mono text-xs leading-relaxed whitespace-pre-line select-all" dir="rtl">
+            {message}
+          </div>
+
+          <div className="text-[11px] text-muted-foreground text-center">
+            رقم الهاتف المسجل: <span dir="ltr" className="font-bold text-foreground">{customer.phone || "غير مسجل"}</span>
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              navigator.clipboard.writeText(toArabicDigits(message));
+              toast.success("تم نسخ نص الفاتورة للحافظة بنجاح");
+            }}
+            className="gap-1.5"
+          >
+            <Copy className="w-4 h-4" /> نسخ النص
+          </Button>
+          <Button
+            asChild
+            className="gap-2 bg-success hover:bg-success/90 text-success-foreground font-bold"
+          >
+            <a href={waUrl} target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="w-4 h-4" /> إرسال عبر واتساب
+            </a>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ViewInvoiceDialog({
+  inv,
+  customer,
+  items,
+  payments,
+  onClose,
+  onOpenReturn,
+  onOpenShare,
+  onClone,
+  onEdit,
+}: {
+  inv: Invoice | null;
+  customer: Customer | null;
+  items: InvoiceItem[];
+  payments: import("@/lib/store").Payment[];
+  onClose: () => void;
+  onOpenReturn?: (i: Invoice) => void;
+  onOpenShare?: (i: Invoice) => void;
+  onClone?: (i: Invoice) => void;
+  onEdit?: (i: Invoice) => void;
+}) {
+  const { privacy } = usePrivacy();
+  const { settings: shop } = useShopSettings();
+  const blurCls = privacy ? "privacy-blur" : "privacy-clear";
+
+  if (!inv) return null;
+
+  const remaining = inv.total - inv.paid;
+  const late = daysLate(inv);
+  const isOverdue = remaining > 0 && late > 0;
+  const invItems = items.filter((it) => it.invoiceId === inv.id);
+  const invPayments = payments.filter((p) => p.invoiceId === inv.id);
+
+  const totalCost = invItems.reduce((acc, it) => acc + ((it.cost || 0) * (it.quantity || 1)), 0);
+  const totalProfit = inv.total - totalCost;
+  const paidPct = Math.min(100, Math.round((inv.paid / Math.max(1, inv.total)) * 100));
+
+  return (
+    <Dialog open={!!inv} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className={cn(
+                "font-bold text-xs px-2.5 py-0.5",
+                remaining === 0 ? "bg-success/15 text-success border-success/30" :
+                isOverdue ? "bg-danger/15 text-danger border-danger/30" :
+                "bg-primary/15 text-primary border-primary/30"
+              )}>
+                {remaining === 0 ? "مسددة بالكامل" : isOverdue ? `متأخرة ${late} يوم` : "نشطة وجارية"}
+              </Badge>
+            </div>
+            <div className="text-right">
+              <DialogTitle className="text-lg font-bold">فاتورة #{inv.id.slice(0, 6)}</DialogTitle>
+              <DialogDescription className="text-xs">{customer?.name ?? "عميل محذوف"} {customer?.phone ? `• ${customer.phone}` : ""}</DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        {/* شريط الإجراءات السريعة في رأس التفاصيل */}
+        <div className="flex flex-wrap items-center justify-end gap-2 bg-foreground/[0.03] p-2.5 rounded-2xl border border-border/50">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onOpenShare?.(inv)}
+            className="gap-1.5 text-xs text-success border-success/30 hover:bg-success/10 font-bold"
+          >
+            <MessageCircle className="w-3.5 h-3.5" /> مشاركة واتساب
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onOpenReturn?.(inv)}
+            className="gap-1.5 text-xs text-warning border-warning/30 hover:bg-warning/10 font-bold"
+          >
+            <Undo2 className="w-3.5 h-3.5" /> مرتجع بضاعة
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onClone?.(inv)}
+            className="gap-1.5 text-xs text-blue-500 border-blue-500/30 hover:bg-blue-500/10 font-bold"
+          >
+            <Copy className="w-3.5 h-3.5" /> استنساخ الفاتورة
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => printReceipt(inv, customer?.name ?? "—", customer?.phone ?? "—", [inv])}
+            className="gap-1.5 text-xs text-foreground/80 hover:bg-foreground/5 font-bold"
+          >
+            <Printer className="w-3.5 h-3.5" /> طباعة إيصال
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onEdit?.(inv)}
+            className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <Pencil className="w-3.5 h-3.5" /> تعديل
+          </Button>
+        </div>
+
+        {/* بطاقات الإحصائيات الأربعة */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-right">
+          <div className="p-3 rounded-2xl bg-card border border-border/60">
+            <div className="text-[11px] text-muted-foreground font-medium mb-1">إجمالي الفاتورة</div>
+            <div className={cn("text-base font-extrabold tabular-nums", blurCls)}>{fmt(inv.total)} ج.م</div>
+          </div>
+          <div className="p-3 rounded-2xl bg-success/5 border border-success/20">
+            <div className="text-[11px] text-success font-medium mb-1">المسدد</div>
+            <div className={cn("text-base font-extrabold text-success tabular-nums", blurCls)}>{fmt(inv.paid)} ج.م</div>
+          </div>
+          <div className={cn("p-3 rounded-2xl border", remaining > 0 ? "bg-danger/5 border-danger/20" : "bg-card border-border/60")}>
+            <div className={cn("text-[11px] font-medium mb-1", remaining > 0 ? "text-danger" : "text-muted-foreground")}>المتبقي المستحق</div>
+            <div className={cn("text-base font-extrabold tabular-nums", remaining > 0 ? "text-danger" : "text-success", blurCls)}>{fmt(remaining)} ج.م</div>
+          </div>
+          <div className="p-3 rounded-2xl bg-primary/5 border border-primary/20">
+            <div className="text-[11px] text-primary font-medium mb-1">صافي الربح التقديري</div>
+            <div className={cn("text-base font-extrabold text-primary tabular-nums", blurCls)}>{fmt(totalProfit)} ج.م</div>
+          </div>
+        </div>
+
+        {/* شريط نسبة التحصيل */}
+        <div className="space-y-1.5 text-right">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold tabular-nums text-muted-foreground">{paidPct}% مسدد</span>
+            <span className="text-muted-foreground font-medium">نسبة سداد الفاتورة</span>
+          </div>
+          <div className="h-2 w-full rounded-full bg-foreground/[0.08] overflow-hidden">
+            <div
+              className={cn("h-full transition-all duration-500 rounded-full", remaining === 0 ? "bg-success" : "bg-primary")}
+              style={{ width: `${paidPct}%` }}
+            />
+          </div>
+        </div>
+
+        {/* جدول بنود وأصناف الفاتورة الكامل */}
+        <div className="space-y-2 text-right">
+          <div className="flex items-center justify-between">
+            <Badge variant="outline" className="text-[10px]">{invItems.length} صنف</Badge>
+            <Label className="text-xs font-bold">بنود ومنتجات الفاتورة</Label>
+          </div>
+          {invItems.length === 0 ? (
+            <div className="text-xs text-muted-foreground p-3 border rounded-xl text-center">
+              لا توجد منتجات مفصلة مسجلة في الفاتورة (مبيعات عامة).
+            </div>
+          ) : (
+            <div className="border border-border/60 rounded-2xl overflow-hidden shadow-xs">
+              <table className="w-full text-xs">
+                <thead className="bg-foreground/[0.035] text-muted-foreground border-b border-border/60">
+                  <tr>
+                    <th className="text-right p-2 font-bold">المنتج</th>
+                    <th className="text-center p-2 font-bold w-16">الكمية</th>
+                    <th className="text-right p-2 font-bold">سعر البيع</th>
+                    <th className="text-right p-2 font-bold">التكلفة</th>
+                    <th className="text-right p-2 font-bold">الإجمالي</th>
+                    <th className="text-right p-2 font-bold text-success">الربح</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/40">
+                  {invItems.map((it) => {
+                    const q = it.quantity || 1;
+                    const rowTotal = it.price * q;
+                    const rowCost = (it.cost || 0) * q;
+                    const rowProfit = rowTotal - rowCost;
+                    return (
+                      <tr key={it.id} className="hover:bg-foreground/[0.02]">
+                        <td className="p-2 font-medium text-foreground">{it.name}</td>
+                        <td className="p-2 text-center tabular-nums font-bold">{q}</td>
+                        <td className={cn("p-2 tabular-nums", blurCls)}>{fmt(it.price)} ج.م</td>
+                        <td className={cn("p-2 tabular-nums text-muted-foreground", blurCls)}>{fmt(it.cost || 0)} ج.م</td>
+                        <td className={cn("p-2 tabular-nums font-bold", blurCls)}>{fmt(rowTotal)} ج.م</td>
+                        <td className={cn("p-2 tabular-nums font-bold text-success", blurCls)}>+{fmt(rowProfit)} ج.م</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* تفاصيل الدفع والأقساط */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-right text-xs">
+          <div className="p-3 rounded-2xl border border-border/60 space-y-2">
+            <div className="font-bold text-foreground border-b border-border/40 pb-1 flex items-center justify-end gap-1.5">
+              بيانات الدفع والتقسيط
+              <CreditCard className="w-3.5 h-3.5 text-primary" />
+            </div>
+            <div className="flex justify-between py-0.5">
+              <span className="font-bold tabular-nums">{fmt(inv.downPayment)} ج.م</span>
+              <span className="text-muted-foreground">الدفعة المقدمة:</span>
+            </div>
+            <div className="flex justify-between py-0.5">
+              <span className="font-bold tabular-nums">{fmt(inv.monthlyInstallment)} ج.م</span>
+              <span className="text-muted-foreground">القسط الشهري:</span>
+            </div>
+            <div className="flex justify-between py-0.5">
+              <span className="font-bold tabular-nums" dir="ltr">{isoToDDMMYYYY(inv.firstDueDate)}</span>
+              <span className="text-muted-foreground">تاريخ أول قسط:</span>
+            </div>
+            <div className="flex justify-between py-0.5">
+              <span className="font-bold tabular-nums" dir="ltr">{format(new Date(inv.createdAt), "dd/MM/yyyy")}</span>
+              <span className="text-muted-foreground">تاريخ إنشاء الفاتورة:</span>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-2xl border border-border/60 space-y-2">
+            <div className="font-bold text-foreground border-b border-border/40 pb-1 flex items-center justify-end gap-1.5">
+              سجل سدادات الفاتورة ({invPayments.length})
+              <Wallet className="w-3.5 h-3.5 text-success" />
+            </div>
+            {invPayments.length === 0 ? (
+              <div className="text-muted-foreground text-center py-3 text-[11px]">
+                لم يتم تسجيل دفعات بعد على هذه الفاتورة.
+              </div>
+            ) : (
+              <div className="max-h-28 overflow-y-auto divide-y divide-border/40">
+                {invPayments.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between py-1 text-[11px]">
+                    <span className="font-bold text-success tabular-nums">+{fmt(p.amount)} ج.م</span>
+                    <span className="text-muted-foreground tabular-nums" dir="ltr">{format(new Date(p.paidAt), "dd/MM/yyyy")}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {inv.notes && (
+          <div className="p-3 rounded-2xl bg-foreground/[0.02] border border-border/50 text-right text-xs">
+            <span className="text-muted-foreground font-bold ml-1">ملاحظات:</span>
+            <span className="text-foreground">{inv.notes}</span>
+          </div>
+        )}
+
         <DialogFooter>
           <Button variant="outline" className="w-full" onClick={onClose}>إغلاق</Button>
         </DialogFooter>
@@ -999,32 +1599,99 @@ function printReceipt(
 }
 
 
-function PaymentDialog({ invoiceId, max }: { invoiceId: string; max: number }) {
+function PaymentDialog({
+  invoiceId,
+  max,
+  invoiceNo,
+  customerName,
+}: {
+  invoiceId: string;
+  max: number;
+  invoiceNo?: string;
+  customerName?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
+  const accounts = useMemo(() => getTreasuryAccounts().filter((a) => a.active), [open]);
+  const [accountId, setAccountId] = useState(accounts[0]?.id || "acc-cash-main");
+
+  const handleConfirm = async () => {
+    const n = Number(amount);
+    if (!n || n <= 0) {
+      toast.error("أدخل مبلغاً صحيحاً");
+      return;
+    }
+    const payAmount = Math.min(n, max);
+    await db.recordPayment(invoiceId, payAmount);
+
+    const selectedAcc = accounts.find((a) => a.id === accountId);
+    if (selectedAcc) {
+      addManualTransaction({
+        accountId: selectedAcc.id,
+        type: "in",
+        category: "سداد فاتورة",
+        amount: payAmount,
+        title: `تحصيل قسط فاتورة #${invoiceNo || invoiceId.slice(0, 6)} - ${customerName || "عميل"}`,
+        date: format(new Date(), "yyyy-MM-dd"),
+        notes: `دفعة محصلة للفاتورة #${invoiceNo || invoiceId.slice(0, 6)}`,
+        performedBy: "النظام",
+      });
+    }
+
+    toast.success(`تم تسجيل تحصيل ${fmt(payAmount)} ج.م وإيداعها في «${selectedAcc?.name || "الخزينة"}»`);
+    setOpen(false);
+    setAmount("");
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="gap-1.5 h-8 border-success/40 text-success hover:bg-success/10"><Wallet className="w-3.5 h-3.5" /> دفع</Button>
+        <Button size="sm" variant="outline" className="gap-1.5 h-8 border-success/40 text-success hover:bg-success/10 font-bold">
+          <Wallet className="w-3.5 h-3.5" /> دفع
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-right">تسجيل دفعة</DialogTitle>
-          <DialogDescription className="text-right">المتبقي على الفاتورة: {fmt(max)} ج.م</DialogDescription>
+          <DialogTitle className="text-right">تسجيل دفعة للفاتورة</DialogTitle>
+          <DialogDescription className="text-right">
+            المتبقي على الفاتورة: <span className="font-bold text-danger">{fmt(max)} ج.م</span> {customerName ? `— العميل: ${customerName}` : ""}
+          </DialogDescription>
         </DialogHeader>
-        <div>
-          <Label>المبلغ المدفوع (ج.م)</Label>
-          <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" />
+        <div className="space-y-4 text-right">
+          <div>
+            <Label className="text-xs font-bold">المبلغ المدفوع (ج.م)</Label>
+            <Input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder={`أقصى مبلغ: ${max}`}
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <Label className="text-xs font-bold">إيداع الدفعة في الخزينة / الحساب</Label>
+            <Select value={accountId} onValueChange={setAccountId}>
+              <SelectTrigger className="text-right">
+                <SelectValue placeholder="اختر الخزينة..." />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((acc) => (
+                  <SelectItem key={acc.id} value={acc.id}>
+                    {acc.name} ({acc.type === "cash" ? "درج نقدية" : acc.type === "ewallet" ? "محفظة إلكترونية" : "بنك"})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              سيتم تسجيل حركة الإيداع تلقائياً في كشف حساب الخزينة المحددة.
+            </p>
+          </div>
         </div>
         <DialogFooter>
-          <Button className="w-full" onClick={() => {
-            const n = Number(amount);
-            if (!n || n <= 0) { toast.error("أدخل مبلغ صحيح"); return; }
-            db.recordPayment(invoiceId, Math.min(n, max));
-            toast.success("تم تسجيل الدفعة");
-            setOpen(false);
-            setAmount("");
-          }}>تأكيد الدفعة</Button>
+          <Button className="w-full bg-success hover:bg-success/90 text-success-foreground font-bold" onClick={handleConfirm}>
+            تأكيد استلام الدفعة
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

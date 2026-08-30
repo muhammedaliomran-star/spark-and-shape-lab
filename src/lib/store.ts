@@ -516,8 +516,39 @@ export async function uid() {
 // downPayment is stored on the invoice and was historically added to paid at creation time,
 // so total paid = downPayment (already counted) + sum of subsequent payment rows.
 async function recomputeInvoicePaid(invoiceId: string) {
-  const { error } = await (supabase as any).rpc("recalculate_invoice_paid", { p_invoice_id: invoiceId });
-  if (error) throw error;
+  try {
+    const { error } = await (supabase as any).rpc("recalculate_invoice_paid", { p_invoice_id: invoiceId });
+    if (!error) return;
+  } catch {
+    // Continue to fallback
+  }
+
+  // Fallback direct calculation
+  try {
+    const { data: inv } = await supabase
+      .from("invoices")
+      .select("id, down_payment, total, status")
+      .eq("id", invoiceId)
+      .maybeSingle();
+
+    if (inv) {
+      const { data: pmts } = await supabase
+        .from("payments")
+        .select("amount")
+        .eq("invoice_id", invoiceId);
+
+      const sumP = (pmts || []).reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0);
+      const correctPaid = Number(inv.down_payment || 0) + sumP;
+      const newStatus = correctPaid >= Number(inv.total || 0) ? "paid" : (inv.status === "cancelled" ? "cancelled" : "pending");
+      
+      await supabase
+        .from("invoices")
+        .update({ paid: correctPaid, status: newStatus })
+        .eq("id", invoiceId);
+    }
+  } catch (err) {
+    console.error("recomputeInvoicePaid error:", err);
+  }
 }
 
 /**
@@ -717,16 +748,41 @@ export const db = {
     await fetchAll();
   },
 
-  async updateInvoice(id: string, patch: Partial<Pick<Invoice, "total" | "downPayment" | "monthlyInstallment" | "firstDueDate" | "notes">>) {
+  async updateInvoice(id: string, patch: Partial<Pick<Invoice, "total" | "downPayment" | "monthlyInstallment" | "firstDueDate" | "notes" | "status" | "paid">>) {
     const upd: any = {};
     if (patch.total !== undefined) upd.total = patch.total;
     if (patch.downPayment !== undefined) upd.down_payment = patch.downPayment;
     if (patch.monthlyInstallment !== undefined) upd.monthly_installment = patch.monthlyInstallment;
     if (patch.firstDueDate !== undefined) upd.first_due_date = patch.firstDueDate;
     if (patch.notes !== undefined) upd.notes = patch.notes;
+    if (patch.status !== undefined) upd.status = patch.status;
+    if (patch.paid !== undefined) upd.paid = patch.paid;
     const { error } = await supabase.from("invoices").update(upd).eq("id", id);
     if (error) throw error;
-    await recomputeInvoicePaid(id);
+    if (patch.paid === undefined && patch.downPayment !== undefined) {
+      await recomputeInvoicePaid(id);
+    }
+    await fetchAll();
+  },
+  async reconcileInvoicePaid(invoiceId: string) {
+    await recomputeInvoicePaid(invoiceId);
+    await fetchAll();
+  },
+  async updateInvoiceStatus(invoiceId: string, status: InvoiceStatus) {
+    const { error } = await supabase.from("invoices").update({ status }).eq("id", invoiceId);
+    if (error) throw error;
+    await fetchAll();
+  },
+  async setInvoicePaidAndStatus(invoiceId: string, paid: number, status?: InvoiceStatus) {
+    const upd: any = { paid };
+    if (status) upd.status = status;
+    const { error } = await supabase.from("invoices").update(upd).eq("id", invoiceId);
+    if (error) throw error;
+    await fetchAll();
+  },
+  async updateStockCost(stockId: string, cost: number) {
+    const { error } = await supabase.from("stock_items").update({ last_unit_cost: cost }).eq("id", stockId);
+    if (error) throw error;
     await fetchAll();
   },
   async updatePayment(id: string, amount: number) {

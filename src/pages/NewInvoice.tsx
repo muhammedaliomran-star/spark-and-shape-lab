@@ -81,6 +81,38 @@ function NewInvoicePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shop.defaultInstallmentMonths, shop.defaultDueDay]);
 
+  // Handle clone invoice if passed via sessionStorage
+  useEffect(() => {
+    try {
+      const rawClone = sessionStorage.getItem("segilly_clone_invoice");
+      if (rawClone) {
+        const cloned = JSON.parse(rawClone);
+        sessionStorage.removeItem("segilly_clone_invoice");
+        if (cloned.customerId) setCustomerId(cloned.customerId);
+        if (cloned.products && Array.isArray(cloned.products) && cloned.products.length > 0) {
+          setProducts(cloned.products.map((p: any) => ({
+            id: crypto.randomUUID(),
+            name: p.name || "",
+            cost: String(p.cost || 0),
+            price: String(p.price || 0),
+            quantity: String(p.quantity || 1),
+            stockId: p.stockId || undefined,
+          })));
+        }
+        if (cloned.notes) setNotes(cloned.notes + " (مستنسخة)");
+        if (cloned.saleType) setSaleType(cloned.saleType);
+        if (cloned.down !== undefined) setDown(String(cloned.down));
+        if (cloned.monthly !== undefined) setMonthly(String(cloned.monthly));
+        if (cloned.count !== undefined) setCount(String(cloned.count));
+        if (cloned.discountPct) setDiscountPct(String(cloned.discountPct));
+        if (cloned.taxPct) setTaxPct(String(cloned.taxPct));
+        toast.info("تم استنساخ بيانات الفاتورة بنجاح — يمكنك مراجعتها وحفظها كفاتورة جديدة");
+      }
+    } catch (e) {
+      console.error("Error loading cloned invoice:", e);
+    }
+  }, []);
+
   const invoiceCode = `#${String((data.invoices?.length ?? 0) + 1).padStart(4, "0")}`;
 
   const handleScan = (code: string) => {

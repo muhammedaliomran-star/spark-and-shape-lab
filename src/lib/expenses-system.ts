@@ -1,0 +1,751 @@
+/**
+ * منظومة إدارة وتدقيق المصروفات المتقدمة (Segilly Expenses & Cost Control Engine)
+ * يشمل:
+ * 1. الربط المباشر مع قنوات الدفع والخزائن (Source Accounts)
+ * 2. منظومة المصروفات الدورية والمجدولة تلقائياً (Recurring Expenses)
+ * 3. الميزانيات التقديرية وسقوف الإنفاق الذكية (Budgets & Overspending Alerts)
+ * 4. إدارة مرفقات الفواتير والإيصالات (Receipt Attachments)
+ * 5. التصنيفات المخصصة ومراكز التكلفة وربط الفروع (Custom Categories & Cost Centers)
+ * 6. التحليلات المالية المتقدمة واكتشاف القفزات غير المعتادة (Period-over-Period Analytics & Spikes)
+ * 7. التفقيط باللغة العربية وطباعة أذونات وسندات صرف النقدية الرسمية (Voucher PDF & Arabic Tafqeet)
+ */
+
+import { pdfDocument, openPdfDocument, esc } from "@/lib/pdf-doc";
+import { fmt, Expense, ExpenseCategory, EXPENSE_CATEGORIES } from "@/lib/store";
+import { TreasuryAccount, getTreasuryAccounts } from "@/lib/cashbox-system";
+
+// ==================== 1. الأنواع والبيانات الأساسية ====================
+
+export interface ExpenseMeta {
+  accountId?: string;        // معرف الخزينة المسحوب منها
+  accountName?: string;      // اسم الخزينة
+  branchId?: string;         // معرف الفرع
+  branchName?: string;       // اسم الفرع
+  recipientName?: string;    // اسم المستلم / المستفيد
+  voucherNumber?: string;    // رقم سند الصرف
+  receiptUrl?: string;       // رابط أو صورة الفاتورة / الوصل (DataURL)
+  receiptName?: string;      // اسم الملف المرفق
+  isRecurring?: boolean;     // هل هو مصروف دوري
+  recurringTemplateId?: string; // معرف القالب الدوري
+}
+
+export interface CustomExpenseCategory {
+  id: string;
+  name: string;
+  label: string;
+  color: string;
+  iconName: string;
+  description?: string;
+  isSystem?: boolean;
+}
+
+export interface RecurringExpense {
+  id: string;
+  title: string;
+  amount: number;
+  category: string;
+  accountId: string;
+  branchId?: string;
+  recipientName?: string;
+  frequency: "daily" | "weekly" | "monthly" | "yearly";
+  dayOfMonth?: number; // 1 to 31
+  dayOfWeek?: number;  // 0 to 6
+  startDate: string;
+  nextDueDate: string;
+  lastGeneratedDate?: string;
+  autoApprove: boolean;
+  active: boolean;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface CategoryBudget {
+  category: string;
+  monthlyLimit: number;
+  warnThresholdPct: number; // e.g. 80 for 80%
+  notes?: string;
+}
+
+// ==================== 2. التخزين المحلي والمزامنة ====================
+
+const STORAGE_KEYS = {
+  EXPENSE_META_MAP: "segilly_expense_meta_map_v1",
+  CUSTOM_CATEGORIES: "segilly_custom_expense_categories_v1",
+  RECURRING_EXPENSES: "segilly_recurring_expenses_v1",
+  CATEGORY_BUDGETS: "segilly_category_budgets_v1",
+  EXPENSE_SETTINGS: "segilly_expense_settings_v1",
+};
+
+function readStorage<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_e) {
+    return fallback;
+  }
+}
+
+function writeStorage<T>(key: string, data: T): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+    window.dispatchEvent(new CustomEvent("segilly_expenses_data_updated", { detail: { key } }));
+  } catch (e) {
+    console.error(`Error writing ${key}:`, e);
+  }
+}
+
+// ==================== 3. استخراج وتخزين بيانات المصروف الإضافية (Metadata) ====================
+
+const META_PREFIX = "<!--seg_meta:";
+const META_SUFFIX = "-->";
+
+export function encodeExpenseNotes(cleanNotes: string, meta: ExpenseMeta): string {
+  const metaStr = JSON.stringify(meta);
+  const clean = (cleanNotes || "").replace(/<!--seg_meta:.*?-->/gs, "").trim();
+  return clean ? `${clean}\n\n${META_PREFIX}${metaStr}${META_SUFFIX}` : `${META_PREFIX}${metaStr}${META_SUFFIX}`;
+}
+
+export function decodeExpenseNotes(rawNotes: string | null): { cleanNotes: string; meta: ExpenseMeta } {
+  if (!rawNotes) return { cleanNotes: "", meta: {} };
+
+  const match = rawNotes.match(/<!--seg_meta:(.*?)-->/s);
+  let meta: ExpenseMeta = {};
+  let cleanNotes = rawNotes;
+
+  if (match && match[1]) {
+    try {
+      meta = JSON.parse(match[1]);
+      cleanNotes = rawNotes.replace(/<!--seg_meta:.*?-->/gs, "").trim();
+    } catch {
+      meta = {};
+    }
+  }
+
+  return { cleanNotes, meta };
+}
+
+export function getExpenseMeta(exp: Expense): ExpenseMeta {
+  const metaMap = readStorage<Record<string, ExpenseMeta>>(STORAGE_KEYS.EXPENSE_META_MAP, {});
+  const fromStore = metaMap[exp.id];
+  const { meta: fromNotes } = decodeExpenseNotes(exp.notes);
+
+  return {
+    accountId: fromNotes.accountId || fromStore?.accountId || "acc-cash-main",
+    accountName: fromNotes.accountName || fromStore?.accountName,
+    branchId: fromNotes.branchId || fromStore?.branchId,
+    branchName: fromNotes.branchName || fromStore?.branchName,
+    recipientName: fromNotes.recipientName || fromStore?.recipientName,
+    voucherNumber: fromNotes.voucherNumber || fromStore?.voucherNumber || `VCH-${exp.id.slice(0, 6).toUpperCase()}`,
+    receiptUrl: fromNotes.receiptUrl || fromStore?.receiptUrl,
+    receiptName: fromNotes.receiptName || fromStore?.receiptName,
+    isRecurring: fromNotes.isRecurring || fromStore?.isRecurring,
+    recurringTemplateId: fromNotes.recurringTemplateId || fromStore?.recurringTemplateId,
+  };
+}
+
+export function saveExpenseMetaLocal(expenseId: string, meta: ExpenseMeta): void {
+  const map = readStorage<Record<string, ExpenseMeta>>(STORAGE_KEYS.EXPENSE_META_MAP, {});
+  map[expenseId] = { ...(map[expenseId] || {}), ...meta };
+  writeStorage(STORAGE_KEYS.EXPENSE_META_MAP, map);
+}
+
+// ==================== 4. التصنيفات الافتراضية والمخصصة ====================
+
+export const DEFAULT_CUSTOM_CATEGORIES: CustomExpenseCategory[] = [
+  { id: "rent", name: "rent", label: "إيجار المحل والمخازن", color: "emerald", iconName: "Building2", isSystem: true },
+  { id: "electricity", name: "electricity", label: "كهرباء ومرافق وخدمات", color: "amber", iconName: "Zap", isSystem: true },
+  { id: "salaries", name: "salaries", label: "رواتب ومكافآت الموظفين", color: "blue", iconName: "Users", isSystem: true },
+  { id: "transport", name: "transport", label: "نقل ومواصلات وشحن", color: "purple", iconName: "Truck", isSystem: true },
+  { id: "maintenance", name: "maintenance", label: "صيانة وتجهيزات وديكور", color: "orange", iconName: "Wrench", isSystem: false },
+  { id: "marketing", name: "marketing", label: "دعاية وإعلانات وتسويق", color: "pink", iconName: "Megaphone", isSystem: false },
+  { id: "packaging", name: "packaging", label: "مستلزمات تغليف وأكياس", color: "cyan", iconName: "Package", isSystem: false },
+  { id: "hospitality", name: "hospitality", label: "بوفيه وضيافة ونثريات", color: "teal", iconName: "Coffee", isSystem: false },
+  { id: "government", name: "government", label: "رسوم وتراخيص حكومية", color: "indigo", iconName: "FileCheck", isSystem: false },
+  { id: "other", name: "other", label: "مصروفات عامة وأخرى", color: "slate", iconName: "Receipt", isSystem: true },
+];
+
+export function getAllExpenseCategories(): CustomExpenseCategory[] {
+  const stored = readStorage<CustomExpenseCategory[]>(STORAGE_KEYS.CUSTOM_CATEGORIES, []);
+  if (stored.length === 0) {
+    writeStorage(STORAGE_KEYS.CUSTOM_CATEGORIES, DEFAULT_CUSTOM_CATEGORIES);
+    return DEFAULT_CUSTOM_CATEGORIES;
+  }
+  return stored;
+}
+
+export function saveExpenseCategories(cats: CustomExpenseCategory[]): void {
+  writeStorage(STORAGE_KEYS.CUSTOM_CATEGORIES, cats);
+}
+
+export function addExpenseCategory(cat: Omit<CustomExpenseCategory, "id" | "isSystem">): CustomExpenseCategory {
+  const list = getAllExpenseCategories();
+  const newCat: CustomExpenseCategory = {
+    ...cat,
+    id: `cat_${Date.now()}`,
+    isSystem: false,
+  };
+  list.push(newCat);
+  saveExpenseCategories(list);
+  return newCat;
+}
+
+export function updateExpenseCategory(id: string, patch: Partial<CustomExpenseCategory>): void {
+  const list = getAllExpenseCategories().map((c) => (c.id === id || c.name === id ? { ...c, ...patch } : c));
+  saveExpenseCategories(list);
+}
+
+export function deleteExpenseCategory(id: string): void {
+  const list = getAllExpenseCategories().filter((c) => c.id !== id && c.name !== id);
+  saveExpenseCategories(list);
+}
+
+export function getCategoryInfo(categoryKey: string): { label: string; color: string; iconName: string } {
+  const cats = getAllExpenseCategories();
+  const found = cats.find((c) => c.id === categoryKey || c.name === categoryKey);
+  if (found) {
+    return { label: found.label, color: found.color, iconName: found.iconName };
+  }
+  const fallback = EXPENSE_CATEGORIES.find((c) => c.value === categoryKey);
+  if (fallback) {
+    return { label: fallback.label, color: "slate", iconName: "Receipt" };
+  }
+  return { label: categoryKey || "أخرى", color: "slate", iconName: "Receipt" };
+}
+
+// ==================== 5. منظومة المصروفات الدورية المجدولة (Recurring) ====================
+
+export function getRecurringExpenses(): RecurringExpense[] {
+  return readStorage<RecurringExpense[]>(STORAGE_KEYS.RECURRING_EXPENSES, [
+    {
+      id: "rec-rent-sample",
+      title: "إيجار الفرع الرئيسي",
+      amount: 12000,
+      category: "rent",
+      accountId: "acc-cash-main",
+      frequency: "monthly",
+      dayOfMonth: 1,
+      startDate: new Date().toISOString().slice(0, 10),
+      nextDueDate: computeNextDueDate("monthly", 1, new Date().toISOString().slice(0, 10)),
+      autoApprove: false,
+      active: true,
+      recipientName: "مالك العقار - الحاج محمود",
+      notes: "إيجار المحل الشهري شامل الصيانة",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "rec-internet-sample",
+      title: "فاتورة الإنترنت وفايبر المحل",
+      amount: 650,
+      category: "electricity",
+      accountId: "acc-vodafone-cash",
+      frequency: "monthly",
+      dayOfMonth: 15,
+      startDate: new Date().toISOString().slice(0, 10),
+      nextDueDate: computeNextDueDate("monthly", 15, new Date().toISOString().slice(0, 10)),
+      autoApprove: false,
+      active: true,
+      recipientName: "شركة وي WE",
+      notes: "باقة 500 جيجا سرعة 70 ميجا",
+      createdAt: new Date().toISOString(),
+    },
+  ]);
+}
+
+export function saveRecurringExpenses(list: RecurringExpense[]): void {
+  writeStorage(STORAGE_KEYS.RECURRING_EXPENSES, list);
+}
+
+export function computeNextDueDate(frequency: RecurringExpense["frequency"], dayOfMonth = 1, fromDateStr?: string): string {
+  const base = fromDateStr ? new Date(fromDateStr) : new Date();
+  const now = new Date();
+  
+  if (frequency === "daily") {
+    const next = new Date(base);
+    next.setDate(next.getDate() + 1);
+    return next.toISOString().slice(0, 10);
+  }
+  
+  if (frequency === "weekly") {
+    const next = new Date(base);
+    next.setDate(next.getDate() + 7);
+    return next.toISOString().slice(0, 10);
+  }
+  
+  if (frequency === "monthly") {
+    let year = now.getFullYear();
+    let month = now.getMonth();
+    
+    // If target day of this month has already passed, schedule for next month
+    if (now.getDate() > dayOfMonth) {
+      month += 1;
+      if (month > 11) {
+        month = 0;
+        year += 1;
+      }
+    }
+    const targetDate = new Date(year, month, Math.min(dayOfMonth, 28));
+    return targetDate.toISOString().slice(0, 10);
+  }
+  
+  // yearly
+  const next = new Date(base);
+  next.setFullYear(next.getFullYear() + 1);
+  return next.toISOString().slice(0, 10);
+}
+
+export function addRecurringExpense(item: Omit<RecurringExpense, "id" | "createdAt" | "nextDueDate">): RecurringExpense {
+  const list = getRecurringExpenses();
+  const nextDueDate = computeNextDueDate(item.frequency, item.dayOfMonth, item.startDate);
+  const newItem: RecurringExpense = {
+    ...item,
+    id: `rec_${Date.now()}`,
+    nextDueDate,
+    createdAt: new Date().toISOString(),
+  };
+  list.unshift(newItem);
+  saveRecurringExpenses(list);
+  return newItem;
+}
+
+export function updateRecurringExpense(id: string, patch: Partial<RecurringExpense>): void {
+  const list = getRecurringExpenses().map((r) => {
+    if (r.id !== id) return r;
+    const updated = { ...r, ...patch };
+    if (patch.frequency || patch.dayOfMonth) {
+      updated.nextDueDate = computeNextDueDate(updated.frequency, updated.dayOfMonth);
+    }
+    return updated;
+  });
+  saveRecurringExpenses(list);
+}
+
+export function deleteRecurringExpense(id: string): void {
+  const list = getRecurringExpenses().filter((r) => r.id !== id);
+  saveRecurringExpenses(list);
+}
+
+export function checkRecurringStatus(r: RecurringExpense): {
+  isDue: boolean;
+  isOverdue: boolean;
+  daysRemaining: number;
+  badgeText: string;
+  badgeTone: "danger" | "warning" | "success" | "muted";
+} {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(r.nextDueDate);
+  due.setHours(0, 0, 0, 0);
+
+  const diffMs = due.getTime() - today.getTime();
+  const days = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+  if (!r.active) {
+    return { isDue: false, isOverdue: false, daysRemaining: days, badgeText: "معطل", badgeTone: "muted" };
+  }
+
+  if (days < 0) {
+    return { isDue: true, isOverdue: true, daysRemaining: days, badgeText: `متأخر منذ ${Math.abs(days)} يوم`, badgeTone: "danger" };
+  }
+  if (days === 0) {
+    return { isDue: true, isOverdue: false, daysRemaining: 0, badgeText: "مستحق اليوم!", badgeTone: "danger" };
+  }
+  if (days <= 3) {
+    return { isDue: true, isOverdue: false, daysRemaining: days, badgeText: `مستحق بعد ${days} يوم`, badgeTone: "warning" };
+  }
+  return { isDue: false, isOverdue: false, daysRemaining: days, badgeText: `مستحق بعد ${days} يوم`, badgeTone: "success" };
+}
+
+// ==================== 6. الميزانيات وسقوف الإنفاق (Budgets & Alerts) ====================
+
+export function getCategoryBudgets(): CategoryBudget[] {
+  return readStorage<CategoryBudget[]>(STORAGE_KEYS.CATEGORY_BUDGETS, [
+    { category: "rent", monthlyLimit: 15000, warnThresholdPct: 85, notes: "إيجار المحل والمخزن" },
+    { category: "salaries", monthlyLimit: 25000, warnThresholdPct: 90, notes: "رواتب ومكافآت الفريق" },
+    { category: "electricity", monthlyLimit: 3000, warnThresholdPct: 80, notes: "فواتير الكهرباء والمياه والإنترنت" },
+    { category: "transport", monthlyLimit: 4000, warnThresholdPct: 80, notes: "نقل ومواصلات وتوصيل البضاعة" },
+    { category: "marketing", monthlyLimit: 6000, warnThresholdPct: 80, notes: "حملات السوشيال ميديا والدعاية" },
+    { category: "hospitality", monthlyLimit: 1500, warnThresholdPct: 80, notes: "بوفيه وضيافة ونثريات" },
+    { category: "maintenance", monthlyLimit: 2500, warnThresholdPct: 80, notes: "صيانة أجهزة وأدوات" },
+  ]);
+}
+
+export function saveCategoryBudgets(list: CategoryBudget[]): void {
+  writeStorage(STORAGE_KEYS.CATEGORY_BUDGETS, list);
+}
+
+export function setCategoryBudget(budget: CategoryBudget): void {
+  const list = getCategoryBudgets();
+  const idx = list.findIndex((b) => b.category === budget.category);
+  if (idx >= 0) {
+    list[idx] = budget;
+  } else {
+    list.push(budget);
+  }
+  saveCategoryBudgets(list);
+}
+
+export function calculateBudgetStatus(
+  budgets: CategoryBudget[],
+  expenses: Expense[],
+  targetMonthStr?: string // e.g. "2026-08"
+): Array<{
+  category: string;
+  categoryLabel: string;
+  limit: number;
+  spent: number;
+  remaining: number;
+  percentage: number;
+  status: "safe" | "warning" | "exceeded";
+}> {
+  const currentMonth = targetMonthStr || new Date().toISOString().slice(0, 7);
+  const monthExpenses = expenses.filter((e) => e.expenseDate && e.expenseDate.startsWith(currentMonth));
+
+  // Map category spent
+  const spentMap: Record<string, number> = {};
+  monthExpenses.forEach((e) => {
+    spentMap[e.category] = (spentMap[e.category] || 0) + (e.amount || 0);
+  });
+
+  return budgets.map((b) => {
+    const spent = spentMap[b.category] || 0;
+    const remaining = Math.max(0, b.monthlyLimit - spent);
+    const pct = b.monthlyLimit > 0 ? (spent / b.monthlyLimit) * 100 : 0;
+    
+    let status: "safe" | "warning" | "exceeded" = "safe";
+    if (pct >= 100) {
+      status = "exceeded";
+    } else if (pct >= (b.warnThresholdPct || 80)) {
+      status = "warning";
+    }
+
+    return {
+      category: b.category,
+      categoryLabel: getCategoryInfo(b.category).label,
+      limit: b.monthlyLimit,
+      spent: Math.round(spent * 100) / 100,
+      remaining: Math.round(remaining * 100) / 100,
+      percentage: Math.min(Math.round(pct), 999),
+      status,
+    };
+  });
+}
+
+// ==================== 7. التفقيط العربي للأرقام والمبالغ (Tafqeet Engine) ====================
+
+const ONES_AR = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة", "عشرة"];
+const TENS_AR = ["", "عشرة", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
+const HUNDREDS_AR = ["", "مائة", "مئتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
+
+function convertGroupToWords(num: number): string {
+  if (num === 0) return "";
+  let result = "";
+  const hundreds = Math.floor(num / 100);
+  const remainder = num % 100;
+  const tens = Math.floor(remainder / 10);
+  const ones = remainder % 10;
+
+  if (hundreds > 0) {
+    result += HUNDREDS_AR[hundreds];
+  }
+
+  if (remainder > 0) {
+    if (result.length > 0) result += " و";
+    if (remainder === 11) result += "أحد عشر";
+    else if (remainder === 12) result += "اثنا عشر";
+    else if (remainder > 12 && remainder < 20) {
+      result += `${ONES_AR[ones]} عشر`;
+    } else {
+      if (ones > 0) result += ONES_AR[ones];
+      if (tens > 0) {
+        if (ones > 0) result += " و";
+        result += TENS_AR[tens];
+      }
+    }
+  }
+
+  return result;
+}
+
+export function tafqeetArabic(amount: number, currencyName = "جنيه مصري", subCurrency = "قرش"): string {
+  if (amount === 0) return `فقط صفر ${currencyName} لا غير`;
+  if (isNaN(amount) || amount < 0) return "";
+
+  const integerPart = Math.floor(amount);
+  const decimalPart = Math.round((amount - integerPart) * 100);
+
+  const billions = Math.floor(integerPart / 1_000_000_000);
+  const millions = Math.floor((integerPart % 1_000_000_000) / 1_000_000);
+  const thousands = Math.floor((integerPart % 1_000_000) / 1_000);
+  const units = integerPart % 1_000;
+
+  const parts: string[] = [];
+
+  if (billions > 0) {
+    if (billions === 1) parts.push("مليار");
+    else if (billions === 2) parts.push("ملياران");
+    else if (billions >= 3 && billions <= 10) parts.push(`${convertGroupToWords(billions)} مليارات`);
+    else parts.push(`${convertGroupToWords(billions)} مليار`);
+  }
+
+  if (millions > 0) {
+    if (millions === 1) parts.push("مليون");
+    else if (millions === 2) parts.push("مليونان");
+    else if (millions >= 3 && millions <= 10) parts.push(`${convertGroupToWords(millions)} ملايين`);
+    else parts.push(`${convertGroupToWords(millions)} مليون`);
+  }
+
+  if (thousands > 0) {
+    if (thousands === 1) parts.push("ألف");
+    else if (thousands === 2) parts.push("ألفان");
+    else if (thousands >= 3 && thousands <= 10) parts.push(`${convertGroupToWords(thousands)} آلاف`);
+    else parts.push(`${convertGroupToWords(thousands)} ألف`);
+  }
+
+  if (units > 0) {
+    parts.push(convertGroupToWords(units));
+  }
+
+  let words = parts.join(" و");
+  let fullText = `فقط ${words} ${currencyName}`;
+
+  if (decimalPart > 0) {
+    fullText += ` و${convertGroupToWords(decimalPart)} ${subCurrency}`;
+  }
+
+  fullText += " لا غير";
+  return fullText;
+}
+
+// ==================== 8. طباعة إذن / سند صرف نقدية رسمي (Payment Voucher PDF) ====================
+
+export function printPaymentVoucherPdf(
+  expense: Expense,
+  meta?: ExpenseMeta,
+  shopName = "سِجلّي لإدارة المتاجر والأقساط"
+): boolean {
+  const resolvedMeta = meta || getExpenseMeta(expense);
+  const catInfo = getCategoryInfo(expense.category);
+  const accounts = getTreasuryAccounts();
+  const acc = accounts.find((a) => a.id === resolvedMeta.accountId) || accounts[0];
+  
+  const voucherNo = resolvedMeta.voucherNumber || `VCH-${expense.id.slice(0, 6).toUpperCase()}`;
+  const amountWords = tafqeetArabic(expense.amount);
+  const dateFormatted = expense.expenseDate || new Date().toISOString().slice(0, 10);
+  const timeFormatted = new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+
+  const body = `
+<div style="direction: rtl; font-family: 'IBM Plex Sans Arabic', 'Cairo', sans-serif;">
+  <div style="border: 2px solid #059669; border-radius: 14px; padding: 22px 26px; background: #fff; margin-bottom: 20px; position: relative;">
+    <div style="position: absolute; left: 24px; top: 22px; text-align: left;">
+      <div style="font-size: 10px; color: #64748b;">رقم السند المعتمد</div>
+      <div style="font-size: 17px; font-weight: 800; color: #059669; letter-spacing: 0.5px;" dir="ltr">${esc(voucherNo)}</div>
+      <div style="font-size: 10px; color: #64748b; margin-top: 4px;">تاريخ الصرف: <b style="color:#0f172a;" dir="ltr">${esc(dateFormatted)}</b></div>
+    </div>
+
+    <div style="margin-bottom: 18px;">
+      <div style="display: inline-block; padding: 4px 12px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 20px; color: #047857; font-size: 11px; font-weight: 700; margin-bottom: 6px;">
+        إذن صرف نقدية رسمي • PAYMENT VOUCHER
+      </div>
+      <h1 style="font-size: 22px; font-weight: 900; color: #0f172a; margin: 0;">${esc(shopName)}</h1>
+      <p style="font-size: 11px; color: #64748b; margin: 2px 0 0;">سند صرف مالي رسمي معتمد لإثبات وخروج السيولة النقدية من الخزينة.</p>
+    </div>
+
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin: 16px 0; display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+      <div>
+        <div style="font-size: 11px; color: #64748b;">المبلغ المنصرف بالأرقام:</div>
+        <div style="font-size: 26px; font-weight: 900; color: #dc2626; letter-spacing: -0.5px;">${fmt(expense.amount)} <span style="font-size: 14px; color: #64748b;">ج.م</span></div>
+      </div>
+      <div style="text-align: left; max-width: 60%;">
+        <div style="font-size: 11px; color: #64748b;">المبلغ بالحروف والتفقيط:</div>
+        <div style="font-size: 13px; font-weight: 700; color: #0f172a; line-height: 1.5;">${esc(amountWords)}</div>
+      </div>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 12px;">
+      <tbody>
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+          <td style="padding: 10px 8px; width: 140px; color: #64748b; font-weight: 600;">يُصرف إلى السيد / الجهة:</td>
+          <td style="padding: 10px 8px; color: #0f172a; font-weight: 700; font-size: 13px;">${esc(resolvedMeta.recipientName || "—")}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+          <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">بند وتصنيف المصروف:</td>
+          <td style="padding: 10px 8px; color: #0f172a; font-weight: 700;"><span style="display:inline-block; padding:2px 8px; background:#f1f5f9; border-radius:6px;">${esc(catInfo.label)}</span></td>
+        </tr>
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+          <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">الخزينة المسحوب منها:</td>
+          <td style="padding: 10px 8px; color: #047857; font-weight: 700;">🏦 ${esc(acc?.name || "الدرج الرئيسي (كاش)")}</td>
+        </tr>
+        ${resolvedMeta.branchName ? `
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+          <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">الفرع / مركز التكلفة:</td>
+          <td style="padding: 10px 8px; color: #0f172a; font-weight: 600;">🏢 ${esc(resolvedMeta.branchName)}</td>
+        </tr>` : ""}
+        <tr>
+          <td style="padding: 10px 8px; color: #64748b; font-weight: 600; vertical-align: top;">وذلك مقابل (البيان):</td>
+          <td style="padding: 10px 8px; color: #334155; font-size: 12.5px; line-height: 1.6;">${esc(expense.notes || "مصروف عام وتشغيلي.")}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top: 36px; padding-top: 18px; border-top: 1px dashed #cbd5e1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; text-align: center;">
+      <div style="padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 34px;">أمين الخزينة / المحاسب</div>
+        <div style="font-size: 11px; color: #94a3b8;">التوقيع: ..........................</div>
+      </div>
+      <div style="padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 34px;">المدير المالي / المسؤول</div>
+        <div style="font-size: 11px; color: #94a3b8;">الاعتماد: ..........................</div>
+      </div>
+      <div style="padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div style="font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 34px;">المستلم / المستفيد</div>
+        <div style="font-size: 11px; color: #94a3b8;">استلمت المبلغ كاملاً: ...............</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px; text-align: center; font-size: 9.5px; color: #94a3b8;">
+      تم إصدار هذا السند إلكترونياً عبر منظومة ${esc(shopName)} في ${esc(dateFormatted)} ${esc(timeFormatted)}.
+    </div>
+  </div>
+</div>
+`;
+
+  const html = pdfDocument({
+    docTitle: `إذن صرف نقدية — ${voucherNo}`,
+    badge: "إذن صرف مالي",
+    title: `سند صرف نقدية #${voucherNo}`,
+    lede: `المبلغ: ${fmt(expense.amount)} ج.م • المستفيد: ${resolvedMeta.recipientName || "—"}`,
+    meta: [
+      { label: "رقم السند", value: voucherNo },
+      { label: "تاريخ السند", value: dateFormatted },
+      { label: "الخزينة المسحوبة", value: acc?.name || "الدرج الرئيسي" },
+    ],
+    kpis: [
+      { label: "المبلغ الإجمالي", value: `${fmt(expense.amount)} ج.م`, tone: "danger" },
+      { label: "بند الصرف", value: catInfo.label },
+      { label: "حالة السند", value: "معتمد ومصروف" },
+    ],
+    body,
+  });
+
+  return openPdfDocument(html, { autoPrint: true });
+}
+
+// ==================== 9. تحليلات مقارنة الفترات واكتشاف القفزات (Analytics & Spike Detection) ====================
+
+export function analyzeExpensePeriods(expenses: Expense[]): {
+  currentMonthTotal: number;
+  lastMonthTotal: number;
+  percentageChange: number;
+  isIncrease: boolean;
+  averageExpensePerEntry: number;
+  spikes: Array<{ expense: Expense; reason: string; avgForCategory: number }>;
+  topCategoryThisMonth: { category: string; label: string; amount: number; pct: number } | null;
+  monthlyTrend: Array<{ month: string; monthLabel: string; total: number; count: number }>;
+} {
+  const now = new Date();
+  const curYear = now.getFullYear();
+  const curMonth = now.getMonth() + 1;
+  const curMonthKey = `${curYear}-${String(curMonth).padStart(2, "0")}`;
+
+  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthKey = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, "0")}`;
+
+  let currentMonthTotal = 0;
+  let lastMonthTotal = 0;
+  const curMonthCatTotals: Record<string, number> = {};
+  const allCategoryAverages: Record<string, { sum: number; count: number }> = {};
+
+  // Monthly trend for past 6 months
+  const monthsMap: Record<string, { total: number; count: number }> = {};
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    monthsMap[key] = { total: 0, count: 0 };
+  }
+
+  expenses.forEach((e) => {
+    const d = e.expenseDate ? e.expenseDate.slice(0, 7) : e.createdAt.slice(0, 7);
+    if (d === curMonthKey) {
+      currentMonthTotal += e.amount;
+      curMonthCatTotals[e.category] = (curMonthCatTotals[e.category] || 0) + e.amount;
+    } else if (d === lastMonthKey) {
+      lastMonthTotal += e.amount;
+    }
+
+    // Averages calculation
+    if (!allCategoryAverages[e.category]) {
+      allCategoryAverages[e.category] = { sum: 0, count: 0 };
+    }
+    allCategoryAverages[e.category].sum += e.amount;
+    allCategoryAverages[e.category].count += 1;
+
+    // Trend
+    if (monthsMap[d]) {
+      monthsMap[d].total += e.amount;
+      monthsMap[d].count += 1;
+    }
+  });
+
+  const diff = currentMonthTotal - lastMonthTotal;
+  const pctChange = lastMonthTotal > 0 ? (diff / lastMonthTotal) * 100 : currentMonthTotal > 0 ? 100 : 0;
+
+  // Find spikes: expense in current month > 1.8x average of that category
+  const spikes: Array<{ expense: Expense; reason: string; avgForCategory: number }> = [];
+  expenses
+    .filter((e) => (e.expenseDate && e.expenseDate.startsWith(curMonthKey)))
+    .forEach((e) => {
+      const avg = allCategoryAverages[e.category]?.count > 1 
+        ? allCategoryAverages[e.category].sum / allCategoryAverages[e.category].count 
+        : e.amount;
+      
+      if (avg > 0 && e.amount >= avg * 1.8 && e.amount > 500) {
+        spikes.push({
+          expense: e,
+          reason: `مبلغ أعلى من المعتاد بنسبة ${Math.round((e.amount / avg - 1) * 100)}% مقارنة بمتوسط التصنيف (${fmt(Math.round(avg))} ج.م)`,
+          avgForCategory: Math.round(avg),
+        });
+      }
+    });
+
+  // Top category this month
+  let topCat: { category: string; label: string; amount: number; pct: number } | null = null;
+  let maxCatAmount = -1;
+  Object.entries(curMonthCatTotals).forEach(([cat, amt]) => {
+    if (amt > maxCatAmount) {
+      maxCatAmount = amt;
+      topCat = {
+        category: cat,
+        label: getCategoryInfo(cat).label,
+        amount: amt,
+        pct: currentMonthTotal > 0 ? Math.round((amt / currentMonthTotal) * 100) : 0,
+      };
+    }
+  });
+
+  const monthNamesArabic = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+  const monthlyTrend = Object.entries(monthsMap).map(([k, v]) => {
+    const [y, m] = k.split("-");
+    const mName = monthNamesArabic[parseInt(m, 10) - 1] || m;
+    return {
+      month: k,
+      monthLabel: `${mName} ${y}`,
+      total: Math.round(v.total),
+      count: v.count,
+    };
+  });
+
+  const curMonthCount = expenses.filter((e) => e.expenseDate && e.expenseDate.startsWith(curMonthKey)).length;
+  const avgExpense = curMonthCount > 0 ? Math.round(currentMonthTotal / curMonthCount) : 0;
+
+  return {
+    currentMonthTotal: Math.round(currentMonthTotal),
+    lastMonthTotal: Math.round(lastMonthTotal),
+    percentageChange: Math.round(pctChange),
+    isIncrease: diff >= 0,
+    averageExpensePerEntry: avgExpense,
+    spikes,
+    topCategoryThisMonth: topCat,
+    monthlyTrend,
+  };
+}

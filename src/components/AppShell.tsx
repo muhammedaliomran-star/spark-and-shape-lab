@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useDB, lowStockCount, useShopSettings, isDueSoonOrOverdue } from "@/lib/store";
 import { UserChip } from "@/components/UserChip";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { BranchSwitcher } from "@/components/BranchSwitcher";
 import { applyTheme } from "@/lib/theme";
 import { useEffect } from "react";
 
@@ -71,6 +72,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/85">Segilly</div>
           </div>
         </div>
+
+        {/* محدد الفرع العام */}
+        <div className="px-1">
+          <BranchSwitcher className="w-full justify-between" />
+        </div>
+
         <nav className="stagger no-scrollbar -mx-1 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-1">
           {nav.map((n) => {
             const active = n.to === "/" ? location.pathname === "/" : location.pathname.startsWith(n.to);

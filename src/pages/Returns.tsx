@@ -16,6 +16,7 @@ import { usePrivacy } from "@/lib/privacy";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import * as React from "react";
 import { useState } from "react";
 import {
   Dialog,
@@ -95,15 +96,16 @@ function ReturnsPage() {
                 <Plus className="w-5 h-5" /> تسجيل مرتجع جديد
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl overflow-hidden rounded-2xl border border-foreground/10 bg-card p-0 shadow-sm">
-              <DialogHeader className="p-6 pb-4 border-b border-foreground/10">
+            <DialogContent className="max-w-2xl overflow-hidden p-0 border-none bg-card/95 ">
+              <DialogHeader className="p-6 pb-2 sticky top-0 bg-card z-20 border-b border-[var(--hairline)]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 flex items-center justify-center text-muted-foreground">
-                      <Undo2 className="w-5 h-5" />
+                    <div className="w-10 h-10 rounded-2xl bg-foreground/[0.06] flex items-center justify-center">
+                      <Undo2 className="w-5 h-5 text-foreground" />
                     </div>
                     <div>
                       <DialogTitle className="text-right text-xl font-black">تسجيل مرتجع جديد</DialogTitle>
+                      <p className="text-xs text-muted-foreground uppercase tracking-[0.12em] font-bold mt-0.5">Register New Return Entry</p>
                     </div>
                   </div>
                 </div>
@@ -114,12 +116,20 @@ function ReturnsPage() {
                   {/* Type Selection */}
                   <div className="space-y-3">
                     <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">نوع المرتجع</Label>
-                    <div className="grid grid-cols-2 gap-2 p-1.5 relative overflow-hidden">
+                    <div className="grid grid-cols-2 gap-2 p-1.5 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] relative overflow-hidden">
+                      <motion.div 
+                        layoutId="active-tab"
+                        className={cn(
+                          "absolute inset-y-1 w-[calc(50%-6px)] rounded-xl shadow-lg z-0",
+                          returnType === "sale" ? "bg-primary left-1.5" : "bg-warning right-1.5"
+                        )}
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      />
                       <Button 
                         variant="ghost"
                         className={cn(
                           "relative z-10 rounded-xl h-11 font-black transition-colors",
-                          returnType === "sale" ? "bg-foreground text-background font-semibold" : "text-muted-foreground hover:text-foreground"
+                          returnType === "sale" ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                         )}
                         onClick={() => setReturnType("sale")}
                       >
@@ -129,7 +139,7 @@ function ReturnsPage() {
                         variant="ghost"
                         className={cn(
                           "relative z-10 rounded-xl h-11 font-black transition-colors",
-                          returnType === "supplier" ? "bg-foreground text-background font-semibold" : "text-muted-foreground hover:text-foreground"
+                          returnType === "supplier" ? "text-warning-foreground" : "text-muted-foreground hover:text-foreground"
                         )}
                         onClick={() => setReturnType("supplier")}
                       >
@@ -139,15 +149,15 @@ function ReturnsPage() {
                   </div>
 
                   {/* Invoice ID */}
-                  <div className="space-y-3 py-3 border-b border-[var(--hairline)]">
-                    <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">رقم الفاتورة (اختياري)</Label>
+                  <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[background-color,border-color,color,box-shadow,transform,opacity] hover:ring-primary/40 group/field">
+                    <Label className="text-[11px] font-black uppercase tracking-[0.12em] text-muted-foreground group-focus-within/field:text-primary transition-colors">رقم الفاتورة (اختياري)</Label>
                     <Input value={invoiceId} onChange={(e) => setInvoiceId(e.target.value)} placeholder="مثال: #INV-001" className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-bold" />
                   </div>
 
                   {/* Add Items Section */}
                   <div className="space-y-4 border-t border-[var(--hairline)] pt-6">
                     <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">إضافة أصناف المرتجع</Label>
-                    <div className="space-y-4">
+                    <div className="space-y-4 p-5 bg-muted/10 rounded-2xl ring-1 ring-inset ring-[var(--hairline)]">
                       <div className="space-y-2 group/subfield">
                         <Label className="text-xs font-bold text-muted-foreground mr-2 group-focus-within/subfield:text-primary transition-colors">اسم الصنف</Label>
                         <Input placeholder="اسم الصنف" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} className="text-right h-11 bg-background/40 border-none focus-visible:ring-2 focus-visible:ring-primary/30 font-bold" />
@@ -202,14 +212,14 @@ function ReturnsPage() {
                   </div>
 
                   {/* Reason */}
-                  <div className="space-y-3 py-3 border-b border-[var(--hairline)]">
-                    <Label className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">السبب / ملاحظات</Label>
+                  <div className="space-y-3 p-4 bg-muted/20 rounded-2xl ring-1 ring-inset ring-[var(--hairline)] transition-[background-color,border-color,color,box-shadow,transform,opacity] hover:ring-primary/40 group/field">
+                    <Label className="text-[11px] font-black uppercase tracking-[0.12em] text-muted-foreground group-focus-within/field:text-primary transition-colors">السبب / ملاحظات</Label>
                     <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="مثال: تلف في المنتج أو خطأ في المقاس..." className="text-right h-12 bg-background/50 border-none focus-visible:ring-2 focus-visible:ring-primary/30" />
                   </div>
 
                   <Button 
                     className={cn(
-                      "w-full gap-2 py-8 text-xl rounded-2xl shadow-sm transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-500 font-black relative overflow-hidden group",
+                      "w-full gap-2 py-8 text-xl rounded-2xl shadow-lg transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-500 font-black relative overflow-hidden group",
                       returnType === 'sale' 
                         ? "bg-primary text-primary-foreground hover:shadow-primary/30" 
                         : "bg-warning text-warning-foreground hover:shadow-warning/30"
@@ -230,31 +240,33 @@ function ReturnsPage() {
       {/* Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <MetricCard label="إجمالي المرتجعات" value={data.returns.reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Undo2 className="w-4 h-4 text-muted-foreground" />} color="muted" privacy={privacy} />
-        <MetricCard label="مرتجعات مبيعات" value={data.returns.filter(r => r.type === "sale").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<TrendingUp className="w-4 h-4 text-warning" />} color="muted" privacy={privacy} />
+        <MetricCard label="مرتجعات مبيعات" value={data.returns.filter(r => r.type === "sale").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<TrendingUp className="w-4 h-4 text-warning" />} color="warning" privacy={privacy} glow />
         <MetricCard label="مرتجعات موردين" value={data.returns.filter(r => r.type === "supplier").reduce((acc, r) => acc + r.totalAmount, 0)} icon={<Package className="w-4 h-4 text-muted-foreground" />} color="muted" privacy={privacy} />
-        <MetricCard label="عدد العمليات" value={data.returns.length} icon={<History className="w-4 h-4 text-muted-foreground" />} color="muted" privacy={privacy} isCount />
+        <MetricCard label="عدد العمليات" value={data.returns.length} icon={<History className="w-4 h-4 text-muted-foreground" />} color="muted" privacy={privacy} isCount glow />
       </div>
 
       {/* Full Width History Table/List */}
       <div className="space-y-4">
         <div className="sticky-search-bar mb-4">
-          <div className="flex flex-col lg:flex-row gap-5 items-center justify-between p-0">
+          <div className="bg-card/50 rounded-2xl border border-foreground/10 bg-card/70 p-5 flex flex-col lg:flex-row gap-5 items-center justify-between">
             <div className="flex items-center gap-4 order-2 lg:order-1 w-full lg:w-auto">
               <div className="relative flex-1 lg:w-80">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input 
                   placeholder="بحث في المرتجعات (رقم الفاتورة، السبب...)" 
-                  className="pr-10 h-11 bg-background/50 border-none"
+                  className="pr-10 h-11 glass border-none"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <span className="text-xs text-muted-foreground">{filteredReturns.length} عملية مؤرشفة</span>
+              <Badge variant="secondary" className="px-4 py-2 rounded-xl font-black text-xs tracking-[0.12em] uppercase bg-muted/50 hidden md:flex shrink-0">
+                {filteredReturns.length} عملية مؤرشفة
+              </Badge>
             </div>
             <h3 className="text-sm font-black flex items-center gap-3 text-right order-1 lg:order-2 w-full lg:w-auto justify-end uppercase tracking-tighter">
               سجل المرتجعات الشامل
-              <div className="p-2 text-foreground">
-                <History className="w-5 h-5" />
+              <div className="p-2 rounded-xl bg-foreground/[0.06] ring-1 ring-foreground/10">
+                <History className="w-5 h-5 text-foreground" />
               </div>
             </h3>
           </div>
