@@ -227,3 +227,39 @@ export function generateWhatsAppLink(phone: string, message: string): string {
   const encodedText = encodeURIComponent(message);
   return `https://wa.me/${cleanPhone}?text=${encodedText}`;
 }
+
+
+/** فتح واتساب برسالة إيصال فاتورة نقطة البيع. */
+export function openWhatsAppReceipt(params: {
+  shopName: string;
+  shopPhone?: string;
+  invoiceCode: string;
+  customerName?: string;
+  customerPhone?: string;
+  invoiceDate?: string;
+  isCash?: boolean;
+  total: number;
+  downPayment?: number;
+  remaining?: number;
+  items: { name: string; quantity: number; price: number }[];
+}) {
+  const lines = params.items
+    .map((it) => `  - ${it.name} (عدد ${it.quantity}) - ${it.price} ج.م`)
+    .join("\n");
+  const message = `مرحباً ${params.customerName || "عميلنا العزيز"} 👋
+إيصال فاتورتك من *${params.shopName}*
+
+• رقم الفاتورة: *${params.invoiceCode}*${params.invoiceDate ? `\n• التاريخ: ${params.invoiceDate}` : ""}
+
+الأصناف:
+${lines}
+
+• الإجمالي: *${params.total} ج.م*${params.downPayment !== undefined ? `\n• المدفوع: ${params.downPayment} ج.م` : ""}${params.remaining ? `\n• المتبقي: ${params.remaining} ج.م` : ""}
+
+شكراً لتعاملك معنا 🌿${params.shopPhone ? `\nللتواصل: ${params.shopPhone}` : ""}`;
+
+  const url = params.customerPhone
+    ? generateWhatsAppLink(params.customerPhone, message)
+    : `https://wa.me/?text=${encodeURIComponent(message)}`;
+  if (typeof window !== "undefined") window.open(url, "_blank");
+}

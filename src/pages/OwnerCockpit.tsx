@@ -54,6 +54,47 @@ import { SalesTargetsTab } from "@/components/owner/SalesTargetsTab";
 import { OwnerApprovalsTab } from "@/components/owner/OwnerApprovalsTab";
 import { GeoShippingIntelligenceTab } from "@/components/owner/GeoShippingIntelligenceTab";
 
+function CountUp({ value, prefix }: { value: number; prefix?: string }) {
+  return (
+    <span>
+      {prefix}
+      <BaseCountUp value={value} format={(n) => fmt(n)} />
+    </span>
+  );
+}
+
+function MetricCard({
+  title,
+  hint,
+  icon,
+  children,
+  className,
+}: {
+  title: string;
+  hint?: string;
+  icon?: React.ReactNode;
+  children?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "plate rounded-3xl border border-border/80 bg-card/60 p-5 transition-[transform,box-shadow] duration-500 hover:-translate-y-0.5",
+        className,
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-sm font-bold text-foreground">{title}</div>
+          {hint && <div className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{hint}</div>}
+        </div>
+        {icon && <span className="shrink-0">{icon}</span>}
+      </div>
+      <div className="mt-4">{children}</div>
+    </div>
+  );
+}
+
 type TimeRange = "today" | "yesterday" | "this_week" | "this_month" | "all";
 
 export default function OwnerCockpit() {
