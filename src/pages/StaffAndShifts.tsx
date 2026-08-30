@@ -310,8 +310,8 @@ export default function StaffAndShifts() {
           <PageHeader
             title="الموظفين والورديات والعمولات"
             subtitle="إدارة الكاشير، تقرير Z-Report، حساب عمولات ومكافآت المبيعات، وتسجيل الحضور والانصراف السريع"
-            badge="الرقابة ونقاط البيع"
-            actions={
+            eyebrow="الرقابة ونقاط البيع"
+            action={
               <div className="flex items-center gap-2">
                 {currentOpenShift ? (
                   <Button

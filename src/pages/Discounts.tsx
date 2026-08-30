@@ -417,8 +417,8 @@ export default function Discounts() {
           <PageHeader
             title="الخصومات والعروض الترويجية"
             subtitle="إدارة الكوبونات، عروض الكميات والباقات، نقاط الولاء، وحماية هامش الربحية"
-            badge="مُحرك المبيعات"
-            actions={
+            eyebrow="مُحرك المبيعات"
+            action={
               <div className="flex items-center gap-2">
                 {activeTab === "coupons" && (
                   <Button
