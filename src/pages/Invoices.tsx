@@ -77,6 +77,9 @@ function InvoicesPage() {
   const { privacy, toggle } = usePrivacy();
   const blurCls = privacy ? "privacy-blur" : "privacy-clear";
   const { settings: shopSettings } = useShopSettings();
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [searchScanOpen, setSearchScanOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [customPrintInv, setCustomPrintInv] = useState<Invoice | null>(null);
   const [shipmentInv, setShipmentInv] = useState<Invoice | null>(null);
@@ -255,8 +258,8 @@ function InvoicesPage() {
     if (selectedIds.size === 0) return;
     const count = selectedIds.size;
     try {
-      for (const id of Array.from(selectedIds)) {
-        await db.deleteInvoice(id);
+      for (const id of Array.from(selectedIds) as string[]) {
+        await db.removeInvoice(id);
       }
       setSelectedIds(new Set());
       toast.success(`تم حذف ${count} فاتورة بنجاح`);
@@ -859,16 +862,20 @@ function InvoicesPage() {
         onClose={() => setShareInv(null)}
       />
       <CreateInvoiceShipmentDialog
-        invoice={shipmentInv}
+        inv={shipmentInv}
         customer={shipmentInv ? findCustomer(shipmentInv.customerId) ?? null : null}
-        invoiceNumber={shipmentInv ? invoiceNumber(data.invoices, shipmentInv.id, shopSettings.invoicePrefix) : ""}
+        items={shipmentInv ? data.invoiceItems.filter((it) => it.invoiceId === shipmentInv.id) : []}
+        carriers={data.carriers}
+        zones={data.zones}
         onClose={() => setShipmentInv(null)}
       />
       <InvoicePrintCustomizerDialog
-        invoice={customPrintInv}
+        inv={customPrintInv}
         customer={customPrintInv ? findCustomer(customPrintInv.customerId) ?? null : null}
-        items={data.invoiceItems}
-        invoices={data.invoices}
+        items={customPrintInv ? data.invoiceItems.filter((it) => it.invoiceId === customPrintInv.id) : []}
+        payments={data.payments}
+        allInvoices={data.invoices}
+        shopSettings={shopSettings}
         onClose={() => setCustomPrintInv(null)}
       />
       {directPayState && (
@@ -1624,7 +1631,9 @@ function ViewInvoiceDialog({
         {inv.monthlyInstallment > 0 && (
           <div className="pt-2">
             <InstallmentScheduleMatrix
-              invoice={inv}
+              inv={inv}
+              customer={customer}
+              payments={payments}
               onPayInstallment={(amt) => onDirectPay?.(inv, amt)}
             />
           </div>
