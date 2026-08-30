@@ -1613,7 +1613,7 @@ function DeleteTimelineEntry({ kind, id }: { kind: "invoice" | "payment"; id: st
 }
 
 function CustomerDialog({ customer, customerCode, trigger }: { customer?: Customer; customerCode?: number; trigger: React.ReactNode }) {
-  const { data } = useDB();
+  const data = useDB();
   const today = new Date().toISOString().slice(0, 10);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(customer?.name ?? "");
