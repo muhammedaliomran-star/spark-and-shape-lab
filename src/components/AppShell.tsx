@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "@/lib/router-compat";
 import type { ReactNode } from "react";
 import { LogOut, Undo2, Wallet, GitBranch, Banknote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { LayoutGrid, Users, FileText, Bell, Receipt, Truck, Package, BarChart3, Settings, CalendarDays, Warehouse, Store, ClipboardCheck } from "lucide-react";
+import { LayoutGrid, Users, FileText, Bell, Receipt, Truck, Package, BarChart3, Settings, CalendarDays, Warehouse, Store, ClipboardCheck, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDB, lowStockCount, useShopSettings, isDueSoonOrOverdue } from "@/lib/store";
 import { UserChip } from "@/components/UserChip";
@@ -77,6 +77,36 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="px-1">
           <BranchSwitcher className="w-full justify-between" />
         </div>
+
+        {/* Pinned Executive Launcher: Owner Companion App */}
+        <Link
+          to="/owner"
+          className={cn(
+            "group relative flex items-center justify-between gap-3 rounded-2xl p-3 border transition-all duration-300",
+            location.pathname.startsWith("/owner")
+              ? "bg-amber-500/15 border-amber-500/40 text-amber-300 shadow-sm"
+              : "bg-card/70 border-border/80 text-foreground hover:bg-card hover:border-amber-500/30"
+          )}
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={cn(
+              "grid h-9 w-9 shrink-0 place-items-center rounded-xl transition-colors",
+              location.pathname.startsWith("/owner")
+                ? "bg-amber-500 text-black font-bold shadow-sm"
+                : "bg-amber-500/10 text-amber-400 group-hover:bg-amber-500/20"
+            )}>
+              <Crown className="w-4 h-4" />
+            </div>
+            <div className="min-w-0 text-right">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold truncate">تطبيق المالك</span>
+                <span className="inline-block rounded-md bg-amber-500/20 px-1 py-0.2 text-[9px] font-extrabold text-amber-400">Boss</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground truncate">لوحة الإدارة والقرارات</p>
+            </div>
+          </div>
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" title="جاهز للعمل" />
+        </Link>
 
         <nav className="stagger no-scrollbar -mx-1 flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-1">
           {nav.map((n) => {

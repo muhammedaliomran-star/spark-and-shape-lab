@@ -36,6 +36,7 @@ import {
 } from "@/components/DashboardCustomization";
 import { getMyStorefront, getMyStoreOrders, type Storefront, type StoreOrder } from "@/lib/storefront";
 import {
+  Crown,
   Users,
   AlertCircle,
   Wallet,
@@ -811,6 +812,17 @@ export function Dashboard() {
         subtitle="مركز القيادة والرقابة اللحظية على الخزينة، الديون، المخزون، المبيعات والشحن."
         action={
           <div className="flex flex-wrap items-center gap-2">
+            {/* Executive Companion: Segelly Boss */}
+            <Link
+              to="/owner"
+              className="island-btn group bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/40 hover:bg-amber-500/25 font-bold"
+            >
+              <span>تطبيق المالك (سِجلّي Boss)</span>
+              <span className="island-btn-icon text-amber-400">
+                <Crown className="h-4 w-4" />
+              </span>
+            </Link>
+
             {/* Time Range Selector */}
             <div className="flex items-center rounded-lg bg-foreground/[0.05] p-1 ring-1 ring-border text-xs">
               {(["today", "7d", "month", "all"] as TimeRange[]).map((r) => (
