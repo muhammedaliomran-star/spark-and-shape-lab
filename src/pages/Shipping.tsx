@@ -863,7 +863,7 @@ export default function Shipping() {
             </div>
 
             <TabsContent value="shipments">
-              <div className="grid gap-4">
+              <div className="grid gap-2 sm:gap-4">
                 {filteredShipments.length === 0 ? (
                   <BezelCard className="flex flex-col items-center justify-center py-20 text-center">
                     <div className="mb-4 rounded-full bg-muted p-6">
@@ -1013,7 +1013,7 @@ export default function Shipping() {
                         <span className="text-muted-foreground">التكلفة الأساسية</span>
                         <span className="font-bold">{c.baseCost} ج.م</span>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2 [&_button]:h-11 sm:[&_button]:h-9">
                         <Button variant="outline" size="sm" className="flex-1" onClick={() => openEditCarrier(c)}>
                           <Pencil className="h-4 w-4" /> تعديل
                         </Button>
@@ -1088,7 +1088,7 @@ export default function Shipping() {
                         <span className="text-muted-foreground">تكلفة التوصيل</span>
                         <span className="font-bold text-primary">{z.deliveryCost} ج.م</span>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2 [&_button]:h-11 sm:[&_button]:h-9">
                         <Button variant="outline" size="sm" className="flex-1" onClick={() => openEditZone(z)}>
                           <Pencil className="h-4 w-4" /> تعديل
                         </Button>
