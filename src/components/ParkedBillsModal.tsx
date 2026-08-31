@@ -15,7 +15,8 @@ import { toast } from "sonner";
 interface ParkedBillsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onResume: (bill: ParkedBill) => void;
+  onResume?: (bill: ParkedBill) => void;
+  onSelectBill?: (bill: ParkedBill) => void;
 }
 
 export function ParkedBillsModal({ open, onOpenChange, onResume }: ParkedBillsModalProps) {
