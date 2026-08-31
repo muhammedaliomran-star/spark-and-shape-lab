@@ -61,12 +61,16 @@ export function CarrierReconciliationView({
   const [referenceNumber, setReferenceNumber] = useState("");
   const [notes, setNotes] = useState("");
 
-  const refreshTransactions = () => {
-    setTransactions(loadCarrierTransactions());
+  const refreshTransactions = async () => {
+    try {
+      setTransactions(await loadCarrierTransactions());
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "تعذر تحميل كشف الحساب");
+    }
   };
 
   useEffect(() => {
-    refreshTransactions();
+    void refreshTransactions();
   }, []);
 
   useEffect(() => {
