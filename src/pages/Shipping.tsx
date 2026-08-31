@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { printShipmentLabel, printShipmentLabels, printCarrierManifest } from "@/lib/shipping-docs";
 import { calculateShippingCost, expectedDeliveryDate, shipmentSla } from "@/lib/shipping-pricing";
 import { usePrivacy } from "@/lib/privacy";
+import { DeliveryAttemptsPanel } from "@/components/shipping/DeliveryAttemptsPanel";
 import { trackUrlFor } from "@/lib/whatsapp-templates";
 import { renderShipmentOutForDelivery, waLink } from "@/lib/whatsapp-templates";
 import { FastBarcodeScanner } from "@/components/shipping/FastBarcodeScanner";
