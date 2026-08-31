@@ -102,7 +102,7 @@ export function ParkedBillsModal({ open, onOpenChange, onResume }: ParkedBillsMo
 
                 <div className="p-2 rounded-xl bg-muted/40 text-xs flex items-center justify-between">
                   <span className="font-bold font-mono text-primary text-sm">
-                    {fmt(bill.total)} {shop.currency}
+                    {fmt(bill.total ?? bill.totalAmount ?? 0)} {shop.currency}
                   </span>
                   <span className="text-muted-foreground">
                     {bill.products.length} صنف (
