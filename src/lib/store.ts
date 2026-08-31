@@ -246,6 +246,7 @@ export interface ProductVariant {
   quantity?: number;
   salePrice?: number;
   lastUnitCost?: number;
+  costPrice?: number;
 }
 
 export interface SplitPaymentDetail {
