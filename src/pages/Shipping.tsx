@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { printShipmentLabel, printShipmentLabels, printCarrierManifest } from "@/lib/shipping-docs";
 import { calculateShippingCost, expectedDeliveryDate, shipmentSla } from "@/lib/shipping-pricing";
 import { usePrivacy } from "@/lib/privacy";
+import { trackUrlFor } from "@/lib/whatsapp-templates";
 import { renderShipmentOutForDelivery, waLink } from "@/lib/whatsapp-templates";
 import { FastBarcodeScanner } from "@/components/shipping/FastBarcodeScanner";
 import { SmartReturnModal } from "@/components/shipping/SmartReturnModal";
@@ -379,6 +380,29 @@ export default function Shipping() {
     } catch (e: any) { toast.error(e.message || "تعذرت التسوية"); }
   };
 
+  const labelDataFor = (s: Shipment) => ({
+    tracking: s.trackingNumber ?? s.id.slice(0, 8).toUpperCase(),
+    recipientName: s.recipientName ?? "",
+    recipientPhone: s.recipientPhone ?? "",
+    address: s.deliveryAddress ?? "",
+    carrierName: carrierById.get(s.carrierId ?? "")?.name ?? "",
+    zoneName: zoneById.get(s.zoneId ?? "")?.name ?? "",
+    codAmount: s.codAmount,
+    shippingCost: s.shippingCost,
+    createdAt: s.createdAt,
+    weightKg: s.weightKg,
+    pieces: s.pieces,
+    trackUrl: trackUrlFor(s.trackingNumber ?? s.id.slice(0, 8).toUpperCase(), s.recipientPhone ?? undefined),
+    invoiceRef: s.invoiceId ? orderNumbers[s.invoiceId] ?? s.invoiceId.slice(0, 8) : undefined,
+  });
+
+  const bulkLabels = () => {
+    const list = shipments.filter((s) => selected.has(s.id)).map(labelDataFor);
+    if (!list.length) return toast.error("اختر شحنة واحدة على الأقل");
+    printShipmentLabels(list);
+    toast.success(`تم تجهيز ${list.length} بوليصة للطباعة`);
+  };
+
   const labelFor = (s: Shipment) =>
     printShipmentLabel({
       tracking: s.trackingNumber ?? s.id.slice(0, 8).toUpperCase(),
@@ -390,6 +414,9 @@ export default function Shipping() {
       codAmount: s.codAmount,
       shippingCost: s.shippingCost,
       createdAt: s.createdAt,
+      weightKg: s.weightKg,
+      pieces: s.pieces,
+      trackUrl: trackUrlFor(s.trackingNumber ?? s.id.slice(0, 8).toUpperCase(), s.recipientPhone ?? undefined),
       invoiceRef: s.invoiceId ? orderNumbers[s.invoiceId] ?? s.invoiceId.slice(0, 8) : undefined,
     });
 
