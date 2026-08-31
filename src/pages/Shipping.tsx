@@ -1143,6 +1143,10 @@ export default function Shipping() {
                     </div>
                   </div>
 
+                  <DeliveryAttemptsPanel shipmentId={detail.id} />
+
+
+
                   <div className="flex flex-wrap gap-2">
                     <Button variant="outline" className="flex-1" onClick={() => labelFor(detail)}>
                       <Printer className="ml-2 h-4 w-4" /> بوليصة
