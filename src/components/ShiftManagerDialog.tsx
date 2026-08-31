@@ -27,7 +27,7 @@ import {
   getAllShifts,
   type CashierShift,
   type ShiftCalculatedMetrics,
-} from "@/lib/cashier-shifts";
+} from "@/lib/shifts";
 import { pdfDocument, openPdfDocument, esc } from "@/lib/pdf-doc";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
