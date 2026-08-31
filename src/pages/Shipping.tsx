@@ -21,7 +21,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import { printShipmentLabel, printCarrierManifest } from "@/lib/shipping-docs";
+import { printShipmentLabel, printShipmentLabels, printCarrierManifest } from "@/lib/shipping-docs";
+import { calculateShippingCost, expectedDeliveryDate, shipmentSla } from "@/lib/shipping-pricing";
+import { usePrivacy } from "@/lib/privacy";
 import { renderShipmentOutForDelivery, waLink } from "@/lib/whatsapp-templates";
 import { FastBarcodeScanner } from "@/components/shipping/FastBarcodeScanner";
 import { SmartReturnModal } from "@/components/shipping/SmartReturnModal";
@@ -103,6 +105,8 @@ export default function Shipping() {
   const [shipmentTracking, setShipmentTracking] = useState("");
   const [shipmentCost, setShipmentCost] = useState("0");
   const [shipmentCod, setShipmentCod] = useState("0");
+  const [shipmentWeight, setShipmentWeight] = useState("0");
+  const [shipmentPieces, setShipmentPieces] = useState("1");
 
   // فلاتر + تحديد متعدد
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -111,6 +115,8 @@ export default function Shipping() {
   const [periodFilter, setPeriodFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkCarrier, setBulkCarrier] = useState("");
+  const { privacy } = usePrivacy();
+  const blurCls = privacy ? "privacy-blur" : "";
 
   const invoicedIds = useMemo(() => new Set(shipments.map((s) => s.invoiceId).filter(Boolean)), [shipments]);
   const invoicesWithoutShipment = useMemo(() => invoices.filter((inv) => !invoicedIds.has(inv.id)), [invoices, invoicedIds]);
@@ -119,11 +125,8 @@ export default function Shipping() {
   const zoneById = useMemo(() => new Map(zones.map((z) => [z.id, z])), [zones]);
   const invoiceById = useMemo(() => new Map(invoices.map((i) => [i.id, i])), [invoices]);
 
-  const isLate = (s: Shipment) => {
-    if (!["pending", "processing", "shipped"].includes(s.status)) return false;
-    const expected = s.zoneId ? zoneById.get(s.zoneId)?.estimatedDays ?? 3 : 3;
-    return daysBetween(s.createdAt, new Date().toISOString()) > expected + 1;
-  };
+  const slaOf = (s: Shipment) => shipmentSla(s, s.zoneId ? zoneById.get(s.zoneId) : null);
+  const isLate = (s: Shipment) => slaOf(s).state === "late";
 
   const filteredShipments = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -211,7 +214,7 @@ export default function Shipping() {
 
   const resetCarrierForm = () => { setCarrierName(""); setCarrierContact(""); setCarrierPhone(""); setCarrierBaseCost("0"); setEditCarrier(null); };
   const resetZoneForm = () => { setZoneName(""); setZoneCarrierId(""); setZoneCost("0"); setZoneDays("2"); setEditZone(null); };
-  const resetShipmentForm = () => { setShipmentInvoiceId(""); setShipmentCarrierId(""); setShipmentZoneId(""); setShipmentTracking(""); setShipmentCost("0"); setShipmentCod("0"); };
+  const resetShipmentForm = () => { setShipmentInvoiceId(""); setShipmentCarrierId(""); setShipmentZoneId(""); setShipmentTracking(""); setShipmentCost("0"); setShipmentCod("0"); setShipmentWeight("0"); setShipmentPieces("1"); };
 
   const handleAddCarrier = async () => {
     if (!carrierName) return toast.error("يرجى إدخال اسم الشركة");
@@ -546,6 +549,34 @@ export default function Shipping() {
                         <Input type="number" value={shipmentCod} onChange={(e) => setShipmentCod(e.target.value)} className="text-right" />
                       </div>
                     </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label>الوزن (كجم)</Label>
+                        <Input type="number" min={0} step="0.5" value={shipmentWeight} onChange={(e) => setShipmentWeight(e.target.value)} className="text-right" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>عدد القطع</Label>
+                        <Input type="number" min={1} value={shipmentPieces} onChange={(e) => setShipmentPieces(e.target.value)} className="text-right" />
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="w-full rounded-xl border border-primary/30 bg-primary/5 p-3 text-right text-xs font-bold text-primary"
+                      onClick={() =>
+                        setShipmentCost(
+                          String(
+                            calculateShippingCost({
+                              zone: zones.find((z) => z.id === shipmentZoneId) ?? null,
+                              carrier: carriers.find((c) => c.id === shipmentCarrierId) ?? null,
+                              weightKg: Number(shipmentWeight) || 0,
+                              pieces: Number(shipmentPieces) || 1,
+                            }).total,
+                          ),
+                        )
+                      }
+                    >
+                      احسب تكلفة الشحن تلقائيًا حسب المنطقة والوزن
+                    </button>
                     <div className="space-y-2">
                       <Label>رقم البوليصة / التتبع</Label>
                       <Input value={shipmentTracking} onChange={(e) => setShipmentTracking(e.target.value)} placeholder="اختياري" className="text-right" />
@@ -668,6 +699,7 @@ export default function Shipping() {
                       </SelectContent>
                     </Select>
                     <Button size="sm" disabled={!bulkCarrier} onClick={() => void handleBulkAssign()}>تعيين</Button>
+                    <Button size="sm" variant="outline" onClick={() => bulkLabels()}>اطبع بوالص المحدد</Button>
                     <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>إلغاء التحديد</Button>
                   </div>
                 )}
