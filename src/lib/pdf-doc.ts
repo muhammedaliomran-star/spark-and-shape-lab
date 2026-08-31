@@ -219,6 +219,8 @@ export function pdfDocument(opts: {
   thermalWidth?: string;
   /** فتح درج النقدية عند الطباعة. */
   kickCashDrawer?: boolean;
+  /** قيمة الباركود المطبوعة أسفل المستند. */
+  barcodeValue?: string;
 }): string {
   const thermal = opts.paper === "thermal";
   return `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"/>
