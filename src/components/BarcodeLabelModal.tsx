@@ -4,12 +4,13 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -17,317 +18,281 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useShopSettings, fmt, type StockItem } from "@/lib/store";
+import { Printer, Tag, Sparkles, Layers, Sliders } from "lucide-react";
+import { fmt, useShopSettings, type StockItem, type ProductVariant } from "@/lib/store";
+import { pdfDocument, openPdfDocument, esc } from "@/lib/pdf-doc";
 import { toast } from "sonner";
-import { Printer, Barcode, Check, Copy, Tag } from "lucide-react";
 
 interface BarcodeLabelModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  product?: StockItem | null;
+  product: StockItem | null;
 }
 
 export function BarcodeLabelModal({ open, onOpenChange, product }: BarcodeLabelModalProps) {
   const { settings: shop } = useShopSettings();
-  const [copies, setCopies] = useState<number>(product?.quantity && product.quantity > 0 ? Math.min(product.quantity, 50) : 10);
-  const [paperType, setPaperType] = useState<"thermal_single" | "a4_grid">("thermal_single");
+
+  const [quantity, setQuantity] = useState("4");
   const [showPrice, setShowPrice] = useState(true);
   const [showShopName, setShowShopName] = useState(true);
-  const [customPrice, setCustomPrice] = useState<string>(product?.salePrice ? String(product.salePrice) : "");
+  const [showBarcodeText, setShowBarcodeText] = useState(true);
+  const [selectedVariantId, setSelectedVariantId] = useState<string>("all");
+  const [labelSize, setLabelSize] = useState<"38x25" | "50x30" | "a4_sheet">("38x25");
 
   if (!product) return null;
 
-  const barcodeVal = product.barcode || product.id.slice(0, 12).replace(/\D/g, "") || "123456789012";
-  const displayPrice = customPrice !== "" ? Number(customPrice) : product.salePrice;
+  const currentBarcode = product.barcode || product.id.slice(0, 12).replace(/\D/g, "");
+  const price = product.salePrice || 0;
+  const variants = product.variants || [];
 
   const handlePrint = () => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      toast.error("يرجى السماح بالنوافذ المنبثقة للطباعة");
-      return;
-    }
+    const qty = Math.max(1, Number(quantity || 1));
+    const shopName = shop.shopName || "المتجر";
+    const cur = shop.currency || "ج.م";
 
-    const labelsCount = Math.max(1, copies);
+    // Prepare label items (either single product or variant specific)
+    const itemsToPrint: Array<{ name: string; barcode: string; price: number; sub?: string }> = [];
 
-    // Generate barcodes using SVG rendering for crystal clear thermal printing
-    const generateBarcodeSvg = (code: string) => {
-      // Clean fallback Code 128 / EAN pseudo barcode representation via clean SVG lines
-      const hash = code.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      let bars = "";
-      let x = 10;
-      for (let i = 0; i < code.length; i++) {
-        const digit = parseInt(code[i], 10) || (code.charCodeAt(i) % 10);
-        const w1 = ((digit % 3) + 1) * 1.5;
-        const w2 = (((digit + 2) % 3) + 1) * 1.5;
-        bars += `<rect x="${x}" y="0" width="${w1}" height="40" fill="#000"/>`;
-        x += w1 + 2;
-        bars += `<rect x="${x}" y="0" width="${w2}" height="40" fill="#000"/>`;
-        x += w2 + 2;
+    if (selectedVariantId === "all" || variants.length === 0) {
+      for (let i = 0; i < qty; i++) {
+        itemsToPrint.push({
+          name: product.name,
+          barcode: currentBarcode,
+          price: price,
+        });
       }
-      return `<svg viewBox="0 0 ${Math.max(x + 10, 180)} 40" style="width: 100%; height: 36px; display: block; margin: 0 auto;">${bars}</svg>`;
-    };
-
-    const barcodeSvg = generateBarcodeSvg(barcodeVal);
-
-    let labelsHtml = "";
-    for (let i = 0; i < labelsCount; i++) {
-      labelsHtml += `
-        <div class="label-item">
-          ${showShopName ? `<div class="shop-name">${shop.shopName || "سِجلّي"}</div>` : ""}
-          <div class="product-name">${product.name}</div>
-          <div class="barcode-container">
-            ${barcodeSvg}
-            <div class="barcode-text">${barcodeVal}</div>
-          </div>
-          ${showPrice ? `<div class="product-price">${fmt(displayPrice)} ج.م</div>` : ""}
-        </div>
-      `;
+    } else {
+      const v = variants.find((x) => x.id === selectedVariantId);
+      const labelName = `${product.name} ${[v?.size, v?.color].filter(Boolean).join(" - ")}`;
+      const labelBarcode = v?.barcode || currentBarcode;
+      const labelPrice = v?.salePrice || price;
+      for (let i = 0; i < qty; i++) {
+        itemsToPrint.push({
+          name: labelName,
+          barcode: labelBarcode,
+          price: labelPrice,
+          sub: [v?.size, v?.color].filter(Boolean).join(" / "),
+        });
+      }
     }
 
-    const isThermal = paperType === "thermal_single";
+    // Generate HTML for stickers
+    const isSingleLabelRoll = labelSize === "38x25" || labelSize === "50x30";
+    const widthMm = labelSize === "38x25" ? "38mm" : labelSize === "50x30" ? "50mm" : "auto";
+    const heightMm = labelSize === "38x25" ? "25mm" : labelSize === "50x30" ? "30mm" : "auto";
 
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html dir="rtl" lang="ar">
-      <head>
-        <meta charset="utf-8" />
-        <title>طباعة ملصقات الباركود — ${product.name}</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&display=swap');
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body {
-            font-family: 'Cairo', sans-serif;
-            background: #fff;
-            color: #000;
-            -webkit-print-color-adjust: exact;
-          }
-          
-          ${
-            isThermal
-              ? `
-            @page {
-              size: 50mm 30mm;
-              margin: 0;
-            }
-            .labels-container {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-            }
-            .label-item {
-              width: 48mm;
-              height: 28mm;
-              margin: 1mm auto;
-              page-break-after: always;
-              display: flex;
-              flex-direction: column;
-              justify-content: space-between;
-              align-items: center;
-              text-align: center;
-              padding: 1.5mm 1mm;
-              border: 1px dashed #eee;
-            }
-          `
-              : `
-            @page {
-              size: A4 portrait;
-              margin: 8mm;
-            }
-            .labels-container {
-              display: grid;
-              grid-template-columns: repeat(4, 1fr);
-              gap: 4mm;
-              padding: 2mm;
-            }
-            .label-item {
-              width: 100%;
-              height: 32mm;
-              border: 1px solid #ddd;
-              border-radius: 4px;
-              display: flex;
-              flex-direction: column;
-              justify-content: space-between;
-              align-items: center;
-              text-align: center;
-              padding: 2mm;
-              page-break-inside: avoid;
-            }
-          `
-          }
-
-          .shop-name {
-            font-size: 8px;
-            font-weight: 700;
-            color: #555;
-            line-height: 1;
-          }
-          .product-name {
-            font-size: 10px;
-            font-weight: 800;
-            max-width: 95%;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.2;
-          }
-          .barcode-container {
-            width: 90%;
-            margin: 1px auto;
-            text-align: center;
-          }
-          .barcode-text {
-            font-family: monospace;
-            font-size: 9px;
-            font-weight: bold;
-            letter-spacing: 1.5px;
-            line-height: 1;
-            margin-top: 1px;
-          }
-          .product-price {
-            font-size: 12px;
-            font-weight: 900;
-            line-height: 1;
-            padding: 1px 6px;
-            background: #000;
-            color: #fff;
-            border-radius: 3px;
-            display: inline-block;
-          }
-
-          @media print {
-            .label-item { border: none !important; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="labels-container">
-          ${labelsHtml}
+    const labelsHtml = itemsToPrint
+      .map(
+        (item) => `
+      <div class="sticker-card" style="
+        width: ${widthMm};
+        height: ${heightMm};
+        page-break-inside: avoid;
+        break-inside: avoid;
+        box-sizing: border-box;
+        padding: 4px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        font-family: system-ui, sans-serif;
+        border: 1px dashed #ccc;
+        margin: 2px;
+      ">
+        ${showShopName ? `<div style="font-size: 8px; font-weight: bold; color: #555; text-transform: uppercase;">${esc(shopName)}</div>` : ""}
+        <div style="font-size: 10px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 95%;">
+          ${esc(item.name)}
         </div>
-        <script>
-          window.onload = function() {
-            setTimeout(function() {
-              window.print();
-            }, 300);
-          }
-        </script>
-      </body>
-      </html>
-    `;
+        ${item.sub ? `<div style="font-size: 8px; color: #666; font-weight: bold;">${esc(item.sub)}</div>` : ""}
+        
+        <!-- SVG Barcode placeholder rendered via clean SVG lines -->
+        <div style="margin: 2px 0;">
+          <svg style="width: 80%; height: 26px; max-width: 140px;" viewBox="0 0 100 25" preserveAspectRatio="none">
+            <rect x="0" y="0" width="3" height="25" fill="#000"/>
+            <rect x="5" y="0" width="2" height="25" fill="#000"/>
+            <rect x="9" y="0" width="4" height="25" fill="#000"/>
+            <rect x="15" y="0" width="1" height="25" fill="#000"/>
+            <rect x="18" y="0" width="3" height="25" fill="#000"/>
+            <rect x="23" y="0" width="5" height="25" fill="#000"/>
+            <rect x="30" y="0" width="2" height="25" fill="#000"/>
+            <rect x="34" y="0" width="4" height="25" fill="#000"/>
+            <rect x="40" y="0" width="1" height="25" fill="#000"/>
+            <rect x="43" y="0" width="3" height="25" fill="#000"/>
+            <rect x="48" y="0" width="6" height="25" fill="#000"/>
+            <rect x="56" y="0" width="2" height="25" fill="#000"/>
+            <rect x="60" y="0" width="4" height="25" fill="#000"/>
+            <rect x="66" y="0" width="2" height="25" fill="#000"/>
+            <rect x="70" y="0" width="3" height="25" fill="#000"/>
+            <rect x="75" y="0" width="5" height="25" fill="#000"/>
+            <rect x="82" y="0" width="2" height="25" fill="#000"/>
+            <rect x="86" y="0" width="4" height="25" fill="#000"/>
+            <rect x="92" y="0" width="2" height="25" fill="#000"/>
+            <rect x="96" y="0" width="4" height="25" fill="#000"/>
+          </svg>
+        </div>
 
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    toast.success(`جاري تجهيز ${copies} ملصق باركود للطباعة...`);
+        ${showBarcodeText ? `<div style="font-family: monospace; font-size: 8px; letter-spacing: 1px; font-weight: bold;">${esc(item.barcode)}</div>` : ""}
+
+        ${showPrice ? `<div style="font-size: 11px; font-weight: 900; background: #000; color: #fff; padding: 1px 6px; border-radius: 4px; margin-top: 2px;">${fmt(item.price)} ${cur}</div>` : ""}
+      </div>
+    `
+      )
+      .join("");
+
+    const fullPrintDoc = `<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>طباعة ملصقات الباركود - ${esc(product.name)}</title>
+  <style>
+    @page {
+      size: ${labelSize === "a4_sheet" ? "A4" : `${widthMm} ${heightMm}`};
+      margin: 0mm;
+    }
+    body {
+      margin: 0;
+      padding: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: ${isSingleLabelRoll ? "center" : "flex-start"};
+      background: #fff;
+    }
+    @media print {
+      .sticker-card {
+        border: none !important;
+        margin: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  ${labelsHtml}
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+      }, 250);
+    };
+  </script>
+</body>
+</html>`;
+
+    openPdfDocument(fullPrintDoc, {
+      autoPrint: true,
+      features: "width=500,height=700",
+    });
+    toast.success("تم إرسال ملصقات الباركود لأمر الطباعة ✓");
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md" dir="rtl">
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-primary/10 text-primary">
-              <Barcode className="h-5 w-5" />
-            </span>
-            <div>
-              <DialogTitle className="text-base font-bold">طباعة ملصقات الباركود والأسعار</DialogTitle>
-              <DialogDescription className="text-xs">
-                توليد استيكرات الأسعار والباركود للطابعات الحرارية وورق A4
-              </DialogDescription>
-            </div>
-          </div>
+      <DialogContent className="sm:max-w-md rounded-3xl p-6">
+        <DialogHeader className="text-right space-y-1">
+          <DialogTitle className="text-lg font-black flex items-center gap-2">
+            <Tag className="w-5 h-5 text-primary" />
+            طباعة ملصقات الباركود والأسعار
+          </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            طباعة استيكرات الباركود للصقها على المنتجات بمقاسات الطابعات الحرارية أو ورق A4.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 my-2 text-right">
-          {/* Preview Card */}
-          <div className="p-4 rounded-2xl bg-card border border-border flex flex-col items-center justify-center text-center shadow-xs">
-            <span className="text-[10px] text-muted-foreground font-bold">{shop.shopName || "سِجلّي"}</span>
-            <span className="text-xs font-extrabold text-foreground mt-0.5 max-w-[240px] truncate">{product.name}</span>
-            <div className="w-44 my-2 p-1.5 bg-white rounded border border-border text-center">
-              <div className="flex justify-center items-center gap-0.5 h-7">
-                {barcodeVal.split("").map((ch, idx) => (
-                  <span
-                    key={idx}
-                    className="bg-black inline-block h-full"
-                    style={{
-                      width: `${((ch.charCodeAt(0) % 3) + 1) * 1.5}px`,
-                      marginRight: `${(idx % 2) + 1}px`,
-                    }}
-                  />
-                ))}
-              </div>
-              <div className="text-[10px] font-mono font-bold tracking-widest text-black mt-0.5">{barcodeVal}</div>
+          {/* تفاصيل المنتج المحدد */}
+          <div className="p-3 rounded-2xl bg-foreground/[0.03] border border-foreground/10 space-y-1">
+            <div className="text-sm font-bold text-foreground">{product.name}</div>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono">
+              <span>الباركود: {currentBarcode}</span>
+              <span>السعر: {fmt(price)} ج.م</span>
             </div>
-            {showPrice && (
-              <span className="px-2.5 py-0.5 bg-foreground text-background text-xs font-black rounded">
-                {fmt(displayPrice)} ج.م
-              </span>
-            )}
           </div>
 
+          {/* تنوعات المقاسات إذا وجدت */}
+          {variants.length > 0 && (
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-muted-foreground flex items-center gap-1">
+                <Layers className="w-3.5 h-3.5 text-primary" /> اختر التنوع / المقاس:
+              </Label>
+              <Select value={selectedVariantId} onValueChange={setSelectedVariantId}>
+                <SelectTrigger className="h-10 rounded-2xl text-xs">
+                  <SelectValue placeholder="اختر التنوع..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">المنتج الرئيسي (بدون تنوع محدد)</SelectItem>
+                  {variants.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {[v.size, v.color].filter(Boolean).join(" / ")} — {v.salePrice || price} ج.م
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs font-semibold">عدد الملصقات (النسخ)</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-muted-foreground">عدد الملصقات:</Label>
               <Input
                 type="number"
                 min="1"
-                max="500"
-                value={copies}
-                onChange={(e) => setCopies(Math.max(1, Number(e.target.value) || 1))}
-                className="mt-1 rounded-xl font-bold"
+                max="100"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                className="h-10 rounded-2xl text-center font-bold"
               />
             </div>
-            <div>
-              <Label className="text-xs font-semibold">سعر البيع على الملصق</Label>
-              <Input
-                type="number"
-                value={customPrice}
-                onChange={(e) => setCustomPrice(e.target.value)}
-                placeholder={String(product.salePrice)}
-                className="mt-1 rounded-xl font-bold"
-              />
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-muted-foreground">مقاس ورق الملصق:</Label>
+              <Select value={labelSize} onValueChange={(v: any) => setLabelSize(v)}>
+                <SelectTrigger className="h-10 rounded-2xl text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="38x25">طابعة استيكر (38×25 مم)</SelectItem>
+                  <SelectItem value="50x30">طابعة استيكر (50×30 مم)</SelectItem>
+                  <SelectItem value="a4_sheet">ورق استيكر A4 مقسم</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          <div>
-            <Label className="text-xs font-semibold">نوع الورق والطابعة</Label>
-            <Select value={paperType} onValueChange={(v: any) => setPaperType(v)}>
-              <SelectTrigger className="mt-1 rounded-xl">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent dir="rtl">
-                <SelectItem value="thermal_single">طابعة باركود حراري (مقاس 50×30 مم / 38×25 مم)</SelectItem>
-                <SelectItem value="a4_grid">ورق استيكر A4 مقسم (شبكة ملصقات)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex gap-4 pt-1 text-xs">
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showPrice}
-                onChange={(e) => setShowPrice(e.target.checked)}
-                className="rounded text-primary"
-              />
-              <span>إظهار السعر</span>
-            </label>
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showShopName}
-                onChange={(e) => setShowShopName(e.target.checked)}
-                className="rounded text-primary"
-              />
-              <span>إظهار اسم المحل</span>
-            </label>
+          {/* خيارات المحتوى المطبوع */}
+          <div className="p-3 rounded-2xl border border-foreground/10 space-y-2.5 bg-foreground/[0.01]">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium">إظهار سعر البيع</span>
+              <Switch checked={showPrice} onCheckedChange={setShowPrice} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium">إظهار اسم المحل</span>
+              <Switch checked={showShopName} onCheckedChange={setShowShopName} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium">إظهار كود الأرقام أسفل الباركود</span>
+              <Switch checked={showBarcodeText} onCheckedChange={setShowBarcodeText} />
+            </div>
           </div>
         </div>
 
-        <DialogFooter className="gap-2 border-t border-border pt-3">
-          <Button onClick={handlePrint} className="w-full rounded-xl font-bold gap-2">
-            <Printer className="h-4 w-4" />
-            <span>طباعة الملصقات الآن ({copies} استيكر)</span>
+        <DialogFooter className="flex-row items-center justify-between sm:justify-between gap-2 pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="rounded-2xl text-xs h-10 px-4"
+          >
+            إلغاء
+          </Button>
+
+          <Button
+            type="button"
+            onClick={handlePrint}
+            className="rounded-2xl gap-2 text-xs font-bold h-10 px-6"
+          >
+            <Printer className="w-4 h-4" />
+            طباعة الاستيكرات ({quantity})
           </Button>
         </DialogFooter>
       </DialogContent>
