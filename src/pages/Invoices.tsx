@@ -2098,6 +2098,8 @@ export type ProductRow = {
   cost: string;
   price: string;
   stockId?: string;
+  variantId?: string;
+  size?: string;
   quantity: string;
   discount?: string;
   notes?: string;
