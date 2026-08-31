@@ -16,7 +16,7 @@ export const trackUrlFor = (publicNumber: string, phone?: string) => {
   const q = new URLSearchParams();
   q.set("num", publicNumber);
   if (phone) q.set("phone", phone);
-  return `${origin}/order-tracking?${q.toString()}`;
+  return `${origin}/track?${q.toString()}`;
 };
 
 // 1) تأكيد الطلب مع العنوان

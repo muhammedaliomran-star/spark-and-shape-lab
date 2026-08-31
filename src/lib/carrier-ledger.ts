@@ -54,10 +54,9 @@ export async function loadCarrierTransactions(carrierId?: string): Promise<Carri
 export async function saveCarrierTransaction(
   tx: Omit<CarrierSettlementTransaction, "id" | "createdAt">,
 ): Promise<CarrierSettlementTransaction> {
-  const { data: auth } = await supabase.auth.getUser();
-  const { data, error } = await (supabase.from as any)("carrier_settlements")
+  const { data, error } = await supabase
+    .from("carrier_settlements")
     .insert({
-      user_id: auth.user?.id,
       carrier_id: tx.carrierId,
       type: tx.type,
       amount: tx.amount,
@@ -73,7 +72,7 @@ export async function saveCarrierTransaction(
 }
 
 export async function deleteCarrierTransaction(id: string): Promise<void> {
-  const { error } = await (supabase.from as any)("carrier_settlements").delete().eq("id", id);
+  const { error } = await supabase.from("carrier_settlements").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }
 

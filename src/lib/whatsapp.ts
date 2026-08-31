@@ -171,7 +171,7 @@ export function buildTrackingUrl(orderNumber: string, customerPhone?: string): s
     const rawClean = customerPhone.replace(/[^\d]/g, "");
     params.set("phone", rawClean);
   }
-  return `${origin}/order-tracking?${params.toString()}`;
+  return `${origin}/track?${params.toString()}`;
 }
 
 /**
