@@ -68,16 +68,33 @@ export function CreateInvoiceShipmentDialog({
     return zones.filter((z) => z.carrierId === carrierId);
   }, [carrierId, zones]);
 
+  const selectedZone = useMemo(() => zones.find((z) => z.id === zoneId) ?? null, [zones, zoneId]);
+  const selectedCarrier = useMemo(() => carriers.find((c) => c.id === carrierId) ?? null, [carriers, carrierId]);
+
+  const pricing = useMemo(
+    () =>
+      calculateShippingCost({
+        zone: selectedZone,
+        carrier: selectedCarrier,
+        weightKg: Number(weightKg || 0),
+        pieces: Number(pieces || 1),
+      }),
+    [selectedZone, selectedCarrier, weightKg, pieces],
+  );
+
   useEffect(() => {
     if (carrierZones.length > 0) {
       setZoneId(carrierZones[0].id);
-      setShippingCost(String(carrierZones[0].deliveryCost || 0));
     } else {
       setZoneId("");
-      const selectedCarrier = carriers.find((c) => c.id === carrierId);
-      setShippingCost(String(selectedCarrier?.baseCost || 0));
     }
-  }, [carrierId, carrierZones, carriers]);
+  }, [carrierId, carrierZones]);
+
+  useEffect(() => {
+    setShippingCost(String(pricing.total));
+    setExpectedDate(expectedDeliveryDate(new Date(), selectedZone));
+  }, [pricing.total, selectedZone]);
+
 
   if (!inv || !customer) return null;
 
