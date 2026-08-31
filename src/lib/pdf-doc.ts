@@ -215,6 +215,8 @@ export function pdfDocument(opts: {
   page?: "A4" | "A4 landscape" | "A5";
   /** مقاس الطباعة المضبوط في الإعدادات. */
   paper?: "a4" | "thermal";
+  /** عرض ورق الطابعة الحرارية إن وُجد. */
+  thermalWidth?: string;
 }): string {
   const thermal = opts.paper === "thermal";
   return `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"/>

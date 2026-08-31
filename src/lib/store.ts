@@ -1098,6 +1098,7 @@ export const db = {
   async addStockItem(item: {
     name: string; quantity?: number; lastUnitCost?: number; salePrice?: number; barcode?: string | null;
     size?: string | null; itemType?: string | null; minStock?: number;
+    lowStockAlert?: number; season?: string | null; category?: string | null; notes?: string | null;
   }) {
     const user_id = await uid();
     const { data, error } = await supabase.from("stock_items").insert({
@@ -1684,6 +1685,13 @@ export interface ShopSettings {
   whatsappPaymentThankYouTemplate: string;
   criticalOverdueDays: number;
   audioAlertsEnabled: boolean;
+  managerPin?: string;
+  maxDiscountWithoutPin?: number;
+  hideCostAndProfitsFromCashier?: boolean;
+  preventInvoiceDeletionWithoutPin?: boolean;
+  preventViewingTotalAnalyticsWithoutPin?: boolean;
+  thermalPaperWidth?: "58mm" | "80mm" | string;
+  openCashDrawerOnPrint?: boolean;
 }
 
 export const EMPTY_SHOP_SETTINGS: ShopSettings = {
