@@ -1,6 +1,7 @@
 import * as XLSX from "xlsx";
 import { Shipment, ShipmentCarrier, ShippingZone } from "./store";
 import { pdfDocument, openPdfDocument, esc } from "./pdf-doc";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface CarrierSettlementTransaction {
   id: string;
@@ -14,37 +15,68 @@ export interface CarrierSettlementTransaction {
   createdAt: string;
 }
 
-const SETTLEMENTS_KEY = "segelly_carrier_settlement_transactions_v1";
+type SettlementRow = {
+  id: string;
+  carrier_id: string;
+  type: string;
+  amount: number | string;
+  settled_on: string;
+  payment_method: string;
+  reference_number: string | null;
+  notes: string | null;
+  created_at: string;
+};
 
-export function loadCarrierTransactions(carrierId?: string): CarrierSettlementTransaction[] {
-  try {
-    const raw = localStorage.getItem(SETTLEMENTS_KEY);
-    const list: CarrierSettlementTransaction[] = raw ? JSON.parse(raw) : [];
-    if (carrierId) {
-      return list.filter(t => t.carrierId === carrierId);
-    }
-    return list;
-  } catch {
-    return [];
-  }
-}
-
-export function saveCarrierTransaction(tx: Omit<CarrierSettlementTransaction, "id" | "createdAt">): CarrierSettlementTransaction {
-  const list = loadCarrierTransactions();
-  const newTx: CarrierSettlementTransaction = {
-    ...tx,
-    id: `ctx_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    createdAt: new Date().toISOString(),
+function mapRow(row: SettlementRow): CarrierSettlementTransaction {
+  return {
+    id: row.id,
+    carrierId: row.carrier_id,
+    type: row.type as CarrierSettlementTransaction["type"],
+    amount: Number(row.amount ?? 0),
+    date: row.settled_on,
+    paymentMethod: row.payment_method as CarrierSettlementTransaction["paymentMethod"],
+    referenceNumber: row.reference_number ?? undefined,
+    notes: row.notes ?? undefined,
+    createdAt: row.created_at,
   };
-  list.unshift(newTx);
-  localStorage.setItem(SETTLEMENTS_KEY, JSON.stringify(list));
-  return newTx;
 }
 
-export function deleteCarrierTransaction(id: string) {
-  const list = loadCarrierTransactions().filter(t => t.id !== id);
-  localStorage.setItem(SETTLEMENTS_KEY, JSON.stringify(list));
+/** تحميل كل حركات التوريد والتسوية من قاعدة البيانات (مش من المتصفح). */
+export async function loadCarrierTransactions(carrierId?: string): Promise<CarrierSettlementTransaction[]> {
+  let query = (supabase.from as any)("carrier_settlements").select("*").order("settled_on", { ascending: false });
+  if (carrierId) query = query.eq("carrier_id", carrierId);
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as SettlementRow[]).map(mapRow);
 }
+
+/** حفظ حركة توريد/تسوية جديدة في قاعدة البيانات. */
+export async function saveCarrierTransaction(
+  tx: Omit<CarrierSettlementTransaction, "id" | "createdAt">,
+): Promise<CarrierSettlementTransaction> {
+  const { data: auth } = await supabase.auth.getUser();
+  const { data, error } = await (supabase.from as any)("carrier_settlements")
+    .insert({
+      user_id: auth.user?.id,
+      carrier_id: tx.carrierId,
+      type: tx.type,
+      amount: tx.amount,
+      settled_on: tx.date,
+      payment_method: tx.paymentMethod,
+      reference_number: tx.referenceNumber || null,
+      notes: tx.notes || null,
+    })
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+  return mapRow(data as SettlementRow);
+}
+
+export async function deleteCarrierTransaction(id: string): Promise<void> {
+  const { error } = await (supabase.from as any)("carrier_settlements").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 
 export interface CarrierFinancialSummary {
   carrier: ShipmentCarrier;
