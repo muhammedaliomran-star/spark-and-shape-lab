@@ -278,6 +278,14 @@ export default function Shipping() {
     if (!shipmentInvoiceId) return toast.error("اختر الفاتورة");
     const invoice = invoices.find((inv) => inv.id === shipmentInvoiceId);
     const customer = invoice ? customerById.get(invoice.customerId) : null;
+    const zone = zones.find((z) => z.id === shipmentZoneId) ?? null;
+    const carrier = carriers.find((c) => c.id === shipmentCarrierId) ?? null;
+    const auto = calculateShippingCost({
+      zone,
+      carrier,
+      weightKg: Number(shipmentWeight) || 0,
+      pieces: Number(shipmentPieces) || 1,
+    });
     try {
       await db.addShipment({
         invoiceId: shipmentInvoiceId,
@@ -290,11 +298,14 @@ export default function Shipping() {
         deliveryAddress: customer?.address ?? null,
         processingAt: null, shippedAt: null, deliveredAt: null, returnedAt: null, statusUpdatedBy: null,
         actualDeliveryDate: null,
-        shippingCost: Number(shipmentCost) || 0,
+        shippingCost: Number(shipmentCost) || auto.total,
         codAmount: Number(shipmentCod) || 0,
         collectionStatus: "uncollected",
         collectedAt: null,
         settledAt: null,
+        weightKg: Number(shipmentWeight) || 0,
+        pieces: Number(shipmentPieces) || 1,
+        expectedDeliveryDate: expectedDeliveryDate(new Date(), zone),
         notes: null,
       });
       toast.success("تمت إضافة الشحنة");
