@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { useEffect, useMemo, useState } from "react";
 import { useSearch, Link } from "@tanstack/react-router";
 import {

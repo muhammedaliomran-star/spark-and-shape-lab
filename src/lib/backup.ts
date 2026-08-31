@@ -213,19 +213,19 @@ export async function wipeAllData() {
 
 export async function downloadAccountingAuditLog() {
   const userId = await currentUserId();
-  const { data, error } = await supabase.from("audit_events").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+  const { data, error } = await (supabase.from as any)("audit_events").select("*").eq("user_id", userId).order("created_at", { ascending: false });
   if (error) throw error;
   downloadBlob(JSON.stringify(data, null, 2), `audit-log-${stamp()}.json`, "application/json");
 }
 
 export async function resetInventoryStock() {
   const userId = await currentUserId();
-  const { error } = await supabase.from("stock_items").update({ quantity: 0 }).eq("user_id", userId);
+  const { error } = await (supabase.from as any)("stock_items").update({ quantity: 0 }).eq("user_id", userId);
   if (error) throw error;
 }
 
 export async function resetCustomerOpeningBalances() {
   const userId = await currentUserId();
-  const { error } = await supabase.from("customers").update({ opening_balance: 0 }).eq("user_id", userId);
+  const { error } = await (supabase.from as any)("customers").update({ opening_balance: 0 }).eq("user_id", userId);
   if (error) throw error;
 }

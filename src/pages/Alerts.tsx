@@ -252,7 +252,7 @@ function AlertsPage() {
       .filter((i) => i.customerId === item.customer.id && i.total - i.paid > 0.01)
       .map((i) => ({
         invoiceNo: i.invoiceNumber || i.id.slice(0, 6),
-        date: new Date(i.date).toLocaleDateString("ar-EG"),
+        date: new Date(i.date || i.createdAt).toLocaleDateString("ar-EG"),
         dueDate: i.firstDueDate ? new Date(i.firstDueDate).toLocaleDateString("ar-EG") : undefined,
         total: i.total,
         paid: i.paid,
