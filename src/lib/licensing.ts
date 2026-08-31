@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
 import { exportToExcel } from "@/lib/excel-helper";
 import { openPdfDocument, esc } from "@/lib/pdf-doc";
 
-export type LicenseTier = "trial" | "starter" | "pro" | "enterprise";
+export type LicenseTier = "trial" | "starter" | "pro" | "enterprise" | "custom";
 export type LicenseStatus = "active" | "trial" | "expired" | "suspended";
 
 export interface ModulePermissions {
@@ -18,6 +17,38 @@ export interface ModulePermissions {
   maxProducts: number;
 }
 
+export interface LicenseInstallmentPlan {
+  totalPrice: number;
+  depositPaid: number;
+  remainingBalance: number;
+  installmentCount: number;
+  monthlyAmount: number;
+  nextDueDate?: string;
+  isCompleted: boolean;
+  paymentsHistory?: Array<{
+    id: string;
+    date: string;
+    amount: number;
+    receiptNumber: string;
+    notes?: string;
+  }>;
+}
+
+export interface SupportLogItem {
+  id: string;
+  date: string;
+  author: string;
+  action: string;
+  notes: string;
+}
+
+export interface HardwareItem {
+  id: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+}
+
 export interface LicenseRecord {
   id: string;
   key: string;
@@ -26,6 +57,8 @@ export interface LicenseRecord {
   clientName: string;
   clientPhone: string;
   shopName: string;
+  shopAddress?: string;
+  taxNumber?: string;
   issueDate: string;
   expiryDate: string; // ISO date or "LIFETIME"
   status: LicenseStatus;
@@ -34,7 +67,11 @@ export interface LicenseRecord {
   billingCycle: "trial" | "monthly" | "yearly" | "lifetime";
   notes?: string;
   hardwareIncluded?: string;
+  hardwareItems?: HardwareItem[];
+  taxRatePercent?: number;
   modules: ModulePermissions;
+  installments?: LicenseInstallmentPlan;
+  supportLogs?: SupportLogItem[];
   lastActiveDate?: string;
   deviceFingerprint?: string;
 }
@@ -42,8 +79,9 @@ export interface LicenseRecord {
 const STORAGE_KEY_CURRENT_LICENSE = "segilly_active_license_v1";
 const STORAGE_KEY_ADMIN_LICENSES = "segilly_admin_all_licenses_v1";
 const STORAGE_KEY_ADMIN_PIN = "segilly_super_admin_pin_v1";
+const STORAGE_KEY_ADMIN_GLOBAL_LOGS = "segilly_admin_global_audit_logs_v1";
 
-const DEFAULT_MODULES: Record<LicenseTier, ModulePermissions> = {
+export const DEFAULT_MODULES: Record<LicenseTier, ModulePermissions> = {
   trial: {
     allowPos: true,
     allowInstallments: true,
@@ -88,6 +126,17 @@ const DEFAULT_MODULES: Record<LicenseTier, ModulePermissions> = {
     maxCashiers: 99,
     maxProducts: 999999,
   },
+  custom: {
+    allowPos: true,
+    allowInstallments: true,
+    allowWarehouse: true,
+    allowStorefront: false,
+    allowWhatsApp: true,
+    allowMultiBranch: false,
+    maxBranches: 3,
+    maxCashiers: 5,
+    maxProducts: 10000,
+  },
 };
 
 export const TIER_CONFIG: Record<
@@ -118,6 +167,12 @@ export const TIER_CONFIG: Record<
     desc: "ترخيص دائم مفتوح بدون اشتراك شهري مع هاردوير ودعم متميز",
     defaultPrice: 7500,
   },
+  custom: {
+    label: "باقة مخصصة (Custom Plan)",
+    color: "slate",
+    desc: "تخصيص موديولات وصلاحيات محددة حسب اتفاق العميل",
+    defaultPrice: 1200,
+  },
 };
 
 // Initial Seed Data for the Super Admin
@@ -130,6 +185,8 @@ const SEED_LICENSES: LicenseRecord[] = [
     clientName: "أحمد محمود العوضي",
     clientPhone: "01012345678",
     shopName: "محلات العوضي للملابس والأحذية",
+    shopAddress: "القاهرة، مدينة نصر، شارع عباس العقاد",
+    taxNumber: "948-221-550",
     issueDate: "2026-01-15",
     expiryDate: "2027-01-15",
     status: "active",
@@ -138,7 +195,28 @@ const SEED_LICENSES: LicenseRecord[] = [
     billingCycle: "yearly",
     notes: "تم تسليم طابعة فواتير Xprinter مع باقة الأجهزة",
     hardwareIncluded: "طابعة 80mm + قارئ باركود ليزر",
+    hardwareItems: [
+      { id: "hw-1", name: "طابعة فواتير حرارية 80mm USB/LAN", quantity: 1, unitPrice: 2800 },
+      { id: "hw-2", name: "قارئ باركود ليزر مع حامل تلقائي", quantity: 1, unitPrice: 950 },
+    ],
+    taxRatePercent: 14,
     modules: DEFAULT_MODULES.pro,
+    installments: {
+      totalPrice: 9750,
+      depositPaid: 6000,
+      remainingBalance: 3750,
+      installmentCount: 3,
+      monthlyAmount: 1250,
+      nextDueDate: "2026-09-15",
+      isCompleted: false,
+      paymentsHistory: [
+        { id: "p-1", date: "2026-01-15", amount: 6000, receiptNumber: "REC-991", notes: "الدفعة المقدمة عند الاستلام" },
+      ],
+    },
+    supportLogs: [
+      { id: "log-1", date: "2026-01-15", author: "المدير العام", action: "إصدار ترخيص", notes: "تم تسليم الأجهزة وعمل دورة تدريبية للكاشيرات" },
+      { id: "log-2", date: "2026-05-10", author: "الدعم الفني", action: "مساعدة فنية", notes: "ربط طابعة الباركود الإضافية في فرع 2" },
+    ],
   },
   {
     id: "lic-002",
@@ -148,15 +226,25 @@ const SEED_LICENSES: LicenseRecord[] = [
     clientName: "م. طارق عبد العزيز",
     clientPhone: "01122334455",
     shopName: "مجموعة الصفا للأدوات الكهربائية والأجهزة",
+    shopAddress: "الجيزة، الدقي، شارع مصدق",
+    taxNumber: "881-304-112",
     issueDate: "2025-11-01",
     expiryDate: "LIFETIME",
     status: "active",
-    paidAmount: 12000,
+    paidAmount: 14500,
     currency: "ج.م",
     billingCycle: "lifetime",
     notes: "3 فروع + سيستم أقساط متكامل",
     hardwareIncluded: "2 طابعة باركود استيكر + درج نقدية 5 خانات",
+    hardwareItems: [
+      { id: "hw-3", name: "طابعة استيكرات باركود حرارية عالية الدقة", quantity: 2, unitPrice: 3200 },
+      { id: "hw-4", name: "درج نقدية حديدي إلكتروني 5 خانات", quantity: 1, unitPrice: 1700 },
+    ],
+    taxRatePercent: 0,
     modules: DEFAULT_MODULES.enterprise,
+    supportLogs: [
+      { id: "log-3", date: "2025-11-01", author: "المدير العام", action: "ترخيص دائم", notes: "سداد كامل القيمة نقداً وتدريب طاقم العمل بالكامل" },
+    ],
   },
   {
     id: "lic-003",
@@ -166,14 +254,18 @@ const SEED_LICENSES: LicenseRecord[] = [
     clientName: "كريم حسن علي",
     clientPhone: "01234567890",
     shopName: "ميني ماركت البركة",
+    shopAddress: "الإسكندرية، ميامي",
     issueDate: "2026-08-01",
-    expiryDate: "2026-09-01",
+    expiryDate: "2026-09-04",
     status: "active",
     paidAmount: 350,
     currency: "ج.م",
     billingCycle: "monthly",
     notes: "اشتراك شهري متجدد عبر فودافون كاش",
     modules: DEFAULT_MODULES.starter,
+    supportLogs: [
+      { id: "log-4", date: "2026-08-01", author: "المبيعات", action: "تفعيل شهري", notes: "تفعيل اشتراك شهر أغسطس" },
+    ],
   },
   {
     id: "lic-004",
@@ -183,6 +275,7 @@ const SEED_LICENSES: LicenseRecord[] = [
     clientName: "مصطفى إبراهيم",
     clientPhone: "01599887766",
     shopName: "بوتيك الأناقة كيدز",
+    shopAddress: "المنصورة، شارع الجمهورية",
     issueDate: "2026-08-20",
     expiryDate: "2026-09-03",
     status: "trial",
@@ -191,6 +284,9 @@ const SEED_LICENSES: LicenseRecord[] = [
     billingCycle: "trial",
     notes: "طلب تجربة نظام استيكرات الباركود والمقاسات",
     modules: DEFAULT_MODULES.trial,
+    supportLogs: [
+      { id: "log-5", date: "2026-08-20", author: "المبيعات", action: "بدء فترة تجريبية", notes: "العميل مهتم بنظام الباركود والمقاسات والألوان" },
+    ],
   },
   {
     id: "lic-005",
@@ -208,6 +304,9 @@ const SEED_LICENSES: LicenseRecord[] = [
     billingCycle: "monthly",
     notes: "انتهى الاشتراك وجاري التواصل للتجديد السنوي",
     modules: DEFAULT_MODULES.starter,
+    supportLogs: [
+      { id: "log-6", date: "2026-08-16", author: "المبيعات", action: "متابعة تجديد", notes: "تم إرسال تذكير التجديد وينتظر تحويل المحفظة" },
+    ],
   },
 ];
 
@@ -220,6 +319,7 @@ export function generateLicenseKey(tier: LicenseTier): string {
     starter: "SEG-STA",
     pro: "SEG-PRO",
     enterprise: "SEG-ENT",
+    custom: "SEG-CUS",
   };
 
   const rnd = (len = 4) =>
@@ -229,7 +329,7 @@ export function generateLicenseKey(tier: LicenseTier): string {
       .toUpperCase();
 
   const num = Math.floor(1000 + Math.random() * 9000);
-  return `${prefixMap[tier]}-${num}-${rnd(4)}-${rnd(4)}`;
+  return `${prefixMap[tier] || "SEG-LIC"}-${num}-${rnd(4)}-${rnd(4)}`;
 }
 
 /**
@@ -322,6 +422,7 @@ export function activateLicenseKey(
     if (cleanKey.startsWith("SEG-TRI")) tier = "trial";
     else if (cleanKey.startsWith("SEG-STA")) tier = "starter";
     else if (cleanKey.startsWith("SEG-ENT")) tier = "enterprise";
+    else if (cleanKey.startsWith("SEG-CUS")) tier = "custom";
 
     const now = new Date();
     const expiry =
@@ -379,9 +480,10 @@ export function calculateDaysRemaining(expiryDate: string): {
   isLifetime: boolean;
   isExpired: boolean;
   isWarning: boolean;
+  isTrialExpiring: boolean;
 } {
   if (expiryDate === "LIFETIME" || !expiryDate) {
-    return { days: 9999, isLifetime: true, isExpired: false, isWarning: false };
+    return { days: 9999, isLifetime: true, isExpired: false, isWarning: false, isTrialExpiring: false };
   }
 
   const exp = new Date(expiryDate).getTime();
@@ -393,6 +495,7 @@ export function calculateDaysRemaining(expiryDate: string): {
     isLifetime: false,
     isExpired: diffDays < 0,
     isWarning: diffDays <= 7 && diffDays >= 0,
+    isTrialExpiring: diffDays <= 3 && diffDays >= 0,
   };
 }
 
@@ -418,6 +521,48 @@ ${lic.hardwareIncluded ? `🖨️ *الأجهزة المشمولة:* ${lic.hardw
 2. الصق مفتاح التفعيل واضغط "تفعيل الترخيص".
 
 لأي استفسار أو دعم فني يسعدنا خدمتكم دائماً! 🌟`;
+}
+
+/**
+ * Format WhatsApp Renewal Reminder Message
+ */
+export function generateRenewalReminderMessage(lic: LicenseRecord): string {
+  const { days, isExpired } = calculateDaysRemaining(lic.expiryDate);
+  if (lic.status === "trial") {
+    return `مرحباً أستاذ ${lic.clientName} المحترم 🌸
+نأمل أن تكون تجربتك لنظام *سِجلّي لإدارة المحلات والمخازن* في متجركم (${lic.shopName}) ممتازة ومفيدة لنشاطكم!
+
+نود إعلامكم بأن الفترة التجريبية ستنتهي خلال *${Math.max(1, days)} أيام*.
+لتثبيت واستمرار عمل البرنامج والاستفادة من خصم الترقية والتفعيل السنوي، يسعدنا تواصلك معنا لاختيار الباقة الأنسب لكم.
+
+شكراً لثقتكم بنا! 🌟`;
+  }
+
+  return `عناية الأستاذ / ${lic.clientName} المحترم 🌸
+تحية طيبة من فريق دعم نظام *سِجلّي (Segilly POS)*.
+
+نحيطكم علماً بأن اشتراك البرنامج لمتجر (*${lic.shopName}*) ${
+    isExpired ? "قد انتهى بالفعل" : `سينتهي خلال *${days} يوم* (بتاريخ ${lic.expiryDate})`
+  }.
+
+لتجنب أي انقطاع في خدمات الكاشير والطباعة السحابية، يرجى تأكيد التجديد وتحويل قيمة الاشتراك.
+
+لأي استفسار يسعدنا الرد على رسالتكم دائماً. 🌟`;
+}
+
+/**
+ * Format WhatsApp Installment Due Reminder Message
+ */
+export function generateInstallmentReminderMessage(lic: LicenseRecord): string {
+  if (!lic.installments) return "";
+  return `عناية الأستاذ / ${lic.clientName} المحترم 🌸
+تحية طيبة، تذكير بموعد استحقاق قسط ترخيص/أجهزة برنامج *سِجلّي* لمتجر (*${lic.shopName}*):
+
+💰 *المبلغ المستحق:* ${lic.installments.monthlyAmount} ج.م
+📅 *تاريخ الاستحقاق:* ${lic.installments.nextDueDate || "هذا الشهر"}
+💳 *المتبقي الكلي:* ${lic.installments.remainingBalance} ج.م
+
+يرجى إتمام التحويل وتأكيد الدفعة لتوثيقها في سجلكم. شكراً لتعاونكم! 🌟`;
 }
 
 /**
@@ -550,6 +695,249 @@ export function printLicenseCertificate(lic: LicenseRecord): void {
 }
 
 /**
+ * Print Official Software & Hardware Invoice or Quotation
+ */
+export function printLicenseCommercialInvoice(
+  lic: LicenseRecord,
+  type: "invoice" | "quotation" = "invoice"
+): void {
+  const isInvoice = type === "invoice";
+  const docTitle = isInvoice ? "فاتورة بيع برمجيات وأجهزة" : "عرض سعر توريد وترخيص منظومة سِجلّي";
+  const docNumber = isInvoice ? `INV-${lic.id.toUpperCase()}` : `QUO-${lic.id.toUpperCase()}`;
+
+  const licensePrice = lic.paidAmount || 0;
+  const hardwareTotal = (lic.hardwareItems || []).reduce(
+    (acc, item) => acc + item.quantity * item.unitPrice,
+    0
+  );
+  const subtotal = licensePrice + hardwareTotal;
+  const taxRate = lic.taxRatePercent || 0;
+  const taxAmount = (subtotal * taxRate) / 100;
+  const grandTotal = subtotal + taxAmount;
+
+  const docHtml = `<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>${docTitle} - ${esc(lic.shopName)}</title>
+  <style>
+    @page { size: A4 portrait; margin: 12mm; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 24px;
+      color: #1e293b;
+      background: #fff;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #0f766e;
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+    }
+    .brand { font-size: 24px; font-weight: 900; color: #0f766e; }
+    .brand-sub { font-size: 11px; color: #64748b; margin-top: 2px; }
+    .doc-meta { text-align: left; }
+    .doc-type { font-size: 20px; font-weight: 800; color: #0f172a; }
+    .doc-num { font-size: 12px; font-family: monospace; color: #64748b; margin-top: 4px; }
+    
+    .client-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      font-size: 12px;
+    }
+    .client-box strong { color: #0f172a; }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 12px;
+    }
+    th {
+      background: #0f766e;
+      color: #fff;
+      padding: 10px 12px;
+      text-align: right;
+      font-weight: bold;
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    tr:nth-child(even) td { background: #f8fafc; }
+    
+    .totals {
+      width: 320px;
+      margin-right: auto;
+      margin-top: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 12px;
+    }
+    .totals-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 14px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .totals-row.grand {
+      background: #0f766e;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 900;
+      border-bottom: none;
+    }
+    
+    .terms {
+      margin-top: 24px;
+      padding: 12px 16px;
+      background: #f0fdfa;
+      border-right: 4px solid #0d9488;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #334155;
+      line-height: 1.6;
+    }
+    .footer {
+      margin-top: 36px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #64748b;
+      border-top: 1px dashed #cbd5e1;
+      padding-top: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand">سِجلّي POS & ERP</div>
+      <div class="brand-sub">حلول البرمجيات وتجهيز نقاط البيع والأنظمة السحابية</div>
+      <div class="brand-sub">هاتف المبيعات والدعم: 01000000000 | support@segilly.com</div>
+    </div>
+    <div class="doc-meta">
+      <div class="doc-type">${docTitle}</div>
+      <div class="doc-num">الرقم المرجعي: ${docNumber}</div>
+      <div class="doc-num">التاريخ: ${esc(lic.issueDate)}</div>
+    </div>
+  </div>
+
+  <div class="client-box">
+    <div>
+      <div><strong>اسم العميل / الشركة:</strong> ${esc(lic.clientName)}</div>
+      <div style="margin-top:4px;"><strong>اسم المنشأة:</strong> ${esc(lic.shopName)}</div>
+      <div style="margin-top:4px;"><strong>رقم الهاتف:</strong> ${esc(lic.clientPhone)}</div>
+    </div>
+    <div>
+      <div><strong>العنوان:</strong> ${esc(lic.shopAddress || "—")}</div>
+      <div style="margin-top:4px;"><strong>الرقم الضريبي (إن وجد):</strong> ${esc(lic.taxNumber || "—")}</div>
+      <div style="margin-top:4px;"><strong>نوع الترخيص:</strong> ${esc(lic.tierLabel)}</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>م</th>
+        <th>البند / الوصف</th>
+        <th style="text-align:center;">الكمية</th>
+        <th style="text-align:center;">سعر الوحدة</th>
+        <th style="text-align:center;">الإجمالي</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>
+          <strong>ترخيص برنامج سِجلّي (${esc(lic.tierLabel)})</strong><br>
+          <span style="font-size:10px; color:#64748b;">
+            مفتاح التفعيل: ${esc(lic.key)} — الصلاحية: ${lic.expiryDate === "LIFETIME" ? "ترخيص دائم مدى الحياة" : `حتى ${esc(lic.expiryDate)}`}
+          </span>
+        </td>
+        <td style="text-align:center;">1</td>
+        <td style="text-align:center;">${licensePrice.toLocaleString()} ج.م</td>
+        <td style="text-align:center; font-weight:bold;">${licensePrice.toLocaleString()} ج.م</td>
+      </tr>
+      ${
+        (lic.hardwareItems || []).map(
+          (item, idx) => `
+        <tr>
+          <td>${idx + 2}</td>
+          <td>
+            <strong>${esc(item.name)}</strong>
+          </td>
+          <td style="text-align:center;">${item.quantity}</td>
+          <td style="text-align:center;">${item.unitPrice.toLocaleString()} ج.م</td>
+          <td style="text-align:center; font-weight:bold;">${(item.quantity * item.unitPrice).toLocaleString()} ج.م</td>
+        </tr>
+      `
+        ).join("")
+      }
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div class="totals-row">
+      <span>المجموع الفرعي:</span>
+      <span>${subtotal.toLocaleString()} ج.م</span>
+    </div>
+    ${
+      taxRate > 0
+        ? `<div class="totals-row">
+      <span>ضريبة القيمة المضافة (${taxRate}%):</span>
+      <span>${taxAmount.toLocaleString()} ج.م</span>
+    </div>`
+        : ""
+    }
+    <div class="totals-row grand">
+      <span>الإجمالي المستحق:</span>
+      <span>${grandTotal.toLocaleString()} ج.م</span>
+    </div>
+  </div>
+
+  ${
+    lic.installments
+      ? `<div style="margin-top:16px; background:#fffbeb; border:1px solid #fde68a; padding:12px; border-radius:8px; font-size:11px;">
+      <strong>خطة السداد والأقساط:</strong> تم سداد دفعة مقدمة قدرها <strong>${lic.installments.depositPaid.toLocaleString()} ج.م</strong>، والمتبقي <strong>${lic.installments.remainingBalance.toLocaleString()} ج.م</strong> مجدول على ${lic.installments.installmentCount} أقساط بمعدل <strong>${lic.installments.monthlyAmount.toLocaleString()} ج.م</strong> شهرياً.
+    </div>`
+      : ""
+  }
+
+  <div class="terms">
+    <strong>الشروط والأحكام:</strong><br>
+    1. يشمل الترخيص التحديثات السحابية والدعم الفني المباشر طوال فترة سريان الاشتراك.<br>
+    2. الأجهزة الموردة تتمتع بضمان الوكيل الرسمي المعتمد ضد عيوب الصناعة.<br>
+    3. يعتبر سداد الفاتورة إقراراً باستلام النظام والأجهزة ومطابقتها للمواصفات المتفق عليها.
+  </div>
+
+  <div class="footer">
+    <div>توقيع المستلم: ...............................</div>
+    <div>ختم وتوقيع الشركة: ...............................</div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      setTimeout(function() { window.print(); }, 250);
+    };
+  </script>
+</body>
+</html>`;
+
+  openPdfDocument(docHtml, { autoPrint: true, features: "width=850,height=950" });
+}
+
+/**
  * Export all clients and licenses to Excel
  */
 export function exportLicensesToExcel(licenses: LicenseRecord[]): void {
@@ -571,6 +959,7 @@ export function exportLicensesToExcel(licenses: LicenseRecord[]): void {
         ? "منتهي"
         : "موقوف",
     "المبلغ المدفوع": l.paidAmount,
+    "المتبقي بالأقساط": l.installments ? l.installments.remainingBalance : 0,
     "الأجهزة الموردة": l.hardwareIncluded || "—",
     "ملاحظات": l.notes || "—",
   }));
