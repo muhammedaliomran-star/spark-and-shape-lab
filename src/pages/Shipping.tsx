@@ -826,23 +826,39 @@ export default function Shipping() {
                   </Select>
                 </div>
 
+                <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-hairline bg-muted/30 p-3">
+                  <label className="flex min-h-11 flex-1 cursor-pointer items-center gap-2 text-xs font-bold sm:flex-none">
+                    <Checkbox
+                      checked={filteredShipments.length > 0 && filteredShipments.every((s) => selected.has(s.id))}
+                      onCheckedChange={(checked) =>
+                        setSelected(checked ? new Set(filteredShipments.map((s) => s.id)) : new Set())
+                      }
+                      aria-label="تحديد كل الشحنات"
+                    />
+                    تحديد الكل ({filteredShipments.length})
+                  </label>
+                  <Button size="sm" className="h-11 flex-1 gap-1.5 font-bold sm:flex-none" disabled={!selected.size} onClick={() => bulkLabels()}>
+                    <Printer className="h-4 w-4" /> طباعة بوالص جماعية{selected.size ? ` (${selected.size})` : ""}
+                  </Button>
+                </div>
+
                 {selected.size > 0 && (
                   <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-3">
-                    <span className="text-sm font-bold">{selected.size} شحنة محددة</span>
-                    <Button size="sm" variant="outline" onClick={() => void handleBulkStatus("processing")}>تجهيز</Button>
-                    <Button size="sm" variant="outline" onClick={() => void handleBulkStatus("shipped")}>شحن</Button>
-                    <Button size="sm" variant="outline" onClick={() => void handleBulkStatus("delivered")}>تسليم</Button>
+                    <span className="w-full text-sm font-bold sm:w-auto">{selected.size} شحنة محددة</span>
+                    <Button size="sm" variant="outline" className="h-11 flex-1 sm:flex-none" onClick={() => void handleBulkStatus("processing")}>تجهيز</Button>
+                    <Button size="sm" variant="outline" className="h-11 flex-1 sm:flex-none" onClick={() => void handleBulkStatus("shipped")}>شحن</Button>
+                    <Button size="sm" variant="outline" className="h-11 flex-1 sm:flex-none" onClick={() => void handleBulkStatus("delivered")}>تسليم</Button>
                     <Select value={bulkCarrier} onValueChange={setBulkCarrier}>
-                      <SelectTrigger className="h-9 w-[160px] rounded-xl text-xs font-bold"><SelectValue placeholder="تعيين مندوب" /></SelectTrigger>
+                      <SelectTrigger className="h-11 w-full rounded-xl text-xs font-bold sm:w-[160px]"><SelectValue placeholder="تعيين مندوب" /></SelectTrigger>
                       <SelectContent>
                         {carriers.filter((c) => c.active).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Button size="sm" disabled={!bulkCarrier} onClick={() => void handleBulkAssign()}>تعيين</Button>
-                    <Button size="sm" variant="outline" onClick={() => bulkLabels()}>اطبع بوالص المحدد</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>إلغاء التحديد</Button>
+                    <Button size="sm" className="h-11 flex-1 sm:flex-none" disabled={!bulkCarrier} onClick={() => void handleBulkAssign()}>تعيين</Button>
+                    <Button size="sm" variant="ghost" className="h-11 flex-1 sm:flex-none" onClick={() => setSelected(new Set())}>إلغاء التحديد</Button>
                   </div>
                 )}
+
               </div>
             </div>
 
