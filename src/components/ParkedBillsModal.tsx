@@ -19,13 +19,13 @@ interface ParkedBillsModalProps {
   onSelectBill?: (bill: ParkedBill) => void;
 }
 
-export function ParkedBillsModal({ open, onOpenChange, onResume }: ParkedBillsModalProps) {
+export function ParkedBillsModal({ open, onOpenChange, onResume, onSelectBill }: ParkedBillsModalProps) {
   const { bills, removeBill } = useParkedBills();
   const { settings: shop } = useShopSettings();
 
   const handleResume = (bill: ParkedBill) => {
     removeBill(bill.id);
-    onResume(bill);
+    (onResume ?? onSelectBill)?.(bill);
     onOpenChange(false);
     toast.success(`تم استرجاع الفاتورة المعلقة رقم #${bill.parkNumber}`);
   };
