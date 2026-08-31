@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { BezelCard } from "@/components/BezelCard";
+import { Reveal } from "@/components/Reveal";
 import { Button } from "@/components/ui/button";
 import { useDB } from "@/lib/store";
 import { Link } from "@/lib/router-compat";
