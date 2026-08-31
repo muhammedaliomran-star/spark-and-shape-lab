@@ -65,5 +65,5 @@ export async function recordCarrierFeesAsExpense(params: {
     category: "transport",
     expenseDate: (params.date ?? new Date().toISOString()).slice(0, 10),
     notes: `عمولة توصيل — ${params.carrierName}`,
-  } as never);
+  });
 }
