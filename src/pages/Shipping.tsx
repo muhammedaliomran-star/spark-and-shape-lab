@@ -875,12 +875,13 @@ export default function Shipping() {
                 ) : (
                   filteredShipments.map((s, i) => (
                     <Reveal key={s.id} delay={Math.min(i, 8) * 0.05}>
-                      <BezelCard className="plate group flex flex-wrap items-center gap-3 p-4 sm:gap-4 sm:p-5 lg:gap-6">
-                        <Checkbox checked={selected.has(s.id)} onCheckedChange={() => toggleSelect(s.id)} aria-label="تحديد الشحنة" />
-                        <div className={`h-12 w-1.5 rounded-full ${statusMap[s.status]?.color.split(" ")[0]}`} />
+                      <BezelCard className="plate group flex flex-wrap items-center gap-2 p-3 sm:gap-4 sm:p-5 lg:gap-6">
+                        <Checkbox checked={selected.has(s.id)} onCheckedChange={() => toggleSelect(s.id)} aria-label="تحديد الشحنة" className="h-5 w-5" />
+                        <div className={`h-10 w-1.5 rounded-full sm:h-12 ${statusMap[s.status]?.color.split(" ")[0]}`} />
                         <div className="min-w-0 flex-1 space-y-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-lg font-bold">#{s.trackingNumber || "بدون رقم"}</span>
+                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                            <span className="text-base font-bold sm:text-lg">#{s.trackingNumber || "بدون رقم"}</span>
+
                             <span className={`rounded-full border px-3 py-0.5 text-[11px] font-bold ${statusMap[s.status]?.color}`}>
                               {statusMap[s.status]?.label}
                             </span>
