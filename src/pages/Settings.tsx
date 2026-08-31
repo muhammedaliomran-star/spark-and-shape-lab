@@ -147,7 +147,24 @@ const shopSchema = z.object({
   reminderDaysBefore: z.number().int().min(0).max(30),
   printPaper: z.enum(["a4", "thermal"]),
   theme: z.enum(["dark", "light", "system"]),
-  alertsEnabled: z.boolean(),
+    alertsEnabled: z.boolean(),
+  colorPalette: z.string(),
+  numeralsFormat: z.enum(["latn", "arab"]),
+  autoBackupFrequency: z.enum(["weekly", "monthly", "off"]),
+  commercialRegister: z.string().max(50),
+  email: z.string().max(100),
+  website: z.string().max(200),
+  enableVat: z.boolean(),
+  defaultVatRate: z.number(),
+  warrantyPolicy: z.string().max(500),
+  autoPrintOnSave: z.boolean(),
+  thermalShowBarcode: z.boolean(),
+  thermalShowHeader: z.boolean(),
+  customExpenseCategories: z.array(z.string()),
+  whatsappReminderTemplate: z.string(),
+  whatsappPaymentThankYouTemplate: z.string(),
+  criticalOverdueDays: z.number().int().min(1).max(60),
+  audioAlertsEnabled: z.boolean(),
   // Extended fields
   commercialRegister: z.string().trim().max(50, "السجل التجاري طويل جداً").optional(),
   email: z.string().trim().max(100).optional(),
@@ -233,7 +250,7 @@ function SettingsPage() {
     }
     setBusy(true);
     try {
-      await saveShopSettings({ ...form, ...parsed.data });
+      await saveShopSettings({ ...form, ...parsed.data } as ShopSettings);
       if (form.colorPalette) {
         storePalette(form.colorPalette as LibColorPalette);
       }
