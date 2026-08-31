@@ -63,6 +63,9 @@ export function CarrierReconciliationView({
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "instapay" | "vodafone_cash" | "bank_transfer" | "other">("cash");
   const [referenceNumber, setReferenceNumber] = useState("");
   const [notes, setNotes] = useState("");
+  const [postFees, setPostFees] = useState(true);
+  const { privacy } = usePrivacy();
+  const blurCls = privacy ? "privacy-blur" : "";
 
   const refreshTransactions = async () => {
     try {
