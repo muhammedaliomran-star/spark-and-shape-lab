@@ -36,6 +36,9 @@ export function CreateInvoiceShipmentDialog({
   const [shippingCost, setShippingCost] = useState("");
   const [trackingNumber, setTrackingNumber] = useState("");
   const [notes, setNotes] = useState("");
+  const [weightKg, setWeightKg] = useState("");
+  const [pieces, setPieces] = useState("1");
+  const [expectedDate, setExpectedDate] = useState("");
   const [loading, setLoading] = useState(false);
 
   const invItems = useMemo(() => {
