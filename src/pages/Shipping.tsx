@@ -415,11 +415,37 @@ export default function Shipping() {
 
   const handleSettle = async (carrierId: string, amount: number) => {
     if (!window.confirm(`تأكيد تسوية ${egp(amount)} مع المندوب؟`)) return;
+    const carrier = carrierById.get(carrierId);
+    const fees = shipments
+      .filter((s) => s.carrierId === carrierId && s.collectionStatus === "collected")
+      .reduce((sum, s) => sum + Number(s.shippingCost || 0), 0);
     try {
       const n = await db.settleCarrierCollections(carrierId);
-      toast.success(`تمت تسوية ${n} شحنة`);
+      // سجل التسوية في دفتر المناديب + الخزنة + المصروفات
+      let accountName: string | null = null;
+      try {
+        await saveCarrierTransaction({
+          carrierId,
+          type: "settlement",
+          amount,
+          date: new Date().toISOString(),
+          paymentMethod: "cash",
+          notes: `تسوية تحصيلات ${n} شحنة من قسم الشحن`,
+        });
+        accountName = recordCarrierSettlementInTreasury({
+          carrierName: carrier?.name ?? "مندوب",
+          amount,
+          paymentMethod: "cash",
+          notes: `تسوية تحصيلات ${n} شحنة`,
+        });
+        if (fees > 0) await recordCarrierFeesAsExpense({ carrierName: carrier?.name ?? "مندوب", amount: fees });
+      } catch {
+        toast.warning("تمت التسوية لكن تعذر ربطها بالخزنة أو المصروفات");
+      }
+      toast.success(`تمت تسوية ${n} شحنة${accountName ? ` وتسجيل الوارد في ${accountName}` : ""}`);
     } catch (e: any) { toast.error(e.message || "تعذرت التسوية"); }
   };
+
 
   const trackingIdentifierFor = (s: Shipment) =>
     (s.invoiceId ? orderNumbers[s.invoiceId] : undefined) || s.trackingNumber || "";
