@@ -163,19 +163,19 @@ const shopSchema = z.object({
   audioAlertsEnabled: z.boolean().optional(),
 });
 
-const TABLE_LABELS: Record<string, string> = {
-  customers: "العملاء",
-  suppliers: "الموردين",
-  invoices: "فواتير البيع",
-  invoice_items: "أصناف الفواتير",
-  payments: "الدفعات والتحصيلات",
-  purchases: "فواتير الشراء",
-  purchase_items: "أصناف الشراء",
-  supplier_payments: "مدفوعات الموردين",
-  stock_items: "أصناف المخزن",
-  stock_adjustments: "تسويات المخزن",
-  expenses: "المصروفات",
-};
+const TABLE_LABELS = new Map<string, string>([
+  ["customers", "العملاء"],
+  ["suppliers", "الموردين"],
+  ["invoices", "فواتير البيع"],
+  ["invoice_items", "أصناف الفواتير"],
+  ["payments", "الدفعات والتحصيلات"],
+  ["purchases", "فواتير الشراء"],
+  ["purchase_items", "أصناف الشراء"],
+  ["supplier_payments", "مدفوعات الموردين"],
+  ["stock_items", "أصناف المخزن"],
+  ["stock_adjustments", "تسويات المخزن"],
+  ["expenses", "المصروفات"],
+]);
 
 /** Plays a gentle synthesized test beep */
 function playTestAlert() {
@@ -1986,7 +1986,7 @@ function DataTab({ form, set }: TabProps) {
           hint="عدد السجلات المخزنة والمسجلة في قاعدة البيانات السحابية."
         >
           <div className="grid grid-cols-2 gap-2.5">
-            {Object.entries(TABLE_LABELS).map(([key, label]) => (
+            {[...TABLE_LABELS].map(([key, label]) => (
               <div
                 key={key}
                 className="rounded-2xl bg-foreground/[0.03] border border-foreground/5 p-3.5 flex items-center justify-between transition-all hover:bg-foreground/[0.05]"
