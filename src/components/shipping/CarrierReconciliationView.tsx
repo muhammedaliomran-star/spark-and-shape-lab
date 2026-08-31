@@ -600,7 +600,16 @@ export function CarrierReconciliationView({
                 className="text-xs mt-1"
               />
             </div>
+
+            <label className="flex items-start gap-2 rounded-xl border border-border/60 bg-muted/30 p-3 cursor-pointer">
+              <Checkbox checked={postFees} onCheckedChange={(v) => setPostFees(v === true)} className="mt-0.5" />
+              <span className="text-[11px] leading-relaxed">
+                <span className="font-bold block">ربط بالدورة المالية</span>
+                تسجيل المبلغ المورّد كوارد في الخزنة، وتسجيل عمولة المندوب كمصروف نقل.
+              </span>
+            </label>
           </div>
+
 
           <DialogFooter className="gap-2 mt-4">
             <Button variant="outline" onClick={() => setSettlementModalOpen(false)}>
