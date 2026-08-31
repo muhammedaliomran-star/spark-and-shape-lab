@@ -237,6 +237,25 @@ export const PRODUCT_TYPES = [
   "أغذية",
 ] as const;
 
+export interface ProductVariant {
+  id: string;
+  name?: string;
+  size?: string | null;
+  color?: string | null;
+  barcode?: string | null;
+  quantity?: number;
+  salePrice?: number;
+  lastUnitCost?: number;
+  costPrice?: number;
+}
+
+export interface SplitPaymentDetail {
+  cash: number;
+  electronic: number;
+  method?: string;
+  reference?: string;
+}
+
 export interface StockItem {
   id: string;
   name: string;
@@ -249,6 +268,11 @@ export interface StockItem {
   minStock: number;
   createdAt: string;
   updatedAt: string;
+  variants?: ProductVariant[];
+  lowStockAlert?: number;
+  season?: string | null;
+  category?: string | null;
+  notes?: string | null;
 }
 
 export interface DBState {
@@ -1075,6 +1099,7 @@ export const db = {
   async addStockItem(item: {
     name: string; quantity?: number; lastUnitCost?: number; salePrice?: number; barcode?: string | null;
     size?: string | null; itemType?: string | null; minStock?: number;
+    lowStockAlert?: number; season?: string | null; category?: string | null; notes?: string | null;
   }) {
     const user_id = await uid();
     const { data, error } = await supabase.from("stock_items").insert({
@@ -1661,6 +1686,13 @@ export interface ShopSettings {
   whatsappPaymentThankYouTemplate: string;
   criticalOverdueDays: number;
   audioAlertsEnabled: boolean;
+  managerPin?: string;
+  maxDiscountWithoutPin?: number;
+  hideCostAndProfitsFromCashier?: boolean;
+  preventInvoiceDeletionWithoutPin?: boolean;
+  preventViewingTotalAnalyticsWithoutPin?: boolean;
+  thermalPaperWidth?: "58mm" | "80mm" | string;
+  openCashDrawerOnPrint?: boolean;
 }
 
 export const EMPTY_SHOP_SETTINGS: ShopSettings = {

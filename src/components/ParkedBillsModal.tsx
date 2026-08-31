@@ -15,16 +15,17 @@ import { toast } from "sonner";
 interface ParkedBillsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onResume: (bill: ParkedBill) => void;
+  onResume?: (bill: ParkedBill) => void;
+  onSelectBill?: (bill: ParkedBill) => void;
 }
 
-export function ParkedBillsModal({ open, onOpenChange, onResume }: ParkedBillsModalProps) {
+export function ParkedBillsModal({ open, onOpenChange, onResume, onSelectBill }: ParkedBillsModalProps) {
   const { bills, removeBill } = useParkedBills();
   const { settings: shop } = useShopSettings();
 
   const handleResume = (bill: ParkedBill) => {
     removeBill(bill.id);
-    onResume(bill);
+    (onResume ?? onSelectBill)?.(bill);
     onOpenChange(false);
     toast.success(`تم استرجاع الفاتورة المعلقة رقم #${bill.parkNumber}`);
   };
@@ -102,7 +103,7 @@ export function ParkedBillsModal({ open, onOpenChange, onResume }: ParkedBillsMo
 
                 <div className="p-2 rounded-xl bg-muted/40 text-xs flex items-center justify-between">
                   <span className="font-bold font-mono text-primary text-sm">
-                    {fmt(bill.total)} {shop.currency}
+                    {fmt(bill.total ?? bill.totalAmount ?? 0)} {shop.currency}
                   </span>
                   <span className="text-muted-foreground">
                     {bill.products.length} صنف (
