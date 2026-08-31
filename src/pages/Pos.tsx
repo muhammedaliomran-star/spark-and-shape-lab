@@ -4,7 +4,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageTransition } from "@/components/PageTransition";
 import {
-  useDB, db, fmt, customerBalance, useShopSettings, uid, invoiceNumber,
+  useDB, db, fmt, customerBalance, useShopSettings, uid,
   findStockByBarcode, type StockItem, type Customer
 } from "@/lib/store";
 import { supabase } from "@/integrations/supabase/client";
