@@ -626,7 +626,7 @@ export default function Shipping() {
             { label: "شحنات نشطة", value: String(shipments.filter((s) => ["pending", "processing", "shipped"].includes(s.status)).length), icon: Truck, color: "text-blue-500", bg: "bg-blue-500/10" },
             { label: "تم التوصيل", value: String(shipments.filter((s) => s.status === "delivered").length), icon: PackageCheck, color: "text-emerald-500", bg: "bg-emerald-500/10" },
             { label: "شحنات متأخرة", value: String(analytics.lateCount), icon: AlertTriangle, color: "text-rose-500", bg: "bg-rose-500/10" },
-            { label: "مستحقات المناديب", value: egp(totalDue), icon: Wallet, color: "text-amber-500", bg: "bg-amber-500/10" },
+            { label: "مستحقات المناديب", value: privacy ? "••••" : egp(totalDue), icon: Wallet, color: "text-amber-500", bg: "bg-amber-500/10" },
           ].map((metric, i) => (
             <Reveal key={metric.label} delay={i * 0.1}>
               <BezelCard className="group relative overflow-hidden p-6 transition-all hover:translate-y-[-4px]">
@@ -746,7 +746,7 @@ export default function Shipping() {
                 ) : (
                   filteredShipments.map((s, i) => (
                     <Reveal key={s.id} delay={Math.min(i, 8) * 0.05}>
-                      <BezelCard className="plate group flex flex-wrap items-center gap-4 p-5 lg:gap-6">
+                      <BezelCard className="plate group flex flex-wrap items-center gap-3 p-4 sm:gap-4 sm:p-5 lg:gap-6">
                         <Checkbox checked={selected.has(s.id)} onCheckedChange={() => toggleSelect(s.id)} aria-label="تحديد الشحنة" />
                         <div className={`h-12 w-1.5 rounded-full ${statusMap[s.status]?.color.split(" ")[0]}`} />
                         <div className="min-w-0 flex-1 space-y-1">
@@ -755,7 +755,15 @@ export default function Shipping() {
                             <span className={`rounded-full border px-3 py-0.5 text-[11px] font-bold ${statusMap[s.status]?.color}`}>
                               {statusMap[s.status]?.label}
                             </span>
-                            {isLate(s) && <span className="rounded-full bg-rose-500/10 px-3 py-0.5 text-[11px] font-bold text-rose-500">متأخرة</span>}
+                            {(() => {
+                              const sla = slaOf(s);
+                              if (sla.state === "closed" || sla.state === "on_time") return null;
+                              return (
+                                <span className={`rounded-full px-3 py-0.5 text-[11px] font-bold ${sla.state === "late" ? "bg-rose-500/10 text-rose-500" : "bg-amber-500/10 text-amber-600"}`}>
+                                  {sla.label}
+                                </span>
+                              );
+                            })()}
                             {s.codAmount > 0 && (
                               <span className={`rounded-full px-3 py-0.5 text-[11px] font-bold ${collectionMap[s.collectionStatus]?.color}`}>
                                 {collectionMap[s.collectionStatus]?.label}
@@ -769,13 +777,13 @@ export default function Shipping() {
                             </Link>
                           )}
                         </div>
-                        <div className="hidden text-right md:block">
-                          <p className="text-sm font-medium text-muted-foreground">التحصيل</p>
-                          <p className="text-sm font-bold">{egp(s.codAmount)}</p>
+                        <div className="text-right">
+                          <p className="text-xs font-medium text-muted-foreground sm:text-sm">التحصيل</p>
+                          <p className={`text-sm font-bold ${blurCls}`}>{egp(s.codAmount)}</p>
                         </div>
-                        <div className="hidden text-right md:block">
-                          <p className="text-sm font-medium text-muted-foreground">التكلفة</p>
-                          <p className="text-sm font-bold">{egp(s.shippingCost)}</p>
+                        <div className="hidden text-right sm:block">
+                          <p className="text-xs font-medium text-muted-foreground sm:text-sm">التكلفة</p>
+                          <p className={`text-sm font-bold ${blurCls}`}>{egp(s.shippingCost)}</p>
                         </div>
                         <div className="hidden text-right lg:block">
                           <p className="text-sm font-medium text-muted-foreground">التاريخ</p>
@@ -832,7 +840,7 @@ export default function Shipping() {
                       </div>
                       <div className="rounded-2xl bg-amber-500/5 p-4">
                         <p className="text-xs font-medium text-muted-foreground">محصّل ولم يُسلَّم بعد</p>
-                        <p className="mt-1 text-2xl font-bold text-amber-500">{egp(st.due)}</p>
+                        <p className={`mt-1 text-2xl font-bold text-amber-500 ${blurCls}`}>{egp(st.due)}</p>
                       </div>
                       <div className="flex items-center justify-between border-t border-hairline pt-3 text-sm">
                         <span className="text-muted-foreground">عدد الشحنات</span>
@@ -1050,7 +1058,7 @@ export default function Shipping() {
                               <td className="py-3">{st.successRate.toFixed(0)}%</td>
                               <td className="py-3">{st.avgDays.toFixed(1)}</td>
                               <td className="py-3">{egp(st.cost)}</td>
-                              <td className="py-3 font-bold text-amber-500">{egp(st.due)}</td>
+                              <td className={`py-3 font-bold text-amber-500 ${blurCls}`}>{egp(st.due)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -1104,7 +1112,7 @@ export default function Shipping() {
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="rounded-xl bg-primary/5 p-3">
                       <p className="text-xs text-muted-foreground">التحصيل</p>
-                      <p className="font-bold">{egp(detail.codAmount)}</p>
+                      <p className={`font-bold ${blurCls}`}>{egp(detail.codAmount)}</p>
                     </div>
                     <div className="rounded-xl bg-amber-500/5 p-3">
                       <p className="text-xs text-muted-foreground">تكلفة الشحن</p>
