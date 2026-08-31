@@ -33,6 +33,8 @@ import { SmartReturnModal } from "@/components/shipping/SmartReturnModal";
 import { CarrierReconciliationView } from "@/components/shipping/CarrierReconciliationView";
 import { CarrierExcelIntegrationModal } from "@/components/shipping/CarrierExcelIntegrationModal";
 import { WhatsAppMenu } from "@/components/shipping/WhatsAppMenu";
+import { saveCarrierTransaction } from "@/lib/carrier-ledger";
+import { recordCarrierSettlementInTreasury, recordCarrierFeesAsExpense } from "@/lib/shipping-finance";
 import { QrCode, Calculator, FileSpreadsheet, Smartphone } from "lucide-react";
 
 type ShipmentNotification = {
