@@ -34,6 +34,20 @@ import { CarrierExcelIntegrationModal } from "@/components/shipping/CarrierExcel
 import { WhatsAppMenu } from "@/components/shipping/WhatsAppMenu";
 import { QrCode, Calculator, FileSpreadsheet, Smartphone } from "lucide-react";
 
+type ShipmentNotification = {
+  id: string;
+  shipment_id: string;
+  kind: "late" | "status_update";
+  status: ShipmentStatus | null;
+  title: string;
+  body: string;
+  tracking_identifier: string | null;
+  expected_delivery_date: string | null;
+  read_at: string | null;
+  resolved_at: string | null;
+  created_at: string;
+};
+
 const statusMap: Record<string, { label: string; color: string }> = {
   pending: { label: "قيد الانتظار", color: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
   processing: { label: "جاري التجهيز", color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
@@ -67,6 +81,7 @@ export default function Shipping() {
   const search = useSearch({ strict: false }) as { q?: string; invoice?: string };
   const [searchQuery, setSearchQuery] = useState(search.q ?? search.invoice ?? "");
   const [orderNumbers, setOrderNumbers] = useState<Record<string, string>>({});
+  const [shippingNotifications, setShippingNotifications] = useState<ShipmentNotification[]>([]);
 
   useEffect(() => {
     if (search.q || search.invoice) setSearchQuery(search.q ?? search.invoice ?? "");
@@ -78,6 +93,25 @@ export default function Shipping() {
       setOrderNumbers(Object.fromEntries((data ?? []).map((row: { invoice_id: string; public_number: string }) => [row.invoice_id, row.public_number])));
     })();
   }, []);
+
+  const refreshShippingNotifications = async () => {
+    const { error: syncError } = await supabase.rpc("sync_late_shipment_notifications");
+    if (syncError) throw syncError;
+    const { data, error } = await supabase
+      .from("shipment_notifications")
+      .select("id,shipment_id,kind,status,title,body,tracking_identifier,expected_delivery_date,read_at,resolved_at,created_at")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    setShippingNotifications((data ?? []) as ShipmentNotification[]);
+  };
+
+  useEffect(() => {
+    if (!shipments.length) return;
+    void refreshShippingNotifications().catch((error: unknown) => {
+      toast.error(error instanceof Error ? error.message : "تعذر تحديث تنبيهات الشحن");
+    });
+  }, [shipments]);
 
   const [isAddCarrierOpen, setIsAddCarrierOpen] = useState(false);
   const [isAddZoneOpen, setIsAddZoneOpen] = useState(false);
@@ -337,7 +371,11 @@ export default function Shipping() {
     }
     try {
       await db.updateShipmentStatus(id, status, reason);
-      toast.success("تم تحديث حالة الشحنة");
+      await refreshShippingNotifications();
+      const shipment = shipments.find((item) => item.id === id);
+      toast.success("تم تحديث حالة الشحنة وتجهيز رابط التتبع", shipment?.recipientPhone ? {
+        action: { label: "واتساب", onClick: () => window.open(whatsappLink(shipment), "_blank", "noopener,noreferrer") },
+      } : undefined);
     } catch (e: any) { toast.error(e.message || "تعذر تحديث الحالة"); }
   };
 
@@ -358,6 +396,7 @@ export default function Shipping() {
       if (!reason) return toast.error("سبب تغيير الحالة مطلوب");
     }
     const { ok, errors } = await db.bulkShipmentStatus(ids, status, reason);
+    await refreshShippingNotifications();
     setSelected(new Set());
     if (ok) toast.success(`تم تحديث ${ok} شحنة`);
     if (errors.length) toast.error(`${errors.length} شحنة لم تتحدث: ${errors[0]}`);
@@ -381,6 +420,9 @@ export default function Shipping() {
     } catch (e: any) { toast.error(e.message || "تعذرت التسوية"); }
   };
 
+  const trackingIdentifierFor = (s: Shipment) =>
+    (s.invoiceId ? orderNumbers[s.invoiceId] : undefined) || s.trackingNumber || "";
+
   const labelDataFor = (s: Shipment) => ({
     tracking: s.trackingNumber ?? s.id.slice(0, 8).toUpperCase(),
     recipientName: s.recipientName ?? "",
@@ -393,7 +435,7 @@ export default function Shipping() {
     createdAt: s.createdAt,
     weightKg: s.weightKg,
     pieces: s.pieces,
-    trackUrl: trackUrlFor(s.trackingNumber ?? s.id.slice(0, 8).toUpperCase(), s.recipientPhone ?? undefined),
+    trackUrl: trackingIdentifierFor(s) ? trackUrlFor(trackingIdentifierFor(s), s.recipientPhone ?? undefined) : undefined,
     invoiceRef: s.invoiceId ? orderNumbers[s.invoiceId] ?? s.invoiceId.slice(0, 8) : undefined,
   });
 
@@ -417,7 +459,7 @@ export default function Shipping() {
       createdAt: s.createdAt,
       weightKg: s.weightKg,
       pieces: s.pieces,
-      trackUrl: trackUrlFor(s.trackingNumber ?? s.id.slice(0, 8).toUpperCase(), s.recipientPhone ?? undefined),
+      trackUrl: trackingIdentifierFor(s) ? trackUrlFor(trackingIdentifierFor(s), s.recipientPhone ?? undefined) : undefined,
       invoiceRef: s.invoiceId ? orderNumbers[s.invoiceId] ?? s.invoiceId.slice(0, 8) : undefined,
     });
 
@@ -441,7 +483,7 @@ export default function Shipping() {
     const zone = zones.find((z) => z.id === s.zoneId);
     const orderNumber = s.invoiceId ? orderNumbers[s.invoiceId] : undefined;
     const tracking = s.trackingNumber || orderNumber || s.id.slice(0, 8).toUpperCase();
-    const trackUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/order-tracking?num=${encodeURIComponent(orderNumber || tracking)}&phone=${encodeURIComponent(s.recipientPhone ?? "")}`;
+    const trackUrl = trackUrlFor(orderNumber || tracking, s.recipientPhone ?? undefined);
     const msg = renderShipmentOutForDelivery({
       shop: { shopName: shopSettings.shopName || "سِجلّي", shopPhone: shopSettings.phone, whatsapp: shopSettings.whatsapp },
       recipientName: s.recipientName ?? "",
@@ -644,6 +686,47 @@ export default function Shipping() {
             </Reveal>
           ))}
         </div>
+
+        {shippingNotifications.length > 0 && (
+          <Reveal delay={0.3}>
+            <BezelCard className="p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-bold">تنبيهات وسجل الشحن</h2>
+                  <p className="text-xs text-muted-foreground">تُنشأ تلقائيًا من مواعيد التسليم وتغيّرات الحالة.</p>
+                </div>
+                <Badge variant="outline">{shippingNotifications.filter((item) => item.kind === "late" && !item.resolved_at).length} متأخرة</Badge>
+              </div>
+              <div className="grid gap-2">
+                {shippingNotifications.slice(0, 8).map((item) => {
+                  const shipment = shipments.find((row) => row.id === item.shipment_id);
+                  return (
+                    <div key={item.id} className="flex flex-col gap-3 rounded-lg border border-hairline p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-bold">{item.title}</p>
+                          <Badge variant={item.resolved_at ? "outline" : item.kind === "late" ? "destructive" : "secondary"}>
+                            {item.resolved_at ? "تم الحل" : item.kind === "late" ? "متأخرة" : "تحديث"}
+                          </Badge>
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">{item.body}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{new Date(item.created_at).toLocaleString("ar-EG")}</p>
+                      </div>
+                      <div className="flex shrink-0 gap-2">
+                        {shipment && <Button size="sm" variant="outline" onClick={() => setDetail(shipment)}>فتح الشحنة</Button>}
+                        {shipment?.recipientPhone && item.tracking_identifier && (
+                          <Button size="sm" onClick={() => window.open(whatsappLink(shipment), "_blank", "noopener,noreferrer")}>
+                            <MessageCircle className="h-4 w-4" /> واتساب
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </BezelCard>
+          </Reveal>
+        )}
 
         <Reveal delay={0.4}>
           <Tabs defaultValue="shipments" className="w-full">
