@@ -1,5 +1,11 @@
+import type { ColorPalette } from "./theme";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+export type { ColorPalette };
+export type NumeralsFormat = "latn" | "arab";
+export type AutoBackupFrequency = "weekly" | "monthly" | "off";
+export const DEFAULT_EXPENSE_CATEGORIES_LIST = ["rent", "electricity", "salaries", "transport", "other"];
 
 export type CustomerStatus = "committed" | "neutral" | "defaulter";
 export type CustomerType = "installment" | "cash";
@@ -23,6 +29,8 @@ export interface PaymentVoucher {
   paymentMethod: string;
   description: string | null;
   voucherDate: string;
+  partyName?: string;
+  partyPhone?: string;
   createdAt: string;
 }
 
@@ -40,6 +48,7 @@ export interface Customer {
   creditLimit: number;
   dueDay: number;
   openingBalance: number;
+  nationalId?: string;
   createdAt: string;
 }
 
@@ -60,6 +69,8 @@ export interface Invoice {
   taxPct?: number;
   taxAmount?: number;
   status?: InvoiceStatus;
+  invoiceNumber?: string;
+  date?: string;
 }
 
 export interface Payment {
@@ -149,6 +160,7 @@ export interface Supplier {
   contact: string;
   notes: string | null;
   openingBalance: number;
+  nationalId?: string;
   createdAt: string;
 }
 
@@ -1632,6 +1644,23 @@ export interface ShopSettings {
   theme: ThemeMode;
   reminderDaysBefore: number;
   alertsEnabled: boolean;
+  colorPalette: ColorPalette;
+  numeralsFormat: NumeralsFormat;
+  autoBackupFrequency: AutoBackupFrequency;
+  commercialRegister: string;
+  email: string;
+  website: string;
+  enableVat: boolean;
+  defaultVatRate: number;
+  warrantyPolicy: string;
+  autoPrintOnSave: boolean;
+  thermalShowBarcode: boolean;
+  thermalShowHeader: boolean;
+  customExpenseCategories: string[];
+  whatsappReminderTemplate: string;
+  whatsappPaymentThankYouTemplate: string;
+  criticalOverdueDays: number;
+  audioAlertsEnabled: boolean;
 }
 
 export const EMPTY_SHOP_SETTINGS: ShopSettings = {
@@ -1651,6 +1680,23 @@ export const EMPTY_SHOP_SETTINGS: ShopSettings = {
   theme: "dark",
   reminderDaysBefore: 3,
   alertsEnabled: true,
+  colorPalette: "emerald",
+  numeralsFormat: "latn",
+  autoBackupFrequency: "weekly",
+  commercialRegister: "",
+  email: "",
+  website: "",
+  enableVat: false,
+  defaultVatRate: 14,
+  warrantyPolicy: "",
+  autoPrintOnSave: true,
+  thermalShowBarcode: true,
+  thermalShowHeader: true,
+  customExpenseCategories: DEFAULT_EXPENSE_CATEGORIES_LIST,
+  whatsappReminderTemplate: "",
+  whatsappPaymentThankYouTemplate: "",
+  criticalOverdueDays: 15,
+  audioAlertsEnabled: true,
 };
 
 let shopCache: ShopSettings | null = null;
