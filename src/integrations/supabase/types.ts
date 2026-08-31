@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      carrier_settlements: {
+        Row: {
+          amount: number
+          carrier_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          payment_method: string
+          reference_number: string | null
+          settled_on: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          carrier_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          reference_number?: string | null
+          settled_on?: string
+          type?: string
+          user_id?: string
+        }
+        Update: {
+          amount?: number
+          carrier_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          reference_number?: string | null
+          settled_on?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carrier_settlements_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "shipping_carriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null
@@ -67,6 +114,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      delivery_attempts: {
+        Row: {
+          attempt_number: number
+          created_at: string
+          delivered_amount: number
+          id: string
+          next_attempt_at: string | null
+          notes: string | null
+          outcome: string
+          reason: string | null
+          shipment_id: string
+          user_id: string
+        }
+        Insert: {
+          attempt_number?: number
+          created_at?: string
+          delivered_amount?: number
+          id?: string
+          next_attempt_at?: string | null
+          notes?: string | null
+          outcome?: string
+          reason?: string | null
+          shipment_id: string
+          user_id?: string
+        }
+        Update: {
+          attempt_number?: number
+          created_at?: string
+          delivered_amount?: number
+          id?: string
+          next_attempt_at?: string | null
+          notes?: string | null
+          outcome?: string
+          reason?: string | null
+          shipment_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_attempts_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       expenses: {
         Row: {
@@ -430,9 +524,11 @@ export type Database = {
           collection_status: string
           created_at: string | null
           delivery_address: string | null
+          expected_delivery_date: string | null
           id: string
           invoice_id: string | null
           notes: string | null
+          pieces: number
           recipient_name: string | null
           recipient_phone: string | null
           settled_at: string | null
@@ -440,6 +536,7 @@ export type Database = {
           status: Database["public"]["Enums"]["shipment_status"] | null
           tracking_number: string | null
           user_id: string | null
+          weight_kg: number
           zone_id: string | null
         }
         Insert: {
@@ -450,9 +547,11 @@ export type Database = {
           collection_status?: string
           created_at?: string | null
           delivery_address?: string | null
+          expected_delivery_date?: string | null
           id?: string
           invoice_id?: string | null
           notes?: string | null
+          pieces?: number
           recipient_name?: string | null
           recipient_phone?: string | null
           settled_at?: string | null
@@ -460,6 +559,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["shipment_status"] | null
           tracking_number?: string | null
           user_id?: string | null
+          weight_kg?: number
           zone_id?: string | null
         }
         Update: {
@@ -470,9 +570,11 @@ export type Database = {
           collection_status?: string
           created_at?: string | null
           delivery_address?: string | null
+          expected_delivery_date?: string | null
           id?: string
           invoice_id?: string | null
           notes?: string | null
+          pieces?: number
           recipient_name?: string | null
           recipient_phone?: string | null
           settled_at?: string | null
@@ -480,6 +582,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["shipment_status"] | null
           tracking_number?: string | null
           user_id?: string | null
+          weight_kg?: number
           zone_id?: string | null
         }
         Relationships: [
