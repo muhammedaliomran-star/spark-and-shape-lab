@@ -374,7 +374,7 @@ async function fetchAll() {
       notes: r.notes, frozen: r.frozen,
       address: r.address, joiningDate: r.joining_date,
       creditLimit: Number(r.credit_limit ?? 0), dueDay: r.due_day ?? 1,
-      openingBalance: Number(r.opening_balance ?? 0),
+      openingBalance: Number(r.opening_balance ?? 0), nationalId: r.national_id,
       createdAt: r.created_at,
     })),
     invoices: (i.data ?? []).map((r: any) => ({
@@ -383,7 +383,7 @@ async function fetchAll() {
       firstDueDate: r.first_due_date, paid: Number(r.paid), notes: r.notes, createdAt: r.created_at,
       discountPct: Number(r.discount_pct ?? 0), discountAmount: Number(r.discount_amount ?? 0),
       taxPct: Number(r.tax_pct ?? 0), taxAmount: Number(r.tax_amount ?? 0),
-      status: (r.status ?? "pending") as InvoiceStatus,
+      status: (r.status ?? "pending") as InvoiceStatus, invoiceNumber: r.invoice_number, date: r.date || r.created_at,
     })),
     payments: (p.data ?? []).map((r: any) => ({
       id: r.id, invoiceId: r.invoice_id, amount: Number(r.amount), paidAt: r.paid_at,
@@ -398,7 +398,7 @@ async function fetchAll() {
     })),
     suppliers: (s.data ?? []).map((r: any) => ({
       id: r.id, name: r.name, contact: r.contact ?? "", notes: r.notes,
-      openingBalance: Number(r.opening_balance ?? 0), createdAt: r.created_at,
+      openingBalance: Number(r.opening_balance ?? 0), nationalId: r.national_id, createdAt: r.created_at,
     })),
     purchases: (pu.data ?? []).map((r: any) => ({
       id: r.id, supplierId: r.supplier_id, total: Number(r.total),
@@ -449,7 +449,7 @@ async function fetchAll() {
       id: r.id, customerId: r.customer_id, supplierId: r.supplier_id,
       amount: Number(r.amount), type: r.type as "receipt" | "payment",
       paymentMethod: r.payment_method, description: r.description,
-      voucherDate: r.voucher_date, createdAt: r.created_at,
+      voucherDate: r.voucher_date, createdAt: r.created_at, partyName: r.party_name, partyPhone: r.party_phone,
     })),
     carriers: (sc.data ?? []).map((r: any) => ({
       id: r.id, name: r.name, contactPerson: r.contact_person, phone: r.phone,
@@ -1748,7 +1748,24 @@ export async function fetchShopSettings(): Promise<ShopSettings> {
         printPaper: ((row.print_paper as PrintPaper) ?? "a4"),
         theme: ((row.theme as ThemeMode) ?? "dark"),
         reminderDaysBefore: num(row.reminder_days_before, 3),
-        alertsEnabled: (row.alerts_enabled as boolean) ?? true,
+        alertsEnabled: (row.alerts_enabled as boolean) ?? true,,
+        colorPalette: (row.color_palette as ColorPalette) ?? "emerald",
+        numeralsFormat: (row.numerals_format as NumeralsFormat) ?? "latn",
+        autoBackupFrequency: (row.auto_backup_frequency as AutoBackupFrequency) ?? "weekly",
+        commercialRegister: (row.commercial_register as string) ?? "",
+        email: (row.email as string) ?? "",
+        website: (row.website as string) ?? "",
+        enableVat: (row.enable_vat as boolean) ?? false,
+        defaultVatRate: num(row.default_vat_rate, 14),
+        warrantyPolicy: (row.warranty_policy as string) ?? "",
+        autoPrintOnSave: (row.auto_print_on_save as boolean) ?? true,
+        thermalShowBarcode: (row.thermal_show_barcode as boolean) ?? true,
+        thermalShowHeader: (row.thermal_show_header as boolean) ?? true,
+        customExpenseCategories: (row.custom_expense_categories as string[]) ?? DEFAULT_EXPENSE_CATEGORIES_LIST,
+        whatsappReminderTemplate: (row.whatsapp_reminder_template as string) ?? "",
+        whatsappPaymentThankYouTemplate: (row.whatsapp_payment_thank_you_template as string) ?? "",
+        criticalOverdueDays: num(row.critical_overdue_days, 15),
+        audioAlertsEnabled: (row.audio_alerts_enabled as boolean) ?? true
       }
     : EMPTY_SHOP_SETTINGS;
   shopListeners.forEach((l) => l());
@@ -1775,7 +1792,24 @@ export async function saveShopSettings(patch: ShopSettings) {
       print_paper: patch.printPaper,
       theme: patch.theme,
       reminder_days_before: Math.min(30, Math.max(0, Math.round(patch.reminderDaysBefore))),
-      alerts_enabled: patch.alertsEnabled,
+      alerts_enabled: patch.alertsEnabled,,
+      color_palette: patch.colorPalette,
+      numerals_format: patch.numeralsFormat,
+      auto_backup_frequency: patch.autoBackupFrequency,
+      commercial_register: patch.commercialRegister.trim(),
+      email: patch.email.trim(),
+      website: patch.website.trim(),
+      enable_vat: patch.enableVat,
+      default_vat_rate: patch.defaultVatRate,
+      warranty_policy: patch.warrantyPolicy.trim(),
+      auto_print_on_save: patch.autoPrintOnSave,
+      thermal_show_barcode: patch.thermalShowBarcode,
+      thermal_show_header: patch.thermalShowHeader,
+      custom_expense_categories: patch.customExpenseCategories,
+      whatsapp_reminder_template: patch.whatsappReminderTemplate.trim(),
+      whatsapp_payment_thank_you_template: patch.whatsappPaymentThankYouTemplate.trim(),
+      critical_overdue_days: patch.criticalOverdueDays,
+      audio_alerts_enabled: patch.audioAlertsEnabled
     } as never,
     { onConflict: "user_id" },
   );

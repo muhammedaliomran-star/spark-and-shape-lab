@@ -1273,7 +1273,7 @@ function AppearanceTab({ form, set }: TabProps) {
     set("colorPalette", palId);
     applyTheme(form.theme, palId);
     storePalette(palId);
-    toast.success(`تم تفعيل لوحة ألوان: ${PALETTES_CONFIG[palId]?.name || palId}`);
+    toast.success(`تم تفعيل لوحة ألوان: ${PALETTES_CONFIG.find(p => p.id === palId)?.label || palId}`);
   };
 
   return (
@@ -1360,8 +1360,8 @@ function AppearanceTab({ form, set }: TabProps) {
         hint="اختر لوحة الألوان المميزة لنظامك — يتم تطبيق الألوان الحقيقية فوراً في كامل النظام وتُحفظ تلقائياً."
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5">
-          {(Object.keys(PALETTES_CONFIG) as LibColorPalette[]).map((palId) => {
-            const p = PALETTES_CONFIG[palId];
+          {PALETTES_CONFIG.map((p) => { const palId = p.id;
+            
             const isSelected = currentPalette === palId;
             return (
               <button
