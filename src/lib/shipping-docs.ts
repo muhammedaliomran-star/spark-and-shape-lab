@@ -1,5 +1,17 @@
 // بوليصة الشحن ومانيفست المندوب — مستندات PDF قابلة للطباعة مع باركود Code39.
 import { pdfDocument, openPdfDocument, esc, type PdfMeta } from "./pdf-doc";
+import qrcode from "qrcode-generator";
+
+/** يرسم QR كصورة SVG مدمجة (لتتبّع العميل من الموبايل). */
+export function qrSvg(text: string, size = 110): string {
+  const qr = qrcode(0, "M");
+  qr.addData(text);
+  qr.make();
+  return qr.createSvgTag({ cellSize: 3, margin: 2, scalable: true }).replace(
+    "<svg",
+    `<svg style="width:${size}px;height:${size}px"`,
+  );
+}
 
 const CODE39: Record<string, string> = {
   "0": "nnnwwnwnn", "1": "wnnwnnnnw", "2": "nnwwnnnnw", "3": "wnwwnnnnn", "4": "nnnwwnnnw",
@@ -45,6 +57,9 @@ export type LabelData = {
   shippingCost: number;
   createdAt: string;
   invoiceRef?: string;
+  trackUrl?: string;
+  weightKg?: number;
+  pieces?: number;
 };
 
 const money = (n: number) => `${Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م`;
@@ -62,6 +77,11 @@ export function printShipmentLabel(data: LabelData, paper: "a4" | "thermal" = "a
   <div style="text-align:center;margin:14px 0 4px">${code39Svg(data.tracking || "NA")}</div>
   <div style="text-align:center;font-weight:700;letter-spacing:2px">${esc(data.tracking || "بدون رقم تتبع")}</div>
   <div class="total-bar"><span class="l">المطلوب تحصيله من العميل</span><span class="v">${money(data.codAmount)}</span></div>
+  ${
+    data.trackUrl
+      ? `<div style="text-align:center;margin-top:12px">${qrSvg(data.trackUrl)}<div style="font-size:10px;color:#475569;margin-top:4px">امسح الكود لتتبّع الشحنة</div></div>`
+      : ""
+  }
   `;
   return openPdfDocument(
     pdfDocument({
@@ -76,6 +96,7 @@ export function printShipmentLabel(data: LabelData, paper: "a4" | "thermal" = "a
       kpis: [
         { label: "التحصيل (COD)", value: money(data.codAmount), tone: "brand" },
         { label: "تكلفة الشحن", value: money(data.shippingCost), tone: "warn" },
+        { label: "الوزن / القطع", value: `${Number(data.weightKg || 0)} كجم — ${Number(data.pieces || 1)} قطعة` },
       ],
       body,
       paper,
@@ -122,6 +143,53 @@ export function printCarrierManifest(opts: {
       ],
       body,
       page: "A4",
+    }),
+    { autoPrint: false },
+  );
+}
+
+/** طباعة بوالص متعددة في مستند واحد (كل بوليصة في صفحة مستقلة). */
+export function printShipmentLabels(list: LabelData[], paper: "a4" | "thermal" = "a4"): boolean {
+  if (!list.length) return false;
+  const pages = list
+    .map(
+      (data) => `
+  <section style="page-break-after:always;padding:10px 0;border-bottom:2px dashed #cbd5e1">
+    <h2 style="margin:0 0 8px;font-size:16px">بوليصة شحن — ${esc(data.tracking || "بدون رقم")}</h2>
+    <section class="info">
+      <div><b>المستلم:</b> ${esc(data.recipientName || "-")}</div>
+      <div><b>الموبايل:</b> ${esc(data.recipientPhone || "-")}</div>
+      <div style="grid-column:1/-1"><b>العنوان:</b> ${esc(data.address || "-")}</div>
+      <div><b>المندوب:</b> ${esc(data.carrierName || "-")}</div>
+      <div><b>المنطقة:</b> ${esc(data.zoneName || "-")}</div>
+      <div><b>الوزن:</b> ${Number(data.weightKg || 0)} كجم</div>
+      <div><b>عدد القطع:</b> ${Number(data.pieces || 1)}</div>
+    </section>
+    <div style="text-align:center;margin:10px 0 2px">${code39Svg(data.tracking || "NA", { height: 46 })}</div>
+    <div style="text-align:center;font-weight:700;letter-spacing:2px">${esc(data.tracking || "")}</div>
+    <div class="total-bar"><span class="l">المطلوب تحصيله</span><span class="v">${money(data.codAmount)}</span></div>
+    ${data.trackUrl ? `<div style="text-align:center;margin-top:8px">${qrSvg(data.trackUrl, 90)}</div>` : ""}
+  </section>`,
+    )
+    .join("");
+  return openPdfDocument(
+    pdfDocument({
+      docTitle: `بوالص شحن (${list.length})`,
+      badge: "بوالص شحن",
+      title: `طباعة ${list.length} بوليصة`,
+      brandSub: "نظام الشحن والتوصيل",
+      meta: [{ label: "التاريخ", value: new Date().toLocaleDateString("en-US") }],
+      kpis: [
+        { label: "عدد البوالص", value: String(list.length), tone: "brand" },
+        {
+          label: "إجمالي التحصيل",
+          value: money(list.reduce((s, d) => s + Number(d.codAmount || 0), 0)),
+          tone: "warn",
+        },
+      ],
+      body: pages,
+      paper,
+      footerNote: "قص كل بوليصة على الخط المتقطع والصقها على الطرد.",
     }),
     { autoPrint: false },
   );
