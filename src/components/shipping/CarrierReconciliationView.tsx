@@ -21,6 +21,9 @@ import {
   exportCarrierLedgerToExcel,
   CarrierSettlementTransaction,
 } from "@/lib/carrier-ledger";
+import { recordCarrierSettlementInTreasury, recordCarrierFeesAsExpense } from "@/lib/shipping-finance";
+import { Checkbox } from "@/components/ui/checkbox";
+import { usePrivacy } from "@/lib/privacy";
 import { toast } from "sonner";
 import {
   Calculator,
