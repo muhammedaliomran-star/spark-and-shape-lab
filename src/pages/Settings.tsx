@@ -138,49 +138,44 @@ const shopSchema = z.object({
   currency: z.string().trim().min(1, "اكتب رمز العملة").max(10, "رمز العملة طويل"),
   invoicePrefix: z.string().trim().max(10, "البادئة 10 حروف كحد أقصى"),
   lowStockThreshold: z.number().int().min(0).max(999),
-  defaultInstallmentMonths: z
-    .number()
-    .int()
-    .min(1, "شهر واحد على الأقل")
-    .max(60, "60 شهر كحد أقصى"),
+  defaultInstallmentMonths: z.number().int().min(1).max(60),
   defaultDueDay: z.number().int().min(1).max(28),
   reminderDaysBefore: z.number().int().min(0).max(30),
   printPaper: z.enum(["a4", "thermal"]),
   theme: z.enum(["dark", "light", "system"]),
   alertsEnabled: z.boolean(),
-  // Extended fields
-  commercialRegister: z.string().trim().max(50, "السجل التجاري طويل جداً").optional(),
-  email: z.string().trim().max(100).optional(),
-  website: z.string().trim().max(200).optional(),
-  defaultVatRate: z.number().min(0).max(100).optional(),
+  colorPalette: z.string(),
+  numeralsFormat: z.enum(["latn", "arab"]),
+  autoBackupFrequency: z.enum(["weekly", "monthly", "off"]),
+  commercialRegister: z.string().max(50).optional(),
+  email: z.string().max(100).optional(),
+  website: z.string().max(200).optional(),
   enableVat: z.boolean().optional(),
-  warrantyPolicy: z.string().trim().max(500, "شروط الضمان طويلة جداً").optional(),
+  defaultVatRate: z.number().optional(),
+  warrantyPolicy: z.string().max(500).optional(),
   autoPrintOnSave: z.boolean().optional(),
   thermalShowBarcode: z.boolean().optional(),
   thermalShowHeader: z.boolean().optional(),
-  whatsappReminderTemplate: z.string().trim().max(600).optional(),
-  whatsappPaymentThankYouTemplate: z.string().trim().max(600).optional(),
+  customExpenseCategories: z.array(z.string()).optional(),
+  whatsappReminderTemplate: z.string().optional(),
+  whatsappPaymentThankYouTemplate: z.string().optional(),
   criticalOverdueDays: z.number().int().min(1).max(180).optional(),
   audioAlertsEnabled: z.boolean().optional(),
-  colorPalette: z.string().optional(),
-  numeralsFormat: z.enum(["latn", "arab"]).optional(),
-  autoBackupFrequency: z.enum(["off", "weekly", "monthly"]).optional(),
-  customExpenseCategories: z.array(z.string().trim()).optional(),
 });
 
-const TABLE_LABELS: Record<string, string> = {
-  customers: "العملاء",
-  suppliers: "الموردين",
-  invoices: "فواتير البيع",
-  invoice_items: "أصناف الفواتير",
-  payments: "الدفعات والتحصيلات",
-  purchases: "فواتير الشراء",
-  purchase_items: "أصناف الشراء",
-  supplier_payments: "مدفوعات الموردين",
-  stock_items: "أصناف المخزن",
-  stock_adjustments: "تسويات المخزن",
-  expenses: "المصروفات",
-};
+const TABLE_LABELS = new Map<string, string>([
+  ["customers", "العملاء"],
+  ["suppliers", "الموردين"],
+  ["invoices", "فواتير البيع"],
+  ["invoice_items", "أصناف الفواتير"],
+  ["payments", "الدفعات والتحصيلات"],
+  ["purchases", "فواتير الشراء"],
+  ["purchase_items", "أصناف الشراء"],
+  ["supplier_payments", "مدفوعات الموردين"],
+  ["stock_items", "أصناف المخزن"],
+  ["stock_adjustments", "تسويات المخزن"],
+  ["expenses", "المصروفات"],
+]);
 
 /** Plays a gentle synthesized test beep */
 function playTestAlert() {
@@ -233,7 +228,7 @@ function SettingsPage() {
     }
     setBusy(true);
     try {
-      await saveShopSettings({ ...form, ...parsed.data });
+      await saveShopSettings({ ...form, ...parsed.data } as ShopSettings);
       if (form.colorPalette) {
         storePalette(form.colorPalette as LibColorPalette);
       }
@@ -1273,7 +1268,7 @@ function AppearanceTab({ form, set }: TabProps) {
     set("colorPalette", palId);
     applyTheme(form.theme, palId);
     storePalette(palId);
-    toast.success(`تم تفعيل لوحة ألوان: ${PALETTES_CONFIG[palId]?.name || palId}`);
+    toast.success(`تم تفعيل لوحة ألوان: ${PALETTES_CONFIG.find(p => p.id === palId)?.label || palId}`);
   };
 
   return (
@@ -1360,8 +1355,8 @@ function AppearanceTab({ form, set }: TabProps) {
         hint="اختر لوحة الألوان المميزة لنظامك — يتم تطبيق الألوان الحقيقية فوراً في كامل النظام وتُحفظ تلقائياً."
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5">
-          {(Object.keys(PALETTES_CONFIG) as LibColorPalette[]).map((palId) => {
-            const p = PALETTES_CONFIG[palId];
+          {PALETTES_CONFIG.map((p) => { const palId = p.id;
+            
             const isSelected = currentPalette === palId;
             return (
               <button
@@ -1379,11 +1374,11 @@ function AppearanceTab({ form, set }: TabProps) {
                   <div className="flex items-center gap-1.5">
                     <span
                       className="w-3.5 h-3.5 rounded-full shadow-sm"
-                      style={{ backgroundColor: p.primaryHex }}
+                      style={{ backgroundColor: p.hex }}
                     />
                     <span
                       className="w-2.5 h-2.5 rounded-full opacity-60"
-                      style={{ backgroundColor: p.primaryHex }}
+                      style={{ backgroundColor: p.hex }}
                     />
                   </div>
                   {isSelected && (
@@ -1396,9 +1391,9 @@ function AppearanceTab({ form, set }: TabProps) {
                   )}
                 </div>
 
-                <div className="text-xs font-black text-foreground mb-0.5">{p.name}</div>
+                <div className="text-xs font-black text-foreground mb-0.5">{p.label}</div>
                 <div className="text-[10px] text-muted-foreground font-medium truncate">
-                  {p.subtitle}
+                  {p.sub}
                 </div>
               </button>
             );
@@ -1991,7 +1986,7 @@ function DataTab({ form, set }: TabProps) {
           hint="عدد السجلات المخزنة والمسجلة في قاعدة البيانات السحابية."
         >
           <div className="grid grid-cols-2 gap-2.5">
-            {Object.entries(TABLE_LABELS).map(([key, label]) => (
+            {[...TABLE_LABELS].map(([key, label]) => (
               <div
                 key={key}
                 className="rounded-2xl bg-foreground/[0.03] border border-foreground/5 p-3.5 flex items-center justify-between transition-all hover:bg-foreground/[0.05]"

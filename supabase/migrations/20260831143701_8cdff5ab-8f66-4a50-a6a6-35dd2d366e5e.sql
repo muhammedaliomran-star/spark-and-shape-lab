@@ -1,0 +1,1 @@
+alter function public.sync_late_shipment_notifications() security invoker;

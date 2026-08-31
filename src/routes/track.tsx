@@ -7,6 +7,11 @@ export const Route = createFileRoute("/track")({
   head: () => ({
     meta: [
       { title: "تتبع الشحنة والطلب — سِجلّي" },
+      { name: "description", content: "تابع حالة شحنتك أو طلبك بأمان باستخدام رقم التتبع ورقم الهاتف." },
+      { property: "og:title", content: "تتبع الشحنة والطلب — سِجلّي" },
+      { property: "og:description", content: "تابع حالة شحنتك أو طلبك بأمان باستخدام رقم التتبع ورقم الهاتف." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),

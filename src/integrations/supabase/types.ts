@@ -515,6 +515,62 @@ export type Database = {
           },
         ]
       }
+      shipment_notifications: {
+        Row: {
+          body: string
+          created_at: string
+          dedupe_key: string
+          expected_delivery_date: string | null
+          id: string
+          kind: string
+          read_at: string | null
+          resolved_at: string | null
+          shipment_id: string
+          status: Database["public"]["Enums"]["shipment_status"] | null
+          title: string
+          tracking_identifier: string | null
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          dedupe_key: string
+          expected_delivery_date?: string | null
+          id?: string
+          kind: string
+          read_at?: string | null
+          resolved_at?: string | null
+          shipment_id: string
+          status?: Database["public"]["Enums"]["shipment_status"] | null
+          title: string
+          tracking_identifier?: string | null
+          user_id?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          dedupe_key?: string
+          expected_delivery_date?: string | null
+          id?: string
+          kind?: string
+          read_at?: string | null
+          resolved_at?: string | null
+          shipment_id?: string
+          status?: Database["public"]["Enums"]["shipment_status"] | null
+          title?: string
+          tracking_identifier?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipment_notifications_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shipments: {
         Row: {
           actual_delivery_date: string | null
@@ -1725,6 +1781,7 @@ export type Database = {
         }
         Returns: Json
       }
+      sync_late_shipment_notifications: { Args: never; Returns: number }
       team_directory: {
         Args: never
         Returns: {
