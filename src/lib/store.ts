@@ -237,6 +237,24 @@ export const PRODUCT_TYPES = [
   "أغذية",
 ] as const;
 
+export interface ProductVariant {
+  id: string;
+  name?: string;
+  size?: string | null;
+  color?: string | null;
+  barcode?: string | null;
+  quantity?: number;
+  salePrice?: number;
+  lastUnitCost?: number;
+}
+
+export interface SplitPaymentDetail {
+  cash: number;
+  electronic: number;
+  method?: string;
+  reference?: string;
+}
+
 export interface StockItem {
   id: string;
   name: string;
@@ -249,6 +267,11 @@ export interface StockItem {
   minStock: number;
   createdAt: string;
   updatedAt: string;
+  variants?: ProductVariant[];
+  lowStockAlert?: number;
+  season?: string | null;
+  category?: string | null;
+  notes?: string | null;
 }
 
 export interface DBState {
