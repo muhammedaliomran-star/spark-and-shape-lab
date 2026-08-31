@@ -1261,6 +1261,9 @@ export const db = {
     if (patch.deliveryAddress !== undefined) upd.delivery_address = patch.deliveryAddress;
     if (patch.shippingCost !== undefined) upd.shipping_cost = patch.shippingCost;
     if (patch.codAmount !== undefined) upd.cod_amount = patch.codAmount;
+    if (patch.weightKg !== undefined) upd.weight_kg = patch.weightKg;
+    if (patch.pieces !== undefined) upd.pieces = patch.pieces;
+    if (patch.expectedDeliveryDate !== undefined) upd.expected_delivery_date = patch.expectedDeliveryDate;
     if (patch.notes !== undefined) upd.notes = patch.notes;
     if (Object.keys(upd).length === 0) return;
     const { error } = await (supabase.from as any)("shipments").update(upd).eq("id", id);
