@@ -272,6 +272,64 @@ export function CreateInvoiceShipmentDialog({
             </div>
           </div>
 
+          {/* الوزن والقطع والتسعير التلقائي */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <Label className="text-xs font-bold">الوزن (كجم)</Label>
+              <Input
+                type="number"
+                min={0}
+                step="0.5"
+                value={weightKg}
+                onChange={(e) => setWeightKg(e.target.value)}
+                placeholder="0"
+                className="text-center"
+              />
+            </div>
+            <div>
+              <Label className="text-xs font-bold">عدد القطع</Label>
+              <Input
+                type="number"
+                min={1}
+                value={pieces}
+                onChange={(e) => setPieces(e.target.value)}
+                placeholder="1"
+                className="text-center"
+              />
+            </div>
+            <div>
+              <Label className="text-xs font-bold">التسليم المتوقع</Label>
+              <Input
+                type="date"
+                value={expectedDate}
+                onChange={(e) => setExpectedDate(e.target.value)}
+                className="text-center text-xs"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border/60 bg-muted/30 p-3 space-y-1">
+            <div className="flex items-center justify-between text-[11px] font-bold">
+              <span>التسعير التلقائي</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-6 text-[10px]"
+                onClick={() => setShippingCost(String(pricing.total))}
+              >
+                تطبيق ({fmt(pricing.total)})
+              </Button>
+            </div>
+            {pricing.lines.map((l) => (
+              <div key={l.label} className="flex items-center justify-between text-[10px] text-muted-foreground">
+                <span>{l.label}</span>
+                <span className="font-mono">{fmt(l.value)}</span>
+              </div>
+            ))}
+          </div>
+
+
           <div>
             <Label className="text-xs font-bold">ملاحظات الشحن / محتويات الطرد</Label>
             <Input
