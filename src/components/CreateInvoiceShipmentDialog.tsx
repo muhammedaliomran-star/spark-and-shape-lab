@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Truck, Package, MapPin, Phone, User, Check, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+import { calculateShippingCost, expectedDeliveryDate } from "@/lib/shipping-pricing";
 
 export function CreateInvoiceShipmentDialog({
   inv,
@@ -130,6 +131,9 @@ export function CreateInvoiceShipmentDialog({
         statusUpdatedBy: "النظام",
         collectedAt: null,
         settledAt: null,
+        weightKg: Number(weightKg || 0),
+        pieces: Number(pieces || 1),
+        expectedDeliveryDate: expectedDate || null,
       });
 
       toast.success(`تم إنشاء بوليصة شحن رقم ${trackingNumber} بنجاح`, {
