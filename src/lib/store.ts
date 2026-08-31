@@ -457,7 +457,9 @@ async function fetchAll() {
       collectionStatus: (r.collection_status ?? "uncollected") as ShipmentCollectionStatus,
       collectedAt: r.collected_at ?? null,
       settledAt: r.settled_at ?? null,
-
+      weightKg: Number(r.weight_kg ?? 0),
+      pieces: Number(r.pieces ?? 1),
+      expectedDeliveryDate: r.expected_delivery_date ?? null,
       notes: r.notes, createdAt: r.created_at,
     })),
 
