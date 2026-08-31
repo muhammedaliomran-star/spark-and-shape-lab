@@ -127,33 +127,59 @@ export function CarrierReconciliationView({
     setSettlementModalOpen(true);
   };
 
-  const handleSaveSettlement = () => {
+  const handleSaveSettlement = async () => {
     if (!selectedCarrier || !settleAmount || Number(settleAmount) <= 0) {
       toast.error("يرجى إدخال مبلغ صحيح للتوريد والتسوية");
       return;
     }
 
-    saveCarrierTransaction({
-      carrierId: selectedCarrier.id,
-      type: settleType,
-      amount: Number(settleAmount),
-      date: new Date().toISOString(),
-      paymentMethod,
-      referenceNumber,
-      notes,
-    });
+    try {
+      const amount = Number(settleAmount);
+      await saveCarrierTransaction({
+        carrierId: selectedCarrier.id,
+        type: settleType,
+        amount,
+        date: new Date().toISOString(),
+        paymentMethod,
+        referenceNumber,
+        notes,
+      });
 
-    toast.success(`تم تسجيل توريد بمبلغ ${Number(settleAmount).toLocaleString("ar-EG")} ج.م بنجاح`);
-    setSettlementModalOpen(false);
-    refreshTransactions();
-    if (onRefresh) onRefresh();
+      // ربط التسوية بالدورة المالية: وارد في الخزنة + عمولة المندوب كمصروف
+      const accountName = recordCarrierSettlementInTreasury({
+        carrierName: selectedCarrier.name,
+        amount,
+        paymentMethod,
+        referenceNumber,
+        notes,
+      });
+      if (postFees && summary && summary.totalCarrierFees > 0) {
+        try {
+          await recordCarrierFeesAsExpense({ carrierName: selectedCarrier.name, amount: summary.totalCarrierFees });
+        } catch {
+          toast.warning("اتسجل التوريد لكن تعذر تسجيل عمولة المندوب كمصروف");
+        }
+      }
+
+      toast.success(
+        `تم تسجيل توريد ${amount.toLocaleString("ar-EG")} ج.م${accountName ? ` في ${accountName}` : ""}`,
+      );
+      setSettlementModalOpen(false);
+      await refreshTransactions();
+      if (onRefresh) await onRefresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "تعذر حفظ التوريد");
+    }
   };
 
-  const handleDeleteTx = (id: string) => {
-    if (confirm("هل أنت متأكد من حذف هذه الحركة من كشف الحساب؟")) {
-      deleteCarrierTransaction(id);
-      refreshTransactions();
+  const handleDeleteTx = async (id: string) => {
+    if (!confirm("هل أنت متأكد من حذف هذه الحركة من كشف الحساب؟")) return;
+    try {
+      await deleteCarrierTransaction(id);
+      await refreshTransactions();
       toast.success("تم حذف حركة التوريد");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "تعذر الحذف");
     }
   };
 
