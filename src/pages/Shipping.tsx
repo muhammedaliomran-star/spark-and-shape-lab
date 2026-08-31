@@ -33,6 +33,8 @@ import { SmartReturnModal } from "@/components/shipping/SmartReturnModal";
 import { CarrierReconciliationView } from "@/components/shipping/CarrierReconciliationView";
 import { CarrierExcelIntegrationModal } from "@/components/shipping/CarrierExcelIntegrationModal";
 import { WhatsAppMenu } from "@/components/shipping/WhatsAppMenu";
+import { saveCarrierTransaction } from "@/lib/carrier-ledger";
+import { recordCarrierSettlementInTreasury, recordCarrierFeesAsExpense } from "@/lib/shipping-finance";
 import { QrCode, Calculator, FileSpreadsheet, Smartphone } from "lucide-react";
 
 type ShipmentNotification = {
@@ -415,11 +417,37 @@ export default function Shipping() {
 
   const handleSettle = async (carrierId: string, amount: number) => {
     if (!window.confirm(`تأكيد تسوية ${egp(amount)} مع المندوب؟`)) return;
+    const carrier = carrierById.get(carrierId);
+    const fees = shipments
+      .filter((s) => s.carrierId === carrierId && s.collectionStatus === "collected")
+      .reduce((sum, s) => sum + Number(s.shippingCost || 0), 0);
     try {
       const n = await db.settleCarrierCollections(carrierId);
-      toast.success(`تمت تسوية ${n} شحنة`);
+      // سجل التسوية في دفتر المناديب + الخزنة + المصروفات
+      let accountName: string | null = null;
+      try {
+        await saveCarrierTransaction({
+          carrierId,
+          type: "settlement",
+          amount,
+          date: new Date().toISOString(),
+          paymentMethod: "cash",
+          notes: `تسوية تحصيلات ${n} شحنة من قسم الشحن`,
+        });
+        accountName = recordCarrierSettlementInTreasury({
+          carrierName: carrier?.name ?? "مندوب",
+          amount,
+          paymentMethod: "cash",
+          notes: `تسوية تحصيلات ${n} شحنة`,
+        });
+        if (fees > 0) await recordCarrierFeesAsExpense({ carrierName: carrier?.name ?? "مندوب", amount: fees });
+      } catch {
+        toast.warning("تمت التسوية لكن تعذر ربطها بالخزنة أو المصروفات");
+      }
+      toast.success(`تمت تسوية ${n} شحنة${accountName ? ` وتسجيل الوارد في ${accountName}` : ""}`);
     } catch (e: any) { toast.error(e.message || "تعذرت التسوية"); }
   };
+
 
   const trackingIdentifierFor = (s: Shipment) =>
     (s.invoiceId ? orderNumbers[s.invoiceId] : undefined) || s.trackingNumber || "";
@@ -798,28 +826,44 @@ export default function Shipping() {
                   </Select>
                 </div>
 
+                <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-hairline bg-muted/30 p-3">
+                  <label className="flex min-h-11 flex-1 cursor-pointer items-center gap-2 text-xs font-bold sm:flex-none">
+                    <Checkbox
+                      checked={filteredShipments.length > 0 && filteredShipments.every((s) => selected.has(s.id))}
+                      onCheckedChange={(checked) =>
+                        setSelected(checked ? new Set(filteredShipments.map((s) => s.id)) : new Set())
+                      }
+                      aria-label="تحديد كل الشحنات"
+                    />
+                    تحديد الكل ({filteredShipments.length})
+                  </label>
+                  <Button size="sm" className="h-11 flex-1 gap-1.5 font-bold sm:flex-none" disabled={!selected.size} onClick={() => bulkLabels()}>
+                    <Printer className="h-4 w-4" /> طباعة بوالص جماعية{selected.size ? ` (${selected.size})` : ""}
+                  </Button>
+                </div>
+
                 {selected.size > 0 && (
                   <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-3">
-                    <span className="text-sm font-bold">{selected.size} شحنة محددة</span>
-                    <Button size="sm" variant="outline" onClick={() => void handleBulkStatus("processing")}>تجهيز</Button>
-                    <Button size="sm" variant="outline" onClick={() => void handleBulkStatus("shipped")}>شحن</Button>
-                    <Button size="sm" variant="outline" onClick={() => void handleBulkStatus("delivered")}>تسليم</Button>
+                    <span className="w-full text-sm font-bold sm:w-auto">{selected.size} شحنة محددة</span>
+                    <Button size="sm" variant="outline" className="h-11 flex-1 sm:flex-none" onClick={() => void handleBulkStatus("processing")}>تجهيز</Button>
+                    <Button size="sm" variant="outline" className="h-11 flex-1 sm:flex-none" onClick={() => void handleBulkStatus("shipped")}>شحن</Button>
+                    <Button size="sm" variant="outline" className="h-11 flex-1 sm:flex-none" onClick={() => void handleBulkStatus("delivered")}>تسليم</Button>
                     <Select value={bulkCarrier} onValueChange={setBulkCarrier}>
-                      <SelectTrigger className="h-9 w-[160px] rounded-xl text-xs font-bold"><SelectValue placeholder="تعيين مندوب" /></SelectTrigger>
+                      <SelectTrigger className="h-11 w-full rounded-xl text-xs font-bold sm:w-[160px]"><SelectValue placeholder="تعيين مندوب" /></SelectTrigger>
                       <SelectContent>
                         {carriers.filter((c) => c.active).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Button size="sm" disabled={!bulkCarrier} onClick={() => void handleBulkAssign()}>تعيين</Button>
-                    <Button size="sm" variant="outline" onClick={() => bulkLabels()}>اطبع بوالص المحدد</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>إلغاء التحديد</Button>
+                    <Button size="sm" className="h-11 flex-1 sm:flex-none" disabled={!bulkCarrier} onClick={() => void handleBulkAssign()}>تعيين</Button>
+                    <Button size="sm" variant="ghost" className="h-11 flex-1 sm:flex-none" onClick={() => setSelected(new Set())}>إلغاء التحديد</Button>
                   </div>
                 )}
+
               </div>
             </div>
 
             <TabsContent value="shipments">
-              <div className="grid gap-4">
+              <div className="grid gap-2 sm:gap-4">
                 {filteredShipments.length === 0 ? (
                   <BezelCard className="flex flex-col items-center justify-center py-20 text-center">
                     <div className="mb-4 rounded-full bg-muted p-6">
@@ -831,12 +875,13 @@ export default function Shipping() {
                 ) : (
                   filteredShipments.map((s, i) => (
                     <Reveal key={s.id} delay={Math.min(i, 8) * 0.05}>
-                      <BezelCard className="plate group flex flex-wrap items-center gap-3 p-4 sm:gap-4 sm:p-5 lg:gap-6">
-                        <Checkbox checked={selected.has(s.id)} onCheckedChange={() => toggleSelect(s.id)} aria-label="تحديد الشحنة" />
-                        <div className={`h-12 w-1.5 rounded-full ${statusMap[s.status]?.color.split(" ")[0]}`} />
+                      <BezelCard className="plate group flex flex-wrap items-center gap-2 p-3 sm:gap-4 sm:p-5 lg:gap-6">
+                        <Checkbox checked={selected.has(s.id)} onCheckedChange={() => toggleSelect(s.id)} aria-label="تحديد الشحنة" className="h-5 w-5" />
+                        <div className={`h-10 w-1.5 rounded-full sm:h-12 ${statusMap[s.status]?.color.split(" ")[0]}`} />
                         <div className="min-w-0 flex-1 space-y-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-lg font-bold">#{s.trackingNumber || "بدون رقم"}</span>
+                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                            <span className="text-base font-bold sm:text-lg">#{s.trackingNumber || "بدون رقم"}</span>
+
                             <span className={`rounded-full border px-3 py-0.5 text-[11px] font-bold ${statusMap[s.status]?.color}`}>
                               {statusMap[s.status]?.label}
                             </span>
@@ -855,7 +900,7 @@ export default function Shipping() {
                               </span>
                             )}
                           </div>
-                          <p className="text-sm font-medium text-muted-foreground">{s.recipientName} • {s.recipientPhone}</p>
+                          <p className="truncate text-xs font-medium text-muted-foreground sm:text-sm">{s.recipientName} • {s.recipientPhone}</p>
                           {s.invoiceId && (
                             <Link to="/invoices" search={{ invoice: s.invoiceId } as never} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
                               <ExternalLink className="h-3 w-3" /> فاتورة مرتبطة
@@ -863,7 +908,7 @@ export default function Shipping() {
                           )}
                         </div>
                         <div className="text-right">
-                          <p className="text-xs font-medium text-muted-foreground sm:text-sm">التحصيل</p>
+                          <p className="text-[11px] font-medium text-muted-foreground sm:text-sm">التحصيل</p>
                           <p className={`text-sm font-bold ${blurCls}`}>{egp(s.codAmount)}</p>
                         </div>
                         <div className="hidden text-right sm:block">
@@ -874,29 +919,30 @@ export default function Shipping() {
                           <p className="text-sm font-medium text-muted-foreground">التاريخ</p>
                           <p className="text-sm font-bold">{format(new Date(s.createdAt), "dd MMMM yyyy", { locale: ar })}</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex w-full items-center gap-1.5 border-t border-hairline pt-2 sm:w-auto sm:border-0 sm:pt-0">
                           <Button
                             variant="ghost"
                             size="icon"
                             title="إشعارات وقوالب واتساب التلقائية"
-                            className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
+                            className="h-11 w-11 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700 sm:h-9 sm:w-9"
                             onClick={() => setWhatsappModalShipment(s)}
                           >
                             <MessageCircle className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" title="بوليصة شحن" onClick={() => labelFor(s)}>
+                          <Button variant="ghost" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" title="بوليصة شحن" onClick={() => labelFor(s)}>
                             <Printer className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" title="تفاصيل" onClick={() => setDetail(s)}>
+                          <Button variant="ghost" size="icon" className="h-11 w-11 sm:h-9 sm:w-9" title="تفاصيل" onClick={() => setDetail(s)}>
                             <FileText className="h-4 w-4" />
                           </Button>
                           <Select value={s.status} onValueChange={(val) => void handleStatusChange(s.id, val as ShipmentStatus)}>
-                            <SelectTrigger className="h-9 w-[130px] rounded-xl text-xs font-bold"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-11 flex-1 rounded-xl text-xs font-bold sm:h-9 sm:w-[130px] sm:flex-none"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               {allowedShipmentStatuses(s.status).map((status) => <SelectItem key={status} value={status}>{statusMap[status]?.label ?? status}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </div>
+
                       </BezelCard>
                     </Reveal>
                   ))
@@ -967,7 +1013,7 @@ export default function Shipping() {
                         <span className="text-muted-foreground">التكلفة الأساسية</span>
                         <span className="font-bold">{c.baseCost} ج.م</span>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2 [&_button]:h-11 sm:[&_button]:h-9">
                         <Button variant="outline" size="sm" className="flex-1" onClick={() => openEditCarrier(c)}>
                           <Pencil className="h-4 w-4" /> تعديل
                         </Button>
@@ -1042,7 +1088,7 @@ export default function Shipping() {
                         <span className="text-muted-foreground">تكلفة التوصيل</span>
                         <span className="font-bold text-primary">{z.deliveryCost} ج.م</span>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2 [&_button]:h-11 sm:[&_button]:h-9">
                         <Button variant="outline" size="sm" className="flex-1" onClick={() => openEditZone(z)}>
                           <Pencil className="h-4 w-4" /> تعديل
                         </Button>
