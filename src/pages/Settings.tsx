@@ -60,6 +60,13 @@ import {
 } from "@/lib/backup";
 import { cn } from "@/lib/utils";
 import {
+  useCurrentLicense,
+  activateLicenseKey,
+  calculateDaysRemaining,
+  printLicenseCertificate,
+  generateLicenseWhatsAppMessage,
+} from "@/lib/licensing";
+import {
   Settings as SettingsIcon,
   Store,
   KeyRound,
@@ -138,44 +145,56 @@ const shopSchema = z.object({
   currency: z.string().trim().min(1, "اكتب رمز العملة").max(10, "رمز العملة طويل"),
   invoicePrefix: z.string().trim().max(10, "البادئة 10 حروف كحد أقصى"),
   lowStockThreshold: z.number().int().min(0).max(999),
-  defaultInstallmentMonths: z.number().int().min(1).max(60),
+  defaultInstallmentMonths: z
+    .number()
+    .int()
+    .min(1, "شهر واحد على الأقل")
+    .max(60, "60 شهر كحد أقصى"),
   defaultDueDay: z.number().int().min(1).max(28),
   reminderDaysBefore: z.number().int().min(0).max(30),
   printPaper: z.enum(["a4", "thermal"]),
   theme: z.enum(["dark", "light", "system"]),
   alertsEnabled: z.boolean(),
-  colorPalette: z.string(),
-  numeralsFormat: z.enum(["latn", "arab"]),
-  autoBackupFrequency: z.enum(["weekly", "monthly", "off"]),
-  commercialRegister: z.string().max(50).optional(),
-  email: z.string().max(100).optional(),
-  website: z.string().max(200).optional(),
+  // Extended fields
+  commercialRegister: z.string().trim().max(50, "السجل التجاري طويل جداً").optional(),
+  email: z.string().trim().max(100).optional(),
+  website: z.string().trim().max(200).optional(),
+  defaultVatRate: z.number().min(0).max(100).optional(),
   enableVat: z.boolean().optional(),
-  defaultVatRate: z.number().optional(),
-  warrantyPolicy: z.string().max(500).optional(),
+  warrantyPolicy: z.string().trim().max(500, "شروط الضمان طويلة جداً").optional(),
   autoPrintOnSave: z.boolean().optional(),
   thermalShowBarcode: z.boolean().optional(),
   thermalShowHeader: z.boolean().optional(),
-  customExpenseCategories: z.array(z.string()).optional(),
-  whatsappReminderTemplate: z.string().optional(),
-  whatsappPaymentThankYouTemplate: z.string().optional(),
+  whatsappReminderTemplate: z.string().trim().max(600).optional(),
+  whatsappPaymentThankYouTemplate: z.string().trim().max(600).optional(),
   criticalOverdueDays: z.number().int().min(1).max(180).optional(),
   audioAlertsEnabled: z.boolean().optional(),
+  colorPalette: z.string().optional(),
+  numeralsFormat: z.enum(["latn", "arab"]).optional(),
+  autoBackupFrequency: z.enum(["off", "weekly", "monthly"]).optional(),
+  customExpenseCategories: z.array(z.string().trim()).optional(),
+  // Commercial POS & Security Settings
+  managerPin: z.string().trim().max(10).optional(),
+  maxDiscountWithoutPin: z.number().min(0).max(100).optional(),
+  hideCostAndProfits: z.boolean().optional(),
+  preventInvoiceDeletion: z.boolean().optional(),
+  openCashDrawerOnPrint: z.boolean().optional(),
+  thermalPaperWidth: z.enum(["80mm", "58mm"]).optional(),
 });
 
-const TABLE_LABELS = new Map<string, string>([
-  ["customers", "العملاء"],
-  ["suppliers", "الموردين"],
-  ["invoices", "فواتير البيع"],
-  ["invoice_items", "أصناف الفواتير"],
-  ["payments", "الدفعات والتحصيلات"],
-  ["purchases", "فواتير الشراء"],
-  ["purchase_items", "أصناف الشراء"],
-  ["supplier_payments", "مدفوعات الموردين"],
-  ["stock_items", "أصناف المخزن"],
-  ["stock_adjustments", "تسويات المخزن"],
-  ["expenses", "المصروفات"],
-]);
+const TABLE_LABELS: Record<string, string> = {
+  customers: "العملاء",
+  suppliers: "الموردين",
+  invoices: "فواتير البيع",
+  invoice_items: "أصناف الفواتير",
+  payments: "الدفعات والتحصيلات",
+  purchases: "فواتير الشراء",
+  purchase_items: "أصناف الشراء",
+  supplier_payments: "مدفوعات الموردين",
+  stock_items: "أصناف المخزن",
+  stock_adjustments: "تسويات المخزن",
+  expenses: "المصروفات",
+};
 
 /** Plays a gentle synthesized test beep */
 function playTestAlert() {
@@ -228,7 +247,7 @@ function SettingsPage() {
     }
     setBusy(true);
     try {
-      await saveShopSettings({ ...form, ...parsed.data } as ShopSettings);
+      await saveShopSettings({ ...form, ...parsed.data });
       if (form.colorPalette) {
         storePalette(form.colorPalette as LibColorPalette);
       }
@@ -260,6 +279,7 @@ function SettingsPage() {
               { value: "billing", label: "الفواتير والطباعة", icon: Receipt },
               { value: "alerts", label: "التنبيهات والواتساب", icon: Bell },
               { value: "appearance", label: "المظهر والألوان", icon: Palette },
+              { value: "license", label: "الترخيص والاشتراك", icon: ShieldCheck },
               { value: "team", label: "الفريق والصلاحيات", icon: Users },
               { value: "integrations", label: "المتجر والشحن", icon: ShoppingBag },
               { value: "account", label: "الحساب والأمان", icon: KeyRound },
@@ -288,6 +308,9 @@ function SettingsPage() {
         </TabsContent>
         <TabsContent value="appearance">
           <AppearanceTab form={form} set={set} />
+        </TabsContent>
+        <TabsContent value="license">
+          <LicenseTab />
         </TabsContent>
         <TabsContent value="team">
           <TeamTab />
@@ -840,6 +863,103 @@ function BillingTab({ form, set }: TabProps) {
               onCheckedChange={(v) => set("thermalShowHeader", v)}
             />
           </div>
+
+          {form.printPaper === "thermal" && (
+            <>
+              <Field label="عرض شريط الورق الحراري">
+                <Select
+                  value={form.thermalPaperWidth ?? "80mm"}
+                  onValueChange={(v) => set("thermalPaperWidth", v as "80mm" | "58mm")}
+                >
+                  <SelectTrigger className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all font-bold">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    <SelectItem value="80mm">80 مم (العرض القياسي الأنسب لمعظم الطابعات)</SelectItem>
+                    <SelectItem value="58mm">58 مم (شريط ضيق لطابعات البلوتوث والمحمولة)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-sm font-bold">فتح درج النقدية تلقائياً عند الطباعة (Cash Drawer Kick)</div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    إرسال إشارة فتح الدرج (ESC/POS) مع طباعة الفاتورة أو إغلاق الوردية
+                  </p>
+                </div>
+                <Switch
+                  checked={form.openCashDrawerOnPrint ?? true}
+                  onCheckedChange={(v) => set("openCashDrawerOnPrint", v)}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </Section>
+
+      {/* أمان الكاشير والتحكم في نقاط البيع */}
+      <Section
+        icon={<ShieldCheck className="w-5 h-5 text-primary" />}
+        title="صلاحيات الكاشير وأمان نقاط البيع (POS Security)"
+        hint="حماية أسعار التكلفة، منع التلاعب بالخصومات، والتحكم برقم المدير السري."
+      >
+        <div className="grid gap-4">
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Field label="الرقم السري للمدير (Manager PIN)" hint="المطلوب للموافقة على الخصومات وإلغاء الفواتير">
+              <Input
+                type="password"
+                inputMode="numeric"
+                maxLength={8}
+                value={form.managerPin ?? "1234"}
+                onChange={(e) => set("managerPin", e.target.value)}
+                placeholder="1234"
+                className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all font-mono font-bold text-center tracking-widest"
+              />
+            </Field>
+
+            <Field label="أقصى نسبة خصم للكاشير بدون رقم المدير (%)" hint="أي خصم أعلى يتطلب موافقة المدير">
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={form.maxDiscountWithoutPin ?? 5}
+                  onChange={(e) => set("maxDiscountWithoutPin", Number(e.target.value) || 0)}
+                  className="h-11 rounded-2xl bg-foreground/[0.03] border-foreground/10 focus:bg-background transition-all"
+                />
+                <span className="text-sm font-bold text-muted-foreground">%</span>
+              </div>
+            </Field>
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm font-bold">إخفاء سعر التكلفة والأرباح عن شاشات الكاشير</div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                حجب حقول التكلفة وهوامش الربح لمنع اطلاع الموظفين على أسرار التسعير
+              </p>
+            </div>
+            <Switch
+              checked={form.hideCostAndProfits ?? false}
+              onCheckedChange={(v) => set("hideCostAndProfits", v)}
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm font-bold">منع حذف أو تعديل الفواتير الصادرة إلا بإذن المدير</div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                تأمين سجل الفواتير والمبيعات ضد الحذف العشوائي والتلاعب
+              </p>
+            </div>
+            <Switch
+              checked={form.preventInvoiceDeletion ?? true}
+              onCheckedChange={(v) => set("preventInvoiceDeletion", v)}
+            />
+          </div>
         </div>
       </Section>
 
@@ -1268,7 +1388,7 @@ function AppearanceTab({ form, set }: TabProps) {
     set("colorPalette", palId);
     applyTheme(form.theme, palId);
     storePalette(palId);
-    toast.success(`تم تفعيل لوحة ألوان: ${PALETTES_CONFIG.find(p => p.id === palId)?.label || palId}`);
+    toast.success(`تم تفعيل لوحة ألوان: ${PALETTES_CONFIG[palId]?.name || palId}`);
   };
 
   return (
@@ -1355,8 +1475,8 @@ function AppearanceTab({ form, set }: TabProps) {
         hint="اختر لوحة الألوان المميزة لنظامك — يتم تطبيق الألوان الحقيقية فوراً في كامل النظام وتُحفظ تلقائياً."
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5">
-          {PALETTES_CONFIG.map((p) => { const palId = p.id;
-            
+          {(Object.keys(PALETTES_CONFIG) as LibColorPalette[]).map((palId) => {
+            const p = PALETTES_CONFIG[palId];
             const isSelected = currentPalette === palId;
             return (
               <button
@@ -1374,11 +1494,11 @@ function AppearanceTab({ form, set }: TabProps) {
                   <div className="flex items-center gap-1.5">
                     <span
                       className="w-3.5 h-3.5 rounded-full shadow-sm"
-                      style={{ backgroundColor: p.hex }}
+                      style={{ backgroundColor: p.primaryHex }}
                     />
                     <span
                       className="w-2.5 h-2.5 rounded-full opacity-60"
-                      style={{ backgroundColor: p.hex }}
+                      style={{ backgroundColor: p.primaryHex }}
                     />
                   </div>
                   {isSelected && (
@@ -1391,9 +1511,9 @@ function AppearanceTab({ form, set }: TabProps) {
                   )}
                 </div>
 
-                <div className="text-xs font-black text-foreground mb-0.5">{p.label}</div>
+                <div className="text-xs font-black text-foreground mb-0.5">{p.name}</div>
                 <div className="text-[10px] text-muted-foreground font-medium truncate">
-                  {p.sub}
+                  {p.subtitle}
                 </div>
               </button>
             );
@@ -1986,7 +2106,7 @@ function DataTab({ form, set }: TabProps) {
           hint="عدد السجلات المخزنة والمسجلة في قاعدة البيانات السحابية."
         >
           <div className="grid grid-cols-2 gap-2.5">
-            {[...TABLE_LABELS].map(([key, label]) => (
+            {Object.entries(TABLE_LABELS).map(([key, label]) => (
               <div
                 key={key}
                 className="rounded-2xl bg-foreground/[0.03] border border-foreground/5 p-3.5 flex items-center justify-between transition-all hover:bg-foreground/[0.05]"
@@ -2592,6 +2712,226 @@ function TeamTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+/* ------------------------------ License & Commercial Subscription Tab ------------------------------ */
+function LicenseTab() {
+  const { license, refresh } = useCurrentLicense();
+  const navigate = useNavigate();
+  const [activationKey, setActivationKey] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const { days, isLifetime, isExpired } = calculateDaysRemaining(license.expiryDate);
+
+  const handleActivate = () => {
+    if (!activationKey.trim()) {
+      toast.error("يرجى إدخال مفتاح التفعيل أولاً");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = activateLicenseKey(activationKey);
+      if (res.success && res.license) {
+        toast.success(res.message);
+        refresh();
+        setActivationKey("");
+      } else {
+        toast.error(res.message);
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "فشل تفعيل الترخيص");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const copyKey = () => {
+    navigator.clipboard.writeText(license.key);
+    setCopied(true);
+    toast.success("تم نسخ المفتاح للحافظة");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleWhatsAppSupport = () => {
+    const text = encodeURIComponent(
+      `مرحباً فريق سِجلّي، أحتاج للمساعدة أو التجديد بخصوص ترخيص متجري (${license.shopName}) ومفتاحي: ${license.key}`
+    );
+    window.open(`https://wa.me/201000000000?text=${text}`, "_blank");
+  };
+
+  return (
+    <div className="space-y-6 max-w-4xl text-right">
+      {/* Current License Card */}
+      <div className="p-6 rounded-3xl bg-foreground/[0.02] border border-foreground/10 space-y-6 relative overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-black text-foreground">{license.tierLabel}</h3>
+                {license.status === "active" ? (
+                  <Badge className="bg-emerald-600 text-white text-[10px]">مرخص وساري</Badge>
+                ) : license.status === "trial" ? (
+                  <Badge variant="secondary" className="text-amber-600 text-[10px]">فترة تجريبية</Badge>
+                ) : (
+                  <Badge variant="destructive" className="text-[10px]">منتهي الصلاحية</Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                المنشأة المرخصة: <strong>{license.shopName}</strong> ({license.clientName})
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => printLicenseCertificate(license)}
+              className="rounded-2xl h-10 gap-1.5 text-xs font-bold"
+            >
+              <Printer className="w-4 h-4" />
+              طباعة شهادة الترخيص
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={() => navigate("/admin")}
+              className="rounded-2xl h-10 px-4 gap-1.5 text-xs font-bold bg-foreground/10 hover:bg-foreground/15 text-foreground"
+            >
+              <ShieldAlert className="w-4 h-4 text-primary" />
+              لوحة السوبر أدمن
+            </Button>
+          </div>
+        </div>
+
+        {/* License Key Display */}
+        <div className="p-4 rounded-2xl bg-background/80 border border-foreground/10 flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <div className="text-[11px] font-bold text-muted-foreground">مفتاح الترخيص المسجل (License Key):</div>
+            <div className="font-mono text-sm font-black text-primary tracking-widest select-all">
+              {license.key}
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={copyKey}
+            className="rounded-xl h-8 text-xs gap-1"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? "تم النسخ" : "نسخ المفتاح"}
+          </Button>
+        </div>
+
+        {/* Details Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="p-3 rounded-2xl bg-foreground/[0.02] border border-foreground/5 space-y-1">
+            <span className="text-muted-foreground text-[10px] font-bold">تاريخ التفعيل:</span>
+            <div className="font-bold text-foreground">{license.issueDate}</div>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-foreground/[0.02] border border-foreground/5 space-y-1">
+            <span className="text-muted-foreground text-[10px] font-bold">تاريخ الانتهاء:</span>
+            <div className="font-bold text-foreground">
+              {isLifetime ? "مدى الحياة (دائم)" : license.expiryDate}
+            </div>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-foreground/[0.02] border border-foreground/5 space-y-1">
+            <span className="text-muted-foreground text-[10px] font-bold">الأيام المتبقية:</span>
+            <div className={`font-bold ${isExpired ? "text-danger" : "text-emerald-600"}`}>
+              {isLifetime ? "غير محدود" : isExpired ? "انتهى" : `${days} يوم`}
+            </div>
+          </div>
+
+          <div className="p-3 rounded-2xl bg-foreground/[0.02] border border-foreground/5 space-y-1">
+            <span className="text-muted-foreground text-[10px] font-bold">الفروع المتاحة:</span>
+            <div className="font-bold text-foreground">{license.modules.maxBranches} فرع</div>
+          </div>
+        </div>
+
+        {/* Enabled Features List */}
+        <div className="space-y-2">
+          <div className="text-xs font-bold text-muted-foreground">الموديولات والصلاحيات المشمولة:</div>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: "نقاط البيع والكاشير السريع", ok: license.modules.allowPos },
+              { label: "إدارة المخازن والباركود", ok: license.modules.allowWarehouse },
+              { label: "نظام الأقساط والديون", ok: license.modules.allowInstallments },
+              { label: "المتجر الإلكتروني المدمج", ok: license.modules.allowStorefront },
+              { label: "إرسال إيصالات واتساب", ok: license.modules.allowWhatsApp },
+              { label: "الربط متعدد الفروع", ok: license.modules.allowMultiBranch },
+            ].map((mod, idx) => (
+              <Badge
+                key={idx}
+                variant="outline"
+                className={`text-xs gap-1.5 py-1 px-3 rounded-xl ${
+                  mod.ok
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600"
+                    : "bg-foreground/5 text-muted-foreground line-through opacity-50"
+                }`}
+              >
+                <CheckCircle2 className="w-3 h-3" />
+                {mod.label}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Activate New Key Section */}
+      <div className="p-6 rounded-3xl bg-foreground/[0.02] border border-foreground/10 space-y-4">
+        <div>
+          <h4 className="text-sm font-black text-foreground flex items-center gap-2">
+            <KeyRound className="w-4 h-4 text-primary" />
+            تفعيل مفتاح ترخيص جديد أو تجديد الاشتراك
+          </h4>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            إذا قمت بشراء ترخيص جديد أو تجديد باقتك، الصق مفتاح التفعيل هنا واضغط على تفعيل.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <Input
+            placeholder="مثال: SEG-PRO-9842-7719-B31A"
+            value={activationKey}
+            onChange={(e) => setActivationKey(e.target.value.toUpperCase())}
+            className="h-11 rounded-2xl font-mono text-center sm:text-right font-bold text-xs tracking-wider uppercase bg-background"
+          />
+          <Button
+            type="button"
+            disabled={busy}
+            onClick={handleActivate}
+            className="w-full sm:w-auto h-11 px-6 rounded-2xl font-bold text-xs bg-primary text-black hover:bg-primary/90 shrink-0"
+          >
+            تفعيل الترخيص
+          </Button>
+        </div>
+      </div>
+
+      {/* Need Support / Help */}
+      <div className="p-4 rounded-3xl bg-primary/[0.03] border border-primary/20 flex flex-wrap items-center justify-between gap-3">
+        <div className="space-y-0.5">
+          <div className="text-xs font-bold text-primary">هل تحتاج إلى شراء أجهزة أو تجديد ترخيصك؟</div>
+          <div className="text-[11px] text-muted-foreground">
+            فريق المبيعات والدعم الفني متاح لمساعدتك في توريد طابعات الباركود، أدراج النقدية، وتفعيل الباقات.
+          </div>
+        </div>
+        <Button
+          size="sm"
+          onClick={handleWhatsAppSupport}
+          className="rounded-2xl text-xs font-bold bg-[#25D366] hover:bg-[#20ba59] text-white gap-1.5 h-9"
+        >
+          <MessageCircle className="w-3.5 h-3.5" />
+          تواصل مع المبيعات على واتساب
+        </Button>
+      </div>
     </div>
   );
 }
