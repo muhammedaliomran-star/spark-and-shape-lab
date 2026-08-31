@@ -4,7 +4,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageTransition } from "@/components/PageTransition";
 import {
-  useDB, db, fmt, customerBalance, useShopSettings, uid, invoiceNumber,
+  useDB, db, fmt, customerBalance, useShopSettings, uid,
   findStockByBarcode, type StockItem, type Customer
 } from "@/lib/store";
 import { supabase } from "@/integrations/supabase/client";
@@ -491,7 +491,7 @@ function PosPage() {
     if (cart.length === 0) return;
     try {
       setSaving(true);
-      const invoiceCodeStr = invoiceNumber(data.invoices.length);
+      const invoiceCodeStr = `#${String((data.invoices?.length ?? 0) + 1).padStart(4, "0")}`;
       const custName = customer?.name || "عميل نقدي سريع";
       const custPhone = customer?.phone || "";
 
@@ -1234,7 +1234,7 @@ function PosPage() {
       <BarcodeScanner
         open={scanOpen}
         onClose={() => setScanOpen(false)}
-        onScan={handleBarcodeScanned}
+        onDetected={handleBarcodeScanned}
       />
 
       {/* Quick Add Customer Dialog */}

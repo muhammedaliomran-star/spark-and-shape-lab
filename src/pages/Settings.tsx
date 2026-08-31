@@ -107,6 +107,8 @@ import {
   Tag,
   Plus,
   X,
+  Check,
+  Copy,
 } from "lucide-react";
 import { UserAvatar } from "@/components/UserChip";
 import {
@@ -169,15 +171,15 @@ const shopSchema = z.object({
   whatsappPaymentThankYouTemplate: z.string().trim().max(600).optional(),
   criticalOverdueDays: z.number().int().min(1).max(180).optional(),
   audioAlertsEnabled: z.boolean().optional(),
-  colorPalette: z.string().optional(),
+  colorPalette: z.enum(["emerald", "amber", "sapphire", "violet", "rose", "orchid", "ocean", "bronze", "lime", "charcoal"]).optional(),
   numeralsFormat: z.enum(["latn", "arab"]).optional(),
   autoBackupFrequency: z.enum(["off", "weekly", "monthly"]).optional(),
   customExpenseCategories: z.array(z.string().trim()).optional(),
   // Commercial POS & Security Settings
   managerPin: z.string().trim().max(10).optional(),
   maxDiscountWithoutPin: z.number().min(0).max(100).optional(),
-  hideCostAndProfits: z.boolean().optional(),
-  preventInvoiceDeletion: z.boolean().optional(),
+  hideCostAndProfitsFromCashier: z.boolean().optional(),
+  preventInvoiceDeletionWithoutPin: z.boolean().optional(),
   openCashDrawerOnPrint: z.boolean().optional(),
   thermalPaperWidth: z.enum(["80mm", "58mm"]).optional(),
 });
@@ -943,8 +945,8 @@ function BillingTab({ form, set }: TabProps) {
               </p>
             </div>
             <Switch
-              checked={form.hideCostAndProfits ?? false}
-              onCheckedChange={(v) => set("hideCostAndProfits", v)}
+              checked={form.hideCostAndProfitsFromCashier ?? false}
+              onCheckedChange={(v) => set("hideCostAndProfitsFromCashier", v)}
             />
           </div>
 
@@ -956,8 +958,8 @@ function BillingTab({ form, set }: TabProps) {
               </p>
             </div>
             <Switch
-              checked={form.preventInvoiceDeletion ?? true}
-              onCheckedChange={(v) => set("preventInvoiceDeletion", v)}
+              checked={form.preventInvoiceDeletionWithoutPin ?? true}
+              onCheckedChange={(v) => set("preventInvoiceDeletionWithoutPin", v)}
             />
           </div>
         </div>
@@ -1388,7 +1390,8 @@ function AppearanceTab({ form, set }: TabProps) {
     set("colorPalette", palId);
     applyTheme(form.theme, palId);
     storePalette(palId);
-    toast.success(`تم تفعيل لوحة ألوان: ${PALETTES_CONFIG[palId]?.name || palId}`);
+    const palette = PALETTES_CONFIG.find((item) => item.id === palId);
+    toast.success(`تم تفعيل لوحة ألوان: ${palette?.label || palId}`);
   };
 
   return (
@@ -1476,7 +1479,8 @@ function AppearanceTab({ form, set }: TabProps) {
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5">
           {(Object.keys(PALETTES_CONFIG) as LibColorPalette[]).map((palId) => {
-            const p = PALETTES_CONFIG[palId];
+            const p = PALETTES_CONFIG.find((item) => item.id === palId);
+            if (!p) return null;
             const isSelected = currentPalette === palId;
             return (
               <button
@@ -1494,11 +1498,11 @@ function AppearanceTab({ form, set }: TabProps) {
                   <div className="flex items-center gap-1.5">
                     <span
                       className="w-3.5 h-3.5 rounded-full shadow-sm"
-                      style={{ backgroundColor: p.primaryHex }}
+                      style={{ backgroundColor: p.hex }}
                     />
                     <span
                       className="w-2.5 h-2.5 rounded-full opacity-60"
-                      style={{ backgroundColor: p.primaryHex }}
+                      style={{ backgroundColor: p.hex }}
                     />
                   </div>
                   {isSelected && (
@@ -1511,9 +1515,9 @@ function AppearanceTab({ form, set }: TabProps) {
                   )}
                 </div>
 
-                <div className="text-xs font-black text-foreground mb-0.5">{p.name}</div>
+                <div className="text-xs font-black text-foreground mb-0.5">{p.label}</div>
                 <div className="text-[10px] text-muted-foreground font-medium truncate">
-                  {p.subtitle}
+                  {p.sub}
                 </div>
               </button>
             );
