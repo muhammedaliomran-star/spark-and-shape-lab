@@ -125,6 +125,9 @@ export interface Shipment {
   collectionStatus: ShipmentCollectionStatus;
   collectedAt: string | null;
   settledAt: string | null;
+  weightKg: number;
+  pieces: number;
+  expectedDeliveryDate: string | null;
   notes: string | null;
   createdAt: string;
 }
