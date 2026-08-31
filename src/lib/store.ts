@@ -1239,6 +1239,9 @@ export const db = {
     const money: any = {};
     if (s.shippingCost) money.shipping_cost = s.shippingCost;
     if (s.codAmount) money.cod_amount = s.codAmount;
+    if (s.weightKg) money.weight_kg = s.weightKg;
+    if (s.pieces) money.pieces = s.pieces;
+    if (s.expectedDeliveryDate) money.expected_delivery_date = s.expectedDeliveryDate;
     if (created?.id && Object.keys(money).length) {
       await (supabase.from as any)("shipments").update(money).eq("id", created.id);
     }
