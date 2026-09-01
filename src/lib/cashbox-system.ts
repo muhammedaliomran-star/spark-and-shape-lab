@@ -107,6 +107,15 @@ function writeStorage<T>(key: string, data: T): void {
   }
 }
 
+
+// ==================== مزامنة سحابية (fire-and-forget) ====================
+function cloud(fn: (m: typeof import("@/lib/cashbox-sync")) => Promise<unknown>): void {
+  if (typeof window === "undefined") return;
+  import("@/lib/cashbox-sync")
+    .then((m) => fn(m))
+    .catch((e) => console.error("Cashbox cloud sync failed:", e));
+}
+
 // ==================== 1. الحسابات والخزن الافتراضية ====================
 
 export function getDefaultTreasuryAccounts(): TreasuryAccount[] {
@@ -178,6 +187,7 @@ export function addTreasuryAccount(acc: Omit<TreasuryAccount, "id" | "createdAt"
   };
   accounts.push(newAccount);
   saveTreasuryAccounts(accounts);
+  cloud((m) => m.pushAccount(newAccount));
   return newAccount;
 }
 
@@ -187,6 +197,7 @@ export function updateTreasuryAccount(id: string, patch: Partial<TreasuryAccount
   if (idx >= 0) {
     accounts[idx] = { ...accounts[idx], ...patch };
     saveTreasuryAccounts(accounts);
+    cloud((m) => m.pushAccount(accounts[idx]));
   }
 }
 
@@ -195,6 +206,7 @@ export function deleteTreasuryAccount(id: string): boolean {
   if (accounts.length <= 1) return false; // keep at least one
   const filtered = accounts.filter((a) => a.id !== id);
   saveTreasuryAccounts(filtered);
+  cloud((m) => m.removeAccount(id));
   return true;
 }
 
@@ -217,6 +229,7 @@ export function addManualTransaction(tx: Omit<ManualCashTransaction, "id" | "cre
   };
   txs.unshift(newTx);
   saveManualTransactions(txs);
+  cloud((m) => m.pushManualTransaction(newTx));
   return newTx;
 }
 
@@ -229,12 +242,14 @@ export function updateManualTransaction(
   if (idx === -1) return null;
   txs[idx] = { ...txs[idx], ...patch };
   saveManualTransactions(txs);
+  cloud((m) => m.pushManualTransaction(txs[idx]));
   return txs[idx];
 }
 
 export function deleteManualTransaction(id: string): void {
   const txs = getManualTransactions().filter((t) => t.id !== id);
   saveManualTransactions(txs);
+  cloud((m) => m.removeManualTransaction(id));
 }
 
 // ==================== 3. التحويلات الداخلية بين الحسابات ====================
@@ -260,12 +275,14 @@ export function createInternalTransfer(params: Omit<InternalTransfer, "id" | "tr
 
   transfers.unshift(newTransfer);
   saveInternalTransfers(transfers);
+  cloud((m) => m.pushTransfer(newTransfer));
   return newTransfer;
 }
 
 export function deleteInternalTransfer(id: string): void {
   const transfers = getInternalTransfers().filter((t) => t.id !== id);
   saveInternalTransfers(transfers);
+  cloud((m) => m.removeTransfer(id));
 }
 
 // ==================== 4. جرد الفئات النقدية (Denomination Audits) ====================
@@ -302,6 +319,7 @@ export function createDenominationAudit(
   };
   list.unshift(newAudit);
   saveDenominationAudits(list);
+  cloud((m) => m.pushAudit(newAudit));
   return newAudit;
 }
 
