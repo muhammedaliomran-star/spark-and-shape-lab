@@ -41,6 +41,7 @@ import {
   getManualTransactions,
   addManualTransaction,
   deleteManualTransaction,
+  updateManualTransaction,
   getInternalTransfers,
   createInternalTransfer,
   deleteInternalTransfer,
