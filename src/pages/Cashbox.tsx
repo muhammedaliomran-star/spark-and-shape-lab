@@ -82,6 +82,7 @@ import {
   Info,
   Calendar,
   Check,
+  Pencil,
 } from "lucide-react";
 import {
   BarChart,
