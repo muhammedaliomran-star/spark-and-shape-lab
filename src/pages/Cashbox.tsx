@@ -295,27 +295,72 @@ export default function CashboxPage() {
     ].filter((i) => i.value > 0);
   }, [invoices, payments, manualTxs, transfers]);
 
-  // Last 7 days Cash Flow Trend
+  // Cash Flow Trend (daily / weekly / monthly)
   const cashFlowTrendData = useMemo(() => {
-    const days: Record<string, { dateLabel: string; in: number; out: number }> = {};
+    const buckets: Record<string, { dateLabel: string; in: number; out: number }> = {};
     const now = new Date();
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-      const dateKey = d.toISOString().split("T")[0];
-      const dayName = d.toLocaleDateString("ar-EG", { weekday: "short" });
-      days[dateKey] = { dateLabel: dayName, in: 0, out: 0 };
+
+    const keyOf = (d: Date) => {
+      if (trendMode === "daily") return d.toISOString().split("T")[0];
+      if (trendMode === "monthly") return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      // weekly → مفتاح بداية الأسبوع (السبت الأقرب قبل التاريخ)
+      const start = new Date(d);
+      start.setHours(0, 0, 0, 0);
+      start.setDate(start.getDate() - ((start.getDay() + 1) % 7));
+      return start.toISOString().split("T")[0];
+    };
+
+    const labelOf = (d: Date) => {
+      if (trendMode === "daily") return d.toLocaleDateString("ar-EG", { weekday: "short" });
+      if (trendMode === "monthly") return d.toLocaleDateString("ar-EG", { month: "short", year: "2-digit" });
+      return `أسبوع ${d.getDate()}/${d.getMonth() + 1}`;
+    };
+
+    const periods = trendMode === "daily" ? 7 : trendMode === "weekly" ? 8 : 6;
+
+    for (let i = periods - 1; i >= 0; i--) {
+      const d = new Date(now);
+      if (trendMode === "daily") d.setDate(d.getDate() - i);
+      else if (trendMode === "weekly") d.setDate(d.getDate() - i * 7);
+      else d.setMonth(d.getMonth() - i);
+      const k = keyOf(d);
+      if (!buckets[k]) buckets[k] = { dateLabel: labelOf(d), in: 0, out: 0 };
     }
 
     rawLedger.forEach((tx) => {
-      const k = tx.date.split("T")[0];
-      if (days[k]) {
-        if (tx.type === "in") days[k].in += tx.amount;
-        else days[k].out += tx.amount;
+      const d = new Date(tx.date);
+      if (isNaN(d.getTime())) return;
+      const k = keyOf(d);
+      if (buckets[k]) {
+        if (tx.type === "in") buckets[k].in += tx.amount;
+        else buckets[k].out += tx.amount;
       }
     });
 
-    return Object.values(days);
-  }, [rawLedger]);
+    return Object.values(buckets);
+  }, [rawLedger, trendMode]);
+
+  const resetManualForm = () => {
+    setEditingTxId(null);
+    setManualAmount("");
+    setManualTitle("");
+    setManualNotes("");
+    setManualDate(new Date().toISOString().split("T")[0]);
+  };
+
+  const openEditManualTx = (rawId: string) => {
+    const tx = manualTxs.find((t) => t.id === rawId);
+    if (!tx) return;
+    setEditingTxId(tx.id);
+    setManualTxType(tx.type);
+    setManualCategory(tx.category);
+    setManualAccountId(tx.accountId);
+    setManualAmount(String(tx.amount));
+    setManualTitle(tx.title);
+    setManualNotes(tx.notes || "");
+    setManualDate((tx.date || tx.createdAt).split("T")[0]);
+    setIsManualTxOpen(true);
+  };
 
   // Handlers for Manual Transactions
   const handleSaveManualTx = (e: React.FormEvent) => {
@@ -330,7 +375,7 @@ export default function CashboxPage() {
       return;
     }
 
-    addManualTransaction({
+    const payload = {
       accountId: manualAccountId,
       type: manualTxType,
       category: manualCategory,
@@ -339,18 +384,23 @@ export default function CashboxPage() {
       title: manualTitle.trim(),
       notes: manualNotes.trim() || undefined,
       performedBy: "المسؤول المالي",
-    });
+    };
 
-    toast.success(`تم تسجيل حركة ${manualTxType === "in" ? "الإيداع" : "السحب"} بمبلغ ${fmt(amt)} ${cur} بنجاح`);
+    if (editingTxId) {
+      updateManualTransaction(editingTxId, payload);
+      toast.success(`تم تعديل الحركة اليدوية بنجاح (${fmt(amt)} ${cur})`);
+    } else {
+      addManualTransaction(payload);
+      toast.success(`تم تسجيل حركة ${manualTxType === "in" ? "الإيداع" : "السحب"} بمبلغ ${fmt(amt)} ${cur} بنجاح`);
+    }
+
     setIsManualTxOpen(false);
-    setManualAmount("");
-    setManualTitle("");
-    setManualNotes("");
+    resetManualForm();
     refreshAll();
   };
 
   // Handlers for Internal Transfer
-  const handleCreateTransfer = (e: React.FormEvent) => {
+  const handleCreateTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     const amt = parseFloat(transferAmount);
     const fee = parseFloat(transferFee) || 0;
@@ -368,18 +418,45 @@ export default function CashboxPage() {
       toast.warning("تنبيه: رصيد حساب المصدر الحالي أقل من المبلغ والعمولة!");
     }
 
+    const today = new Date().toISOString().split("T")[0];
+    let feeRecorded = false;
+
+    // تسجيل عمولة التحويل كمصروف حقيقي في دفتر المصروفات
+    if (fee > 0) {
+      const fromName = accounts.find((a) => a.id === transferFrom)?.name || "الخزينة";
+      const toName = accounts.find((a) => a.id === transferTo)?.name || "حساب آخر";
+      try {
+        await db.addExpense({
+          amount: fee,
+          category: "other",
+          expenseDate: today,
+          notes: encodeExpenseNotes(`عمولة تحويل داخلي من ${fromName} إلى ${toName}`, {
+            accountId: transferFrom,
+            accountName: fromName,
+          }),
+        });
+        feeRecorded = true;
+      } catch {
+        toast.error("تعذّر تسجيل عمولة التحويل كمصروف، تم حفظ التحويل فقط");
+      }
+    }
+
     createInternalTransfer({
       fromAccountId: transferFrom,
       toAccountId: transferTo,
       amount: amt,
       fee,
-      feeRecordedAsExpense: fee > 0,
-      date: new Date().toISOString().split("T")[0],
+      feeRecordedAsExpense: feeRecorded,
+      date: today,
       notes: transferNotes.trim() || undefined,
       performedBy: "المسؤول المالي",
     });
 
-    toast.success(`تم تحويل ${fmt(amt)} ${cur} بنجاح`);
+    toast.success(
+      fee > 0 && feeRecorded
+        ? `تم تحويل ${fmt(amt)} ${cur} وتسجيل عمولة ${fmt(fee)} ${cur} كمصروف`
+        : `تم تحويل ${fmt(amt)} ${cur} بنجاح`
+    );
     setIsTransferOpen(false);
     setTransferAmount("");
     setTransferFee("0");
@@ -391,9 +468,9 @@ export default function CashboxPage() {
   const handleSaveAudit = () => {
     const totalActual = calculateDenominationTotal(denoms);
     const expected = accountBalances[auditAccountId]?.currentBalance || 0;
-    const variance = totalActual - expected;
+    const variance = Math.round((totalActual - expected) * 100) / 100;
 
-    createDenominationAudit({
+    const audit = createDenominationAudit({
       accountId: auditAccountId,
       countedAt: new Date().toISOString(),
       countedBy: auditCashier,
@@ -406,13 +483,32 @@ export default function CashboxPage() {
       status: Math.abs(variance) > 5 ? "flagged" : "settled",
     });
 
-    toast.success(`تم حفظ واعتماد محضر جرد الخزينة (${fmt(totalActual)} ${cur})`);
+    // اعتماد التسوية تلقائياً: إنشاء حركة تسوية للعجز أو الزيادة لمطابقة الرصيد الدفتري
+    if (Math.abs(variance) >= 0.01) {
+      addManualTransaction({
+        accountId: auditAccountId,
+        type: variance > 0 ? "in" : "out",
+        category: variance > 0 ? "تسوية زيادة جرد" : "تسوية عجز",
+        amount: Math.abs(variance),
+        date: new Date().toISOString().split("T")[0],
+        title: `تسوية فرق جرد ${audit.auditNumber} (${variance > 0 ? "زيادة" : "عجز"})`,
+        notes: auditVarianceReason.trim() || "تسوية تلقائية بعد اعتماد محضر الجرد",
+        performedBy: auditCashier,
+      });
+      toast.success(
+        `تم اعتماد الجرد وتسجيل حركة تسوية ${variance > 0 ? "زيادة" : "عجز"} بمبلغ ${fmt(Math.abs(variance))} ${cur}`
+      );
+    } else {
+      toast.success(`تم حفظ واعتماد محضر جرد الخزينة مطابقاً (${fmt(totalActual)} ${cur})`);
+    }
+
     setIsAuditModalOpen(false);
     setDenoms({ d200: 0, d100: 0, d50: 0, d20: 0, d10: 0, d5: 0, coins: 0 });
     setAuditVarianceReason("");
     setAuditNotes("");
     refreshAll();
   };
+
 
   // Handlers for Creating Account
   const handleCreateAccount = (e: React.FormEvent) => {
