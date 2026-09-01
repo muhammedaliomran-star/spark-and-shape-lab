@@ -27,7 +27,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useDB, fmt, useShopSettings } from "@/lib/store";
+import { useDB, fmt, useShopSettings, db } from "@/lib/store";
+import { encodeExpenseNotes } from "@/lib/expenses-system";
 import {
   TreasuryAccount,
   InternalTransfer,
@@ -40,6 +41,7 @@ import {
   getManualTransactions,
   addManualTransaction,
   deleteManualTransaction,
+  updateManualTransaction,
   getInternalTransfers,
   createInternalTransfer,
   deleteInternalTransfer,
@@ -80,6 +82,7 @@ import {
   Info,
   Calendar,
   Check,
+  Pencil,
 } from "lucide-react";
 import {
   BarChart,
@@ -123,6 +126,10 @@ export default function CashboxPage() {
   const [manualAccountId, setManualAccountId] = useState("acc-cash-main");
   const [manualNotes, setManualNotes] = useState("");
   const [manualDate, setManualDate] = useState(new Date().toISOString().split("T")[0]);
+  const [editingTxId, setEditingTxId] = useState<string | null>(null);
+
+  // Analytics trend granularity
+  const [trendMode, setTrendMode] = useState<"daily" | "weekly" | "monthly">("daily");
 
   // Transfer modal
   const [isTransferOpen, setIsTransferOpen] = useState(false);
@@ -170,6 +177,21 @@ export default function CashboxPage() {
     window.addEventListener("segilly_cashbox_data_updated", handleUpdate);
     return () => window.removeEventListener("segilly_cashbox_data_updated", handleUpdate);
   }, []);
+
+  // سحب بيانات الخزينة من قاعدة البيانات عند فتح الصفحة
+  useEffect(() => {
+    let cancelled = false;
+    import("@/lib/cashbox-sync")
+      .then((m) => m.pullCashboxFromCloud())
+      .then(() => {
+        if (!cancelled) refreshAll();
+      })
+      .catch((e) => console.error("Cashbox cloud pull failed:", e));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
 
   // Balances calculation for each account
   const accountBalances = useMemo(() => {
@@ -288,27 +310,72 @@ export default function CashboxPage() {
     ].filter((i) => i.value > 0);
   }, [invoices, payments, manualTxs, transfers]);
 
-  // Last 7 days Cash Flow Trend
+  // Cash Flow Trend (daily / weekly / monthly)
   const cashFlowTrendData = useMemo(() => {
-    const days: Record<string, { dateLabel: string; in: number; out: number }> = {};
+    const buckets: Record<string, { dateLabel: string; in: number; out: number }> = {};
     const now = new Date();
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-      const dateKey = d.toISOString().split("T")[0];
-      const dayName = d.toLocaleDateString("ar-EG", { weekday: "short" });
-      days[dateKey] = { dateLabel: dayName, in: 0, out: 0 };
+
+    const keyOf = (d: Date) => {
+      if (trendMode === "daily") return d.toISOString().split("T")[0];
+      if (trendMode === "monthly") return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      // weekly → مفتاح بداية الأسبوع (السبت الأقرب قبل التاريخ)
+      const start = new Date(d);
+      start.setHours(0, 0, 0, 0);
+      start.setDate(start.getDate() - ((start.getDay() + 1) % 7));
+      return start.toISOString().split("T")[0];
+    };
+
+    const labelOf = (d: Date) => {
+      if (trendMode === "daily") return d.toLocaleDateString("ar-EG", { weekday: "short" });
+      if (trendMode === "monthly") return d.toLocaleDateString("ar-EG", { month: "short", year: "2-digit" });
+      return `أسبوع ${d.getDate()}/${d.getMonth() + 1}`;
+    };
+
+    const periods = trendMode === "daily" ? 7 : trendMode === "weekly" ? 8 : 6;
+
+    for (let i = periods - 1; i >= 0; i--) {
+      const d = new Date(now);
+      if (trendMode === "daily") d.setDate(d.getDate() - i);
+      else if (trendMode === "weekly") d.setDate(d.getDate() - i * 7);
+      else d.setMonth(d.getMonth() - i);
+      const k = keyOf(d);
+      if (!buckets[k]) buckets[k] = { dateLabel: labelOf(d), in: 0, out: 0 };
     }
 
     rawLedger.forEach((tx) => {
-      const k = tx.date.split("T")[0];
-      if (days[k]) {
-        if (tx.type === "in") days[k].in += tx.amount;
-        else days[k].out += tx.amount;
+      const d = new Date(tx.date);
+      if (isNaN(d.getTime())) return;
+      const k = keyOf(d);
+      if (buckets[k]) {
+        if (tx.type === "in") buckets[k].in += tx.amount;
+        else buckets[k].out += tx.amount;
       }
     });
 
-    return Object.values(days);
-  }, [rawLedger]);
+    return Object.values(buckets);
+  }, [rawLedger, trendMode]);
+
+  const resetManualForm = () => {
+    setEditingTxId(null);
+    setManualAmount("");
+    setManualTitle("");
+    setManualNotes("");
+    setManualDate(new Date().toISOString().split("T")[0]);
+  };
+
+  const openEditManualTx = (rawId: string) => {
+    const tx = manualTxs.find((t) => t.id === rawId);
+    if (!tx) return;
+    setEditingTxId(tx.id);
+    setManualTxType(tx.type);
+    setManualCategory(tx.category);
+    setManualAccountId(tx.accountId);
+    setManualAmount(String(tx.amount));
+    setManualTitle(tx.title);
+    setManualNotes(tx.notes || "");
+    setManualDate((tx.date || tx.createdAt).split("T")[0]);
+    setIsManualTxOpen(true);
+  };
 
   // Handlers for Manual Transactions
   const handleSaveManualTx = (e: React.FormEvent) => {
@@ -323,7 +390,7 @@ export default function CashboxPage() {
       return;
     }
 
-    addManualTransaction({
+    const payload = {
       accountId: manualAccountId,
       type: manualTxType,
       category: manualCategory,
@@ -332,18 +399,23 @@ export default function CashboxPage() {
       title: manualTitle.trim(),
       notes: manualNotes.trim() || undefined,
       performedBy: "المسؤول المالي",
-    });
+    };
 
-    toast.success(`تم تسجيل حركة ${manualTxType === "in" ? "الإيداع" : "السحب"} بمبلغ ${fmt(amt)} ${cur} بنجاح`);
+    if (editingTxId) {
+      updateManualTransaction(editingTxId, payload);
+      toast.success(`تم تعديل الحركة اليدوية بنجاح (${fmt(amt)} ${cur})`);
+    } else {
+      addManualTransaction(payload);
+      toast.success(`تم تسجيل حركة ${manualTxType === "in" ? "الإيداع" : "السحب"} بمبلغ ${fmt(amt)} ${cur} بنجاح`);
+    }
+
     setIsManualTxOpen(false);
-    setManualAmount("");
-    setManualTitle("");
-    setManualNotes("");
+    resetManualForm();
     refreshAll();
   };
 
   // Handlers for Internal Transfer
-  const handleCreateTransfer = (e: React.FormEvent) => {
+  const handleCreateTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     const amt = parseFloat(transferAmount);
     const fee = parseFloat(transferFee) || 0;
@@ -361,18 +433,45 @@ export default function CashboxPage() {
       toast.warning("تنبيه: رصيد حساب المصدر الحالي أقل من المبلغ والعمولة!");
     }
 
+    const today = new Date().toISOString().split("T")[0];
+    let feeRecorded = false;
+
+    // تسجيل عمولة التحويل كمصروف حقيقي في دفتر المصروفات
+    if (fee > 0) {
+      const fromName = accounts.find((a) => a.id === transferFrom)?.name || "الخزينة";
+      const toName = accounts.find((a) => a.id === transferTo)?.name || "حساب آخر";
+      try {
+        await db.addExpense({
+          amount: fee,
+          category: "other",
+          expenseDate: today,
+          notes: encodeExpenseNotes(`عمولة تحويل داخلي من ${fromName} إلى ${toName}`, {
+            accountId: transferFrom,
+            accountName: fromName,
+          }),
+        });
+        feeRecorded = true;
+      } catch {
+        toast.error("تعذّر تسجيل عمولة التحويل كمصروف، تم حفظ التحويل فقط");
+      }
+    }
+
     createInternalTransfer({
       fromAccountId: transferFrom,
       toAccountId: transferTo,
       amount: amt,
       fee,
-      feeRecordedAsExpense: fee > 0,
-      date: new Date().toISOString().split("T")[0],
+      feeRecordedAsExpense: feeRecorded,
+      date: today,
       notes: transferNotes.trim() || undefined,
       performedBy: "المسؤول المالي",
     });
 
-    toast.success(`تم تحويل ${fmt(amt)} ${cur} بنجاح`);
+    toast.success(
+      fee > 0 && feeRecorded
+        ? `تم تحويل ${fmt(amt)} ${cur} وتسجيل عمولة ${fmt(fee)} ${cur} كمصروف`
+        : `تم تحويل ${fmt(amt)} ${cur} بنجاح`
+    );
     setIsTransferOpen(false);
     setTransferAmount("");
     setTransferFee("0");
@@ -384,9 +483,9 @@ export default function CashboxPage() {
   const handleSaveAudit = () => {
     const totalActual = calculateDenominationTotal(denoms);
     const expected = accountBalances[auditAccountId]?.currentBalance || 0;
-    const variance = totalActual - expected;
+    const variance = Math.round((totalActual - expected) * 100) / 100;
 
-    createDenominationAudit({
+    const audit = createDenominationAudit({
       accountId: auditAccountId,
       countedAt: new Date().toISOString(),
       countedBy: auditCashier,
@@ -399,13 +498,32 @@ export default function CashboxPage() {
       status: Math.abs(variance) > 5 ? "flagged" : "settled",
     });
 
-    toast.success(`تم حفظ واعتماد محضر جرد الخزينة (${fmt(totalActual)} ${cur})`);
+    // اعتماد التسوية تلقائياً: إنشاء حركة تسوية للعجز أو الزيادة لمطابقة الرصيد الدفتري
+    if (Math.abs(variance) >= 0.01) {
+      addManualTransaction({
+        accountId: auditAccountId,
+        type: variance > 0 ? "in" : "out",
+        category: variance > 0 ? "تسوية زيادة جرد" : "تسوية عجز",
+        amount: Math.abs(variance),
+        date: new Date().toISOString().split("T")[0],
+        title: `تسوية فرق جرد ${audit.auditNumber} (${variance > 0 ? "زيادة" : "عجز"})`,
+        notes: auditVarianceReason.trim() || "تسوية تلقائية بعد اعتماد محضر الجرد",
+        performedBy: auditCashier,
+      });
+      toast.success(
+        `تم اعتماد الجرد وتسجيل حركة تسوية ${variance > 0 ? "زيادة" : "عجز"} بمبلغ ${fmt(Math.abs(variance))} ${cur}`
+      );
+    } else {
+      toast.success(`تم حفظ واعتماد محضر جرد الخزينة مطابقاً (${fmt(totalActual)} ${cur})`);
+    }
+
     setIsAuditModalOpen(false);
     setDenoms({ d200: 0, d100: 0, d50: 0, d20: 0, d10: 0, d5: 0, coins: 0 });
     setAuditVarianceReason("");
     setAuditNotes("");
     refreshAll();
   };
+
 
   // Handlers for Creating Account
   const handleCreateAccount = (e: React.FormEvent) => {
@@ -970,21 +1088,33 @@ export default function CashboxPage() {
                             </td>
                             <td className="p-3.5 text-center">
                               {tx.source === "manual" && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 rounded-lg text-danger hover:bg-danger/10"
-                                  onClick={() => {
-                                    if (confirm("هل أنت متأكد من حذف هذه الحركة اليدوية؟")) {
-                                      const rawId = tx.id.replace("man-", "");
-                                      deleteManualTransaction(rawId);
-                                      toast.success("تم حذف المعاملة اليدوية");
-                                      refreshAll();
-                                    }
-                                  }}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
+                                <div className="flex items-center justify-center gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 rounded-lg text-primary hover:bg-primary/10"
+                                    onClick={() => openEditManualTx(tx.id.replace("man-", ""))}
+                                    title="تعديل الحركة اليدوية"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 rounded-lg text-danger hover:bg-danger/10"
+                                    onClick={() => {
+                                      if (confirm("هل أنت متأكد من حذف هذه الحركة اليدوية؟")) {
+                                        const rawId = tx.id.replace("man-", "");
+                                        deleteManualTransaction(rawId);
+                                        toast.success("تم حذف المعاملة اليدوية");
+                                        refreshAll();
+                                      }
+                                    }}
+                                    title="حذف"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
                               )}
                             </td>
                           </tr>
@@ -1011,10 +1141,34 @@ export default function CashboxPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* 7-Day In/Out Trend Chart */}
                 <div className="rounded-2xl border border-foreground/10 bg-card p-5">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <div>
-                      <h4 className="font-bold text-sm">حركة التدفق النقدي (آخر 7 أيام)</h4>
-                      <p className="text-xs text-muted-foreground">مقارنة المقبوضات اليومية بالمدفوعات</p>
+                      <h4 className="font-bold text-sm">
+                        حركة التدفق النقدي{" "}
+                        {trendMode === "daily" ? "(آخر 7 أيام)" : trendMode === "weekly" ? "(آخر 8 أسابيع)" : "(آخر 6 شهور)"}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">مقارنة المقبوضات بالمدفوعات حسب الفترة</p>
+                    </div>
+                    <div className="flex items-center gap-1 rounded-xl border border-foreground/10 bg-muted/30 p-1">
+                      {([
+                        { key: "daily", label: "يومي" },
+                        { key: "weekly", label: "أسبوعي" },
+                        { key: "monthly", label: "شهري" },
+                      ] as const).map((opt) => (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => setTrendMode(opt.key)}
+                          className={cn(
+                            "px-3 h-7 rounded-lg text-[11px] font-bold transition-colors",
+                            trendMode === opt.key
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:bg-foreground/5"
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
@@ -1082,19 +1236,51 @@ export default function CashboxPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {inflowChartData.map((item) => (
-                      <div key={item.name} className="p-4 rounded-xl border border-foreground/5 bg-muted/20">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                          <span className="text-xs font-semibold text-muted-foreground">{item.name}</span>
-                        </div>
-                        <div className="text-lg font-black tabular-nums">
-                          {fmt(item.value)} <span className="text-xs font-normal">{cur}</span>
-                        </div>
+                  {inflowChartData.length > 0 ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+                      <div className="h-64 w-full" dir="ltr">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={inflowChartData}
+                              dataKey="value"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={45}
+                              outerRadius={85}
+                              paddingAngle={2}
+                              label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                            >
+                              {inflowChartData.map((entry, index) => (
+                                <Cell key={`inflow-cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value: any) => `${fmt(Number(value))} ${cur}`} />
+                            <Legend wrapperStyle={{ fontSize: 11 }} />
+                          </PieChart>
+                        </ResponsiveContainer>
                       </div>
-                    ))}
-                  </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        {inflowChartData.map((item) => (
+                          <div key={item.name} className="p-4 rounded-xl border border-foreground/5 bg-muted/20">
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                              <span className="text-xs font-semibold text-muted-foreground">{item.name}</span>
+                            </div>
+                            <div className="text-lg font-black tabular-nums">
+                              {fmt(item.value)} <span className="text-xs font-normal">{cur}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-48 flex items-center justify-center text-xs text-muted-foreground">
+                      لا توجد مقبوضات مسجلة بعد لعرض توزيع مصادر السيولة
+                    </div>
+                  )}
                 </div>
               </div>
             </TabsContent>
@@ -1302,10 +1488,18 @@ export default function CashboxPage() {
           {/* ========================================================================= */}
           {/* Modal 1: تسجيل معاملة مالية يدوية (إيداع / سحب) */}
           {/* ========================================================================= */}
-          <Dialog open={isManualTxOpen} onOpenChange={setIsManualTxOpen}>
+          <Dialog
+            open={isManualTxOpen}
+            onOpenChange={(open) => {
+              setIsManualTxOpen(open);
+              if (!open) resetManualForm();
+            }}
+          >
             <DialogContent className="max-w-md rounded-2xl">
               <DialogHeader>
-                <DialogTitle className="text-base font-bold">تسجيل حركة مالية مباشرة بالصندوق</DialogTitle>
+                <DialogTitle className="text-base font-bold">
+                  {editingTxId ? "تعديل الحركة المالية اليدوية" : "تسجيل حركة مالية مباشرة بالصندوق"}
+                </DialogTitle>
                 <DialogDescription className="text-xs">
                   إيداع رأس مال، إيرادات خدمات، أو سحب مسحوبات شخصية ومصاريف نثرية
                 </DialogDescription>
@@ -1436,11 +1630,19 @@ export default function CashboxPage() {
                 </div>
 
                 <DialogFooter className="pt-3">
-                  <Button type="button" variant="outline" onClick={() => setIsManualTxOpen(false)} className="rounded-xl text-xs">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsManualTxOpen(false);
+                      resetManualForm();
+                    }}
+                    className="rounded-xl text-xs"
+                  >
                     إلغاء
                   </Button>
                   <Button type="submit" className="rounded-xl text-xs font-bold px-5">
-                    تأكيد وحفظ الحركة
+                    {editingTxId ? "حفظ التعديلات" : "تأكيد وحفظ الحركة"}
                   </Button>
                 </DialogFooter>
               </form>
