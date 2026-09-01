@@ -199,31 +199,49 @@ export type Database = {
         Row: {
           cost: number
           created_at: string
+          discount_amount: number
+          discount_pct: number
           id: string
           invoice_id: string
+          line_total: number
           name: string
           price: number
           quantity: number
+          serial_numbers: string[]
+          tax_amount: number
+          tax_pct: number
           user_id: string
         }
         Insert: {
           cost?: number
           created_at?: string
+          discount_amount?: number
+          discount_pct?: number
           id?: string
           invoice_id: string
+          line_total?: number
           name: string
           price?: number
           quantity?: number
+          serial_numbers?: string[]
+          tax_amount?: number
+          tax_pct?: number
           user_id: string
         }
         Update: {
           cost?: number
           created_at?: string
+          discount_amount?: number
+          discount_pct?: number
           id?: string
           invoice_id?: string
+          line_total?: number
           name?: string
           price?: number
           quantity?: number
+          serial_numbers?: string[]
+          tax_amount?: number
+          tax_pct?: number
           user_id?: string
         }
         Relationships: [
@@ -248,6 +266,7 @@ export type Database = {
           monthly_installment: number
           notes: string | null
           paid: number
+          receipt_token: string
           status: string
           tax_amount: number
           tax_pct: number
@@ -265,6 +284,7 @@ export type Database = {
           monthly_installment: number
           notes?: string | null
           paid?: number
+          receipt_token?: string
           status?: string
           tax_amount?: number
           tax_pct?: number
@@ -282,6 +302,7 @@ export type Database = {
           monthly_installment?: number
           notes?: string | null
           paid?: number
+          receipt_token?: string
           status?: string
           tax_amount?: number
           tax_pct?: number
@@ -1729,6 +1750,7 @@ export type Database = {
         }
       }
       expire_storefront_reservations: { Args: never; Returns: number }
+      get_public_invoice_receipt: { Args: { p_token: string }; Returns: Json }
       get_public_order_status: {
         Args: { p_customer_phone: string; p_public_number: string }
         Returns: Json
