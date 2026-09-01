@@ -25,9 +25,10 @@ export function SmartReturnModal({
   onOpenChange,
   onSuccess,
 }: SmartReturnModalProps) {
-  const { invoiceItems, stockItems, carriers } = useDB();
-  const [productCondition, setProductCondition] = useState<"intact" | "damaged">("intact");
+  const { invoiceItems, stockItems, carriers, branches } = useDB();
+  const [productCondition, setProductCondition] = useState<"intact" | "damaged" | "inspection">("intact");
   const [restockToInventory, setRestockToInventory] = useState(true);
+  const [restockBranchId, setRestockBranchId] = useState<string>("");
   const [shippingPayer, setShippingPayer] = useState<"store" | "customer" | "carrier">("store");
   const [returnReason, setReturnReason] = useState("العميل رفض الاستلام / غير متواجد");
   const [customNotes, setCustomNotes] = useState("");
