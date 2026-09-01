@@ -220,6 +220,18 @@ export function addManualTransaction(tx: Omit<ManualCashTransaction, "id" | "cre
   return newTx;
 }
 
+export function updateManualTransaction(
+  id: string,
+  patch: Partial<Omit<ManualCashTransaction, "id" | "createdAt">>
+): ManualCashTransaction | null {
+  const txs = getManualTransactions();
+  const idx = txs.findIndex((t) => t.id === id);
+  if (idx === -1) return null;
+  txs[idx] = { ...txs[idx], ...patch };
+  saveManualTransactions(txs);
+  return txs[idx];
+}
+
 export function deleteManualTransaction(id: string): void {
   const txs = getManualTransactions().filter((t) => t.id !== id);
   saveManualTransactions(txs);
