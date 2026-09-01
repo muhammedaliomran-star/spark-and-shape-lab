@@ -433,7 +433,6 @@ function NewInvoicePage() {
           const qty = Math.max(1, Number(p.quantity || 1));
           return [
             {
-              user_id: invData.user_id,
               user_id: userId,
               invoice_id: invData.id,
               name: p.name.trim(),

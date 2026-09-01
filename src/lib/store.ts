@@ -71,7 +71,7 @@ export interface Invoice {
   status?: InvoiceStatus;
   invoiceNumber?: string;
   date?: string;
-  receiptToken: string;
+  receiptToken?: string;
 }
 
 export interface Payment {
