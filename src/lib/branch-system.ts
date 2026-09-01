@@ -815,20 +815,34 @@ export function getInvoiceBranchMap(): Record<string, string> {
 }
 
 export function linkInvoiceToBranch(invoiceId: string, branchId: string): void {
+  if (!invoiceId || !branchId || branchId === "all") return;
   const map = getInvoiceBranchMap();
   map[invoiceId] = branchId;
   writeStorage(STORAGE_KEYS.INVOICE_BRANCH_MAP, map);
 }
 
-export function getInvoicesForBranch(branchId: string, allInvoices: Invoice[]): Invoice[] {
+export function getInvoiceBranchId(invoiceId: string): string | null {
+  return getInvoiceBranchMap()[invoiceId] || null;
+}
+
+/**
+ * فواتير فرع محدد. الفواتير غير المختومة بفرع تُنسب للفرع الرئيسي (fallbackBranchId)
+ * حتى لا تختفي البيانات القديمة عند التصفية.
+ */
+export function getInvoicesForBranch(
+  branchId: string,
+  allInvoices: Invoice[],
+  fallbackBranchId?: string
+): Invoice[] {
+  if (!branchId || branchId === "all") return allInvoices;
   const map = getInvoiceBranchMap();
-  // If no branch assigned yet, associate with main branch or return all if all
   return allInvoices.filter((inv) => {
     const assigned = map[inv.id];
     if (assigned) return assigned === branchId;
-    return true; // fallback
+    return fallbackBranchId ? fallbackBranchId === branchId : true;
   });
 }
+
 
 export function getExpenseBranchMap(): Record<string, string> {
   return readStorage<Record<string, string>>(STORAGE_KEYS.BRANCH_EXPENSES_ALLOC, {});
