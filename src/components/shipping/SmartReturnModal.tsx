@@ -107,7 +107,11 @@ export function SmartReturnModal({
 
       toast.success(
         `تم تسجيل الشحنة كمرتجع بنجاح! ${
-          restockedCount > 0 ? `(تمت إعادة ${restockedCount} قطعة للمخزون تلقائياً)` : ""
+          restockedCount > 0
+            ? `(تمت إعادة ${restockedCount} قطعة للمخزون${effectiveBranch ? ` — فرع ${effectiveBranch.name}` : ""})`
+            : productCondition === "inspection"
+              ? "(البضاعة محجوزة قيد الفحص ولم تُضف للمخزون)"
+              : ""
         }`
       );
 
