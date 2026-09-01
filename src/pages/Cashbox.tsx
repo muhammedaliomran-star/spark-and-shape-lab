@@ -126,6 +126,10 @@ export default function CashboxPage() {
   const [manualAccountId, setManualAccountId] = useState("acc-cash-main");
   const [manualNotes, setManualNotes] = useState("");
   const [manualDate, setManualDate] = useState(new Date().toISOString().split("T")[0]);
+  const [editingTxId, setEditingTxId] = useState<string | null>(null);
+
+  // Analytics trend granularity
+  const [trendMode, setTrendMode] = useState<"daily" | "weekly" | "monthly">("daily");
 
   // Transfer modal
   const [isTransferOpen, setIsTransferOpen] = useState(false);
