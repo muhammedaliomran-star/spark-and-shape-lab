@@ -477,6 +477,13 @@ export function printBranchTransferNote(
     )
     .join("");
 
+  const transferQr = `https://api.qrserver.com/v1/create-qr-code/?size=170x170&margin=4&data=${encodeURIComponent(
+    `SEGILLY-TRANSFER:${transfer.transferNumber}`
+  )}`;
+  const transferBarcode = `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(
+    transfer.transferNumber
+  )}&code=Code128&translate-esc=false&dpi=96`;
+
   const body = `
     <div style="margin-bottom:20px; padding:12px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -485,6 +492,15 @@ export function printBranchTransferNote(
           ${statusLabel}
         </span>
       </div>
+      <div style="display:flex; align-items:center; gap:14px; margin-bottom:10px; padding:8px 10px; background:#fff; border:1px dashed #cbd5e1; border-radius:10px;">
+        <img src="${transferQr}" alt="QR" style="width:78px; height:78px;" />
+        <div style="flex:1; text-align:center;">
+          <img src="${transferBarcode}" alt="Barcode" style="max-width:230px; height:52px;" />
+          <div style="font-size:12px; font-weight:bold; letter-spacing:1px; direction:ltr; margin-top:2px;">${esc(transfer.transferNumber)}</div>
+          <div style="font-size:10px; color:#64748b;">امسح الكود لتأكيد استلام الإذن سريعًا</div>
+        </div>
+      </div>
+
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; font-size:13px;">
         <div>
           <p style="margin:3px 0;"><strong>فرع الإرسال (المصدر):</strong> ${esc(fromBranch?.name || "الفرع الرئيسي")}</p>
