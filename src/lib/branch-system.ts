@@ -130,6 +130,7 @@ const STORAGE_KEYS = {
   BRANCH_STAFF: "segilly_branch_staff_v1",
   BRANCH_EXPENSES_ALLOC: "segilly_branch_expenses_alloc_v1",
   INVOICE_BRANCH_MAP: "segilly_invoice_branch_map_v1",
+  BRANCH_PROFILES: "segilly_branch_profiles_v1",
 };
 
 function readStorage<T>(key: string, fallback: T): T {
