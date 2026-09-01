@@ -38,6 +38,11 @@ export function SmartReturnModal({
 
   const currentCarrier = carriers.find((c) => c.id === shipment.carrierId);
   const matchedInvoiceItems = invoiceItems.filter((it) => it.invoiceId === shipment.invoiceId);
+  const mainBranch = branches.find((b) => b.isMain) || branches[0] || null;
+  const effectiveBranchId = restockBranchId || mainBranch?.id || "";
+  const effectiveBranch = branches.find((b) => b.id === effectiveBranchId) || null;
+  const conditionLabel =
+    productCondition === "intact" ? "سليمة" : productCondition === "damaged" ? "تالفة" : "قيد الفحص";
 
   const quickReasons = [
     "العميل رفض الاستلام / غير متواجد",
