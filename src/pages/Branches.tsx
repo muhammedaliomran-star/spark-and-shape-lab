@@ -65,6 +65,8 @@ import {
   BranchStaffMember,
   getExpensesForBranch,
   linkExpenseToBranch,
+  saveBranchProfile,
+  getBranchProfile,
 } from "@/lib/branch-system";
 import {
   GitBranch,
@@ -149,6 +151,7 @@ export default function BranchesPage() {
   // Branch CRUD state
   const [isBranchDialogOpen, setIsBranchDialogOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const editingBranchProfile = editingBranch ? getBranchProfile(editingBranch.id) : {};
 
   // Transfer State
   const [transfers, setTransfers] = useState<BranchTransfer[]>(getBranchTransfers());
