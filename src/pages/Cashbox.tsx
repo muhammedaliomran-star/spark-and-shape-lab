@@ -1615,11 +1615,19 @@ export default function CashboxPage() {
                 </div>
 
                 <DialogFooter className="pt-3">
-                  <Button type="button" variant="outline" onClick={() => setIsManualTxOpen(false)} className="rounded-xl text-xs">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsManualTxOpen(false);
+                      resetManualForm();
+                    }}
+                    className="rounded-xl text-xs"
+                  >
                     إلغاء
                   </Button>
                   <Button type="submit" className="rounded-xl text-xs font-bold px-5">
-                    تأكيد وحفظ الحركة
+                    {editingTxId ? "حفظ التعديلات" : "تأكيد وحفظ الحركة"}
                   </Button>
                 </DialogFooter>
               </form>
