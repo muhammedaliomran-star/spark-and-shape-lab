@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { db, Shipment, useDB } from "@/lib/store";
 import { saveCarrierTransaction } from "@/lib/carrier-ledger";
 import { toast } from "sonner";
@@ -25,9 +26,10 @@ export function SmartReturnModal({
   onOpenChange,
   onSuccess,
 }: SmartReturnModalProps) {
-  const { invoiceItems, stockItems, carriers } = useDB();
-  const [productCondition, setProductCondition] = useState<"intact" | "damaged">("intact");
+  const { invoiceItems, stockItems, carriers, branches } = useDB();
+  const [productCondition, setProductCondition] = useState<"intact" | "damaged" | "inspection">("intact");
   const [restockToInventory, setRestockToInventory] = useState(true);
+  const [restockBranchId, setRestockBranchId] = useState<string>("");
   const [shippingPayer, setShippingPayer] = useState<"store" | "customer" | "carrier">("store");
   const [returnReason, setReturnReason] = useState("العميل رفض الاستلام / غير متواجد");
   const [customNotes, setCustomNotes] = useState("");
@@ -37,6 +39,11 @@ export function SmartReturnModal({
 
   const currentCarrier = carriers.find((c) => c.id === shipment.carrierId);
   const matchedInvoiceItems = invoiceItems.filter((it) => it.invoiceId === shipment.invoiceId);
+  const mainBranch = branches.find((b) => b.isMain) || branches[0] || null;
+  const effectiveBranchId = restockBranchId || mainBranch?.id || "";
+  const effectiveBranch = branches.find((b) => b.id === effectiveBranchId) || null;
+  const conditionLabel =
+    productCondition === "intact" ? "سليمة" : productCondition === "damaged" ? "تالفة" : "قيد الفحص";
 
   const quickReasons = [
     "العميل رفض الاستلام / غير متواجد",
@@ -51,16 +58,19 @@ export function SmartReturnModal({
   const handleConfirmReturn = async () => {
     setSubmitting(true);
     try {
+      const willRestock = productCondition === "intact" && restockToInventory;
       const fullReason = `${returnReason}${customNotes ? ` — ${customNotes}` : ""} [تحمل الشحن: ${
         shippingPayer === "store" ? "المتجر" : shippingPayer === "customer" ? "العميل" : "المندوب"
-      } | حالة البضاعة: ${productCondition === "intact" ? "سليمة" : "تالفة"}]`;
+      } | حالة البضاعة: ${conditionLabel}${
+        willRestock && effectiveBranch ? ` | فرع الاستلام: ${effectiveBranch.name}` : ""
+      }]`;
 
       // 1. Update Shipment Status to returned
       await db.updateShipmentStatus(shipment.id, "returned", fullReason);
 
       // 2. Restock Inventory if product is intact & requested
       let restockedCount = 0;
-      if (productCondition === "intact" && restockToInventory && matchedInvoiceItems.length > 0) {
+      if (willRestock && matchedInvoiceItems.length > 0) {
         for (const item of matchedInvoiceItems) {
           const matchedStock = stockItems.find(
             (s) => s.name.trim().toLowerCase() === item.name.trim().toLowerCase()
@@ -98,7 +108,11 @@ export function SmartReturnModal({
 
       toast.success(
         `تم تسجيل الشحنة كمرتجع بنجاح! ${
-          restockedCount > 0 ? `(تمت إعادة ${restockedCount} قطعة للمخزون تلقائياً)` : ""
+          restockedCount > 0
+            ? `(تمت إعادة ${restockedCount} قطعة للمخزون${effectiveBranch ? ` — فرع ${effectiveBranch.name}` : ""})`
+            : productCondition === "inspection"
+              ? "(البضاعة محجوزة قيد الفحص ولم تُضف للمخزون)"
+              : ""
         }`
       );
 
@@ -157,12 +171,11 @@ export function SmartReturnModal({
             </Label>
             <RadioGroup
               value={productCondition}
-              onValueChange={(val: "intact" | "damaged") => {
+              onValueChange={(val: "intact" | "damaged" | "inspection") => {
                 setProductCondition(val);
-                if (val === "damaged") setRestockToInventory(false);
-                else setRestockToInventory(true);
+                setRestockToInventory(val === "intact");
               }}
-              className="grid grid-cols-2 gap-2"
+              className="grid grid-cols-3 gap-2"
             >
               <div
                 className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer ${
@@ -174,8 +187,8 @@ export function SmartReturnModal({
                 }}
               >
                 <RadioGroupItem value="intact" id="r_intact" />
-                <Label htmlFor="r_intact" className="cursor-pointer">
-                  المنتج سليم وقابل للبيع ✅
+                <Label htmlFor="r_intact" className="cursor-pointer text-xs">
+                  سليم وقابل للبيع ✅
                 </Label>
               </div>
 
@@ -189,22 +202,73 @@ export function SmartReturnModal({
                 }}
               >
                 <RadioGroupItem value="damaged" id="r_damaged" />
-                <Label htmlFor="r_damaged" className="cursor-pointer">
-                  المنتج تالف / معيب ❌
+                <Label htmlFor="r_damaged" className="cursor-pointer text-xs">
+                  تالف / هالك ❌
+                </Label>
+              </div>
+
+              <div
+                className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer ${
+                  productCondition === "inspection" ? "border-warning bg-warning/10 font-bold" : "bg-card"
+                }`}
+                onClick={() => {
+                  setProductCondition("inspection");
+                  setRestockToInventory(false);
+                }}
+              >
+                <RadioGroupItem value="inspection" id="r_inspection" />
+                <Label htmlFor="r_inspection" className="cursor-pointer text-xs">
+                  قيد الفحص ⏳
                 </Label>
               </div>
             </RadioGroup>
 
+            {productCondition === "inspection" && (
+              <p className="text-[11px] text-warning bg-warning/10 border border-warning/20 rounded p-2">
+                لن تُضاف الأصناف للمخزون الآن — تُحجز قيد الفحص لحين تحديد حالتها النهائية.
+              </p>
+            )}
+
             {productCondition === "intact" && (
-              <div className="flex items-center gap-2 p-2 bg-muted/20 rounded border text-xs">
-                <Checkbox
-                  id="chk_restock"
-                  checked={restockToInventory}
-                  onCheckedChange={(checked) => setRestockToInventory(Boolean(checked))}
-                />
-                <Label htmlFor="chk_restock" className="cursor-pointer font-medium text-foreground">
-                  إعادة الأصناف تلقائياً إلى كمية المخزون في المستودع
-                </Label>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 p-2 bg-muted/20 rounded border text-xs">
+                  <Checkbox
+                    id="chk_restock"
+                    checked={restockToInventory}
+                    onCheckedChange={(checked) => setRestockToInventory(Boolean(checked))}
+                  />
+                  <Label htmlFor="chk_restock" className="cursor-pointer font-medium text-foreground">
+                    إعادة الأصناف تلقائياً إلى كمية المخزون
+                  </Label>
+                </div>
+
+                {restockToInventory && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                      <Store className="h-3.5 w-3.5" />
+                      فرع / مخزن الاستلام
+                    </Label>
+                    {branches.length > 0 ? (
+                      <Select value={effectiveBranchId} onValueChange={setRestockBranchId}>
+                        <SelectTrigger className="h-9 text-xs">
+                          <SelectValue placeholder="اختر الفرع" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {branches.map((b) => (
+                            <SelectItem key={b.id} value={b.id} className="text-xs">
+                              {b.name}
+                              {b.isMain ? " (رئيسي)" : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground">
+                        لا توجد فروع مسجلة — سيتم الإرجاع للمخزن الافتراضي.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
