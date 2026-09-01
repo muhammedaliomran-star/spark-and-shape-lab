@@ -1073,21 +1073,33 @@ export default function CashboxPage() {
                             </td>
                             <td className="p-3.5 text-center">
                               {tx.source === "manual" && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 rounded-lg text-danger hover:bg-danger/10"
-                                  onClick={() => {
-                                    if (confirm("هل أنت متأكد من حذف هذه الحركة اليدوية؟")) {
-                                      const rawId = tx.id.replace("man-", "");
-                                      deleteManualTransaction(rawId);
-                                      toast.success("تم حذف المعاملة اليدوية");
-                                      refreshAll();
-                                    }
-                                  }}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
+                                <div className="flex items-center justify-center gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 rounded-lg text-primary hover:bg-primary/10"
+                                    onClick={() => openEditManualTx(tx.id.replace("man-", ""))}
+                                    title="تعديل الحركة اليدوية"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 rounded-lg text-danger hover:bg-danger/10"
+                                    onClick={() => {
+                                      if (confirm("هل أنت متأكد من حذف هذه الحركة اليدوية؟")) {
+                                        const rawId = tx.id.replace("man-", "");
+                                        deleteManualTransaction(rawId);
+                                        toast.success("تم حذف المعاملة اليدوية");
+                                        refreshAll();
+                                      }
+                                    }}
+                                    title="حذف"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
                               )}
                             </td>
                           </tr>
