@@ -27,7 +27,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useDB, fmt, useShopSettings } from "@/lib/store";
+import { useDB, fmt, useShopSettings, db } from "@/lib/store";
+import { encodeExpenseNotes } from "@/lib/expenses-system";
 import {
   TreasuryAccount,
   InternalTransfer,
