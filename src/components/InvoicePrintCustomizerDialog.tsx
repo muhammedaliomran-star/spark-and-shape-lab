@@ -62,9 +62,8 @@ export function InvoicePrintCustomizerDialog({
     const isThermal = paperFormat === "thermal";
 
     // Build QR Code link or payload
-    const qrPayload = encodeURIComponent(
-      `سجلي|فاتورة:${invNo}|عميل:${customer.name}|المبلغ:${fmt(inv.total)}|المتبقي:${fmt(remaining)}`
-    );
+    const receiptUrl = inv.receiptToken ? `${window.location.origin}/receipt/${inv.receiptToken}` : `${window.location.origin}/invoices`;
+    const qrPayload = encodeURIComponent(receiptUrl);
     const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrPayload}&margin=4`;
 
     const itemsHtml = invItems.length > 0
@@ -83,10 +82,10 @@ export function InvoicePrintCustomizerDialog({
           <tbody>
             ${invItems.map((it) => {
               const q = it.quantity || 1;
-              const lineTotal = it.price * q;
+              const lineTotal = it.lineTotal || it.price * q;
               return `
               <tr>
-                <td><b>${esc(it.name)}</b></td>
+                <td><b>${esc(it.name)}</b>${it.serialNumbers.length ? `<div style="font-size:9px;color:#64748b" dir="ltr">IMEI/SN: ${esc(it.serialNumbers.join(" • "))}</div>` : ""}${it.discountPct || it.taxPct ? `<div style="font-size:9px;color:#64748b">خصم ${fmt(it.discountPct)}% • ضريبة ${fmt(it.taxPct)}%</div>` : ""}</td>
                 <td style="text-align:center" class="num">${q}</td>
                 <td class="num">${fmt(it.price)} ${esc(cur)}</td>
                 <td class="num font-bold">${fmt(lineTotal)} ${esc(cur)}</td>
@@ -142,7 +141,7 @@ export function InvoicePrintCustomizerDialog({
       ? `
       <div style="margin-top:16px; text-align:center; padding:10px; background:#fff; border-radius:12px; border:1px dashed #cbd5e1; display:inline-block; width:100%;">
         <img src="${qrImgUrl}" alt="QR Verification" style="width:85px; height:85px; display:block; margin:0 auto;" />
-        <div style="font-size:9.5px; color:#64748b; margin-top:4px;">امسح الكود للتحقق من صحة الفاتورة</div>
+        <div style="font-size:9.5px; color:#64748b; margin-top:4px;">امسح الكود لفتح الإيصال الرقمي</div>
       </div>`
       : "";
 

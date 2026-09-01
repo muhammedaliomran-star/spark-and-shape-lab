@@ -279,6 +279,9 @@ function InvoicesPage() {
         cost: it.cost,
         price: it.price,
         quantity: it.quantity || 1,
+        discount: it.discountPct,
+        taxPct: it.taxPct,
+        serialNumbers: it.serialNumbers.join(", "),
       })),
       notes: inv.notes,
       saleType: inv.monthlyInstallment > 0 ? "installments" : "cash",
@@ -1357,8 +1360,9 @@ function ShareInvoiceDialog({
   const shopName = shopSettings?.shopName || "المتجر";
   const cur = shopSettings?.currency || "ج.م";
 
+  const receiptUrl = inv.receiptToken ? `${window.location.origin}/receipt/${inv.receiptToken}` : "";
   const itemsText = invItems.length > 0
-    ? invItems.map((it) => `• ${it.name} (الكمية: ${it.quantity || 1}) - ${fmt(it.price * (it.quantity || 1))} ${cur}`).join("\n")
+    ? invItems.map((it) => `• ${it.name} (الكمية: ${it.quantity || 1}) - ${fmt(it.lineTotal || it.price * (it.quantity || 1))} ${cur}${it.serialNumbers.length ? `\n  سيريال: ${it.serialNumbers.join("، ")}` : ""}`).join("\n")
     : `• ${inv.notes || "مبيعات عامة"} - ${fmt(inv.total)} ${cur}`;
 
   const message =
@@ -1377,6 +1381,7 @@ function ShareInvoiceDialog({
       ? `📅 *القسط الشهري:* ${fmt(inv.monthlyInstallment)} ${cur} (أول استحقاق: ${isoToDDMMYYYY(inv.firstDueDate)})\n`
       : `✅ *طريقة الدفع:* نقدي (كاش فوري)\n`) +
     (shopSettings?.phone ? `📞 *خدمة العملاء:* ${shopSettings.phone}\n` : "") +
+    (receiptUrl ? `🔗 *الإيصال الرقمي:* ${receiptUrl}\n` : "") +
     `\nشكراً لتعاملكم معنا ونرحب بكم دائماً! 🌸`;
 
   const cleanPhone = (customer.phone || "").replace(/[^\d]/g, "");
@@ -1406,6 +1411,11 @@ function ShareInvoiceDialog({
         </div>
 
         <DialogFooter className="gap-2 sm:gap-2">
+          {receiptUrl && (
+            <Button variant="outline" onClick={() => { navigator.clipboard.writeText(receiptUrl); toast.success("تم نسخ رابط الإيصال"); }} className="gap-1.5">
+              <Share2 className="w-4 h-4" /> نسخ الرابط
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => {
@@ -1607,12 +1617,16 @@ function ViewInvoiceDialog({
                 <tbody className="divide-y divide-border/40">
                   {invItems.map((it) => {
                     const q = it.quantity || 1;
-                    const rowTotal = it.price * q;
+                    const rowTotal = it.lineTotal || it.price * q;
                     const rowCost = (it.cost || 0) * q;
                     const rowProfit = rowTotal - rowCost;
                     return (
                       <tr key={it.id} className="hover:bg-foreground/[0.02]">
-                        <td className="p-2 font-medium text-foreground">{it.name}</td>
+                        <td className="p-2 font-medium text-foreground">
+                          {it.name}
+                          {it.serialNumbers.length > 0 && <div className="mt-1 font-mono text-[10px] text-muted-foreground" dir="ltr">IMEI/SN: {it.serialNumbers.join(" • ")}</div>}
+                          {(it.discountPct > 0 || it.taxPct > 0) && <div className="mt-1 text-[10px] text-muted-foreground">خصم {fmt(it.discountPct)}% • ضريبة {fmt(it.taxPct)}%</div>}
+                        </td>
                         <td className="p-2 text-center tabular-nums font-bold">{q}</td>
                         <td className={cn("p-2 tabular-nums", blurCls)}>{fmt(it.price)} ج.م</td>
                         <td className={cn("p-2 tabular-nums text-muted-foreground", blurCls)}>{fmt(it.cost || 0)} ج.م</td>
@@ -1715,7 +1729,7 @@ function EditInvoiceDialog({ inv, onClose }: { inv: Invoice | null; onClose: () 
     if (inv) {
       const items = data.invoiceItems.filter((it) => it.invoiceId === inv.id);
       const rows: ProductRow[] = items.length > 0
-        ? items.map((it) => ({ id: it.id, name: it.name, cost: String(it.cost), price: String(it.price), quantity: String(it.quantity) }))
+        ? items.map((it) => ({ id: it.id, name: it.name, cost: String(it.cost), price: String(it.price), quantity: String(it.quantity), discount: String(it.discountPct), taxPct: String(it.taxPct), serialNumbers: it.serialNumbers.join(", ") }))
         : [{ id: crypto.randomUUID(), name: inv.notes || "منتج", cost: "0", price: String(inv.total), quantity: "1" }];
       setProducts(rows);
       setDown(String(inv.downPayment));
@@ -1729,7 +1743,12 @@ function EditInvoiceDialog({ inv, onClose }: { inv: Invoice | null; onClose: () 
   if (!inv) return null;
 
   const totalCost = products.reduce((s, p) => s + Number(p.cost || 0) * Number(p.quantity || 1), 0);
-  const totalPrice = products.reduce((s, p) => s + Number(p.price || 0) * Number(p.quantity || 1), 0);
+  const itemNet = (p: ProductRow) => {
+    const gross = Number(p.price || 0) * Number(p.quantity || 1);
+    const afterDiscount = gross * (1 - Math.min(100, Math.max(0, Number(p.discount || 0))) / 100);
+    return Math.max(0, afterDiscount) * (1 + Math.max(0, Number(p.taxPct || 0)) / 100);
+  };
+  const totalPrice = products.reduce((s, p) => s + itemNet(p), 0);
   const remaining = Math.max(0, totalPrice - Number(down || 0));
   const profit = totalPrice - totalCost;
   const isCash = totalPrice > 0 && Number(down) >= totalPrice;
@@ -1759,7 +1778,7 @@ function EditInvoiceDialog({ inv, onClose }: { inv: Invoice | null; onClose: () 
     const keptIds = new Set(valid.filter((p) => existingIds.has(p.id)).map((p) => p.id));
     for (const oldId of existingIds) if (!keptIds.has(oldId)) await db.removeInvoiceItem(oldId);
     for (const p of valid) {
-      const payload = { name: p.name.trim(), cost: Number(p.cost || 0), price: Number(p.price || 0), quantity: Math.max(1, Math.floor(Number(p.quantity || 1))) };
+      const payload = { name: p.name.trim(), cost: Number(p.cost || 0), price: Number(p.price || 0), quantity: Math.max(1, Math.floor(Number(p.quantity || 1))), discountPct: Number(p.discount || 0), taxPct: Number(p.taxPct || 0), serialNumbers: (p.serialNumbers || "").split(/[,\n]+/).map((value) => value.trim()).filter(Boolean) };
       if (existingIds.has(p.id)) await db.updateInvoiceItem(p.id, payload);
       else await db.addInvoiceItem(inv.id, payload);
     }
@@ -1806,6 +1825,13 @@ function EditInvoiceDialog({ inv, onClose }: { inv: Invoice | null; onClose: () 
                       <div><Label className="text-xs">التكلفة (ج.م)</Label><Input type="number" value={p.cost} onChange={(e) => updateProduct(p.id, { cost: e.target.value })} className={blurCls} /></div>
                       <div><Label className="text-xs">سعر البيع (ج.م)</Label><Input type="number" value={p.price} onChange={(e) => updateProduct(p.id, { price: e.target.value })} className={blurCls} /></div>
                     </div>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-[90px_90px_90px_minmax(0,1fr)]">
+                      <div><Label className="text-xs">الكمية</Label><Input type="number" min="1" value={p.quantity} onChange={(e) => updateProduct(p.id, { quantity: e.target.value })} /></div>
+                      <div><Label className="text-xs">خصم %</Label><Input type="number" min="0" max="100" value={p.discount || ""} onChange={(e) => updateProduct(p.id, { discount: e.target.value })} /></div>
+                      <div><Label className="text-xs">ضريبة %</Label><Input type="number" min="0" value={p.taxPct || ""} onChange={(e) => updateProduct(p.id, { taxPct: e.target.value })} /></div>
+                      <div><Label className="text-xs">Serial / IMEI</Label><Input dir="ltr" className="font-mono text-xs" value={p.serialNumbers || ""} onChange={(e) => updateProduct(p.id, { serialNumbers: e.target.value })} placeholder="افصل بفاصلة" /></div>
+                    </div>
+                    <p className="text-[11px] font-bold text-primary">صافي البند: {fmt(itemNet(p))} ج.م</p>
                   </div>
                 </motion.div>
               ))}
@@ -2102,6 +2128,8 @@ export type ProductRow = {
   size?: string;
   quantity: string;
   discount?: string;
+  taxPct?: string;
+  serialNumbers?: string;
   notes?: string;
 };
 

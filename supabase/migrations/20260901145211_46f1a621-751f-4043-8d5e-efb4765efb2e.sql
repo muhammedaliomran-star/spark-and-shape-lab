@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.get_public_invoice_receipt(uuid);
