@@ -178,6 +178,21 @@ export default function CashboxPage() {
     return () => window.removeEventListener("segilly_cashbox_data_updated", handleUpdate);
   }, []);
 
+  // سحب بيانات الخزينة من قاعدة البيانات عند فتح الصفحة
+  useEffect(() => {
+    let cancelled = false;
+    import("@/lib/cashbox-sync")
+      .then((m) => m.pullCashboxFromCloud())
+      .then(() => {
+        if (!cancelled) refreshAll();
+      })
+      .catch((e) => console.error("Cashbox cloud pull failed:", e));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+
   // Balances calculation for each account
   const accountBalances = useMemo(() => {
     const map: Record<string, { initial: number; inflows: number; outflows: number; currentBalance: number }> = {};
