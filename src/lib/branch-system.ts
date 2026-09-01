@@ -986,3 +986,72 @@ export function setActiveBranchId(branchId: string): void {
   localStorage.setItem(STORAGE_KEYS.ACTIVE_BRANCH, branchId);
   window.dispatchEvent(new CustomEvent("segilly_active_branch_changed", { detail: { branchId } }));
 }
+
+// ==================== 9. الملف الرسمي للفرع (Tax / Legal Profile) ====================
+
+export interface BranchProfile {
+  code?: string;
+  taxNumber?: string;
+  commercialRecord?: string;
+  email?: string;
+}
+
+export function getBranchProfiles(): Record<string, BranchProfile> {
+  return readStorage<Record<string, BranchProfile>>(STORAGE_KEYS.BRANCH_PROFILES, {});
+}
+
+export function getBranchProfile(branchId: string): BranchProfile {
+  return getBranchProfiles()[branchId] || {};
+}
+
+export function saveBranchProfile(branchId: string, patch: BranchProfile): void {
+  const all = getBranchProfiles();
+  all[branchId] = { ...(all[branchId] || {}), ...patch };
+  writeStorage(STORAGE_KEYS.BRANCH_PROFILES, all);
+}
+
+// ==================== 10. تنبيهات نواقص الفروع (Branch Low Stock Alerts) ====================
+
+export interface BranchLowStockAlert {
+  branchId: string;
+  branchName: string;
+  stockItemId: string;
+  itemName: string;
+  quantity: number;
+  minStock: number;
+  shortage: number;
+  isOut: boolean;
+}
+
+export function getBranchLowStockAlerts(
+  branches: Branch[],
+  stockItems: StockItem[],
+  onlyBranchId?: string
+): BranchLowStockAlert[] {
+  const stockList = getBranchStockList();
+  const alerts: BranchLowStockAlert[] = [];
+  const scoped = onlyBranchId && onlyBranchId !== "all"
+    ? branches.filter((b) => b.id === onlyBranchId)
+    : branches;
+
+  for (const branch of scoped) {
+    for (const item of stockItems) {
+      const row = stockList.find((s) => s.branchId === branch.id && s.stockItemId === item.id);
+      if (!row) continue; // لم يُخصص رصيد لهذا الصنف في هذا الفرع
+      const minStock = row.minStock || 3;
+      if (row.quantity > minStock) continue;
+      alerts.push({
+        branchId: branch.id,
+        branchName: branch.name,
+        stockItemId: item.id,
+        itemName: item.name,
+        quantity: row.quantity,
+        minStock,
+        shortage: Math.max(0, minStock - row.quantity),
+        isOut: row.quantity <= 0,
+      });
+    }
+  }
+
+  return alerts.sort((a, b) => a.quantity - b.quantity);
+}
