@@ -661,6 +661,30 @@ async function restoreStockByName(items: Array<{ name: string; quantity: number 
   }
 }
 
+function invoiceItemFinancials(item: {
+  price: number;
+  quantity?: number;
+  discountPct?: number;
+  taxPct?: number;
+  serialNumbers?: string[];
+}) {
+  const quantity = Math.max(1, Math.floor(item.quantity ?? 1));
+  const gross = Math.max(0, Number(item.price) * quantity);
+  const discountPct = Math.min(100, Math.max(0, Number(item.discountPct ?? 0)));
+  const discountAmount = gross * discountPct / 100;
+  const taxable = Math.max(0, gross - discountAmount);
+  const taxPct = Math.max(0, Number(item.taxPct ?? 0));
+  const taxAmount = taxable * taxPct / 100;
+  return {
+    discount_pct: discountPct,
+    discount_amount: discountAmount,
+    tax_pct: taxPct,
+    tax_amount: taxAmount,
+    line_total: taxable + taxAmount,
+    serial_numbers: (item.serialNumbers ?? []).map((value) => value.trim()).filter(Boolean),
+  };
+}
+
 export const db = {
 
   invalidate: fetchAll,
