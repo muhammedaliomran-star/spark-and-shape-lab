@@ -1221,19 +1221,51 @@ export default function CashboxPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {inflowChartData.map((item) => (
-                      <div key={item.name} className="p-4 rounded-xl border border-foreground/5 bg-muted/20">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                          <span className="text-xs font-semibold text-muted-foreground">{item.name}</span>
-                        </div>
-                        <div className="text-lg font-black tabular-nums">
-                          {fmt(item.value)} <span className="text-xs font-normal">{cur}</span>
-                        </div>
+                  {inflowChartData.length > 0 ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+                      <div className="h-64 w-full" dir="ltr">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={inflowChartData}
+                              dataKey="value"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={45}
+                              outerRadius={85}
+                              paddingAngle={2}
+                              label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                            >
+                              {inflowChartData.map((entry, index) => (
+                                <Cell key={`inflow-cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value: any) => `${fmt(Number(value))} ${cur}`} />
+                            <Legend wrapperStyle={{ fontSize: 11 }} />
+                          </PieChart>
+                        </ResponsiveContainer>
                       </div>
-                    ))}
-                  </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        {inflowChartData.map((item) => (
+                          <div key={item.name} className="p-4 rounded-xl border border-foreground/5 bg-muted/20">
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                              <span className="text-xs font-semibold text-muted-foreground">{item.name}</span>
+                            </div>
+                            <div className="text-lg font-black tabular-nums">
+                              {fmt(item.value)} <span className="text-xs font-normal">{cur}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-48 flex items-center justify-center text-xs text-muted-foreground">
+                      لا توجد مقبوضات مسجلة بعد لعرض توزيع مصادر السيولة
+                    </div>
+                  )}
                 </div>
               </div>
             </TabsContent>
