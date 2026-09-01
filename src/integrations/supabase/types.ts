@@ -1714,6 +1714,207 @@ export type Database = {
         }
         Relationships: []
       }
+      treasury_accounts: {
+        Row: {
+          account_number: string | null
+          active: boolean
+          bank_name: string | null
+          color: string
+          created_at: string
+          id: string
+          initial_balance: number
+          local_key: string | null
+          name: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_number?: string | null
+          active?: boolean
+          bank_name?: string | null
+          color?: string
+          created_at?: string
+          id?: string
+          initial_balance?: number
+          local_key?: string | null
+          name: string
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_number?: string | null
+          active?: boolean
+          bank_name?: string | null
+          color?: string
+          created_at?: string
+          id?: string
+          initial_balance?: number
+          local_key?: string | null
+          name?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      treasury_denomination_audits: {
+        Row: {
+          account_key: string
+          audit_number: string
+          counted_at: string
+          counted_by: string | null
+          created_at: string
+          denominations: Json
+          id: string
+          notes: string | null
+          status: string
+          system_expected_cash: number
+          total_actual_cash: number
+          updated_at: string
+          user_id: string
+          variance: number
+          variance_reason: string | null
+        }
+        Insert: {
+          account_key: string
+          audit_number: string
+          counted_at?: string
+          counted_by?: string | null
+          created_at?: string
+          denominations?: Json
+          id?: string
+          notes?: string | null
+          status?: string
+          system_expected_cash?: number
+          total_actual_cash?: number
+          updated_at?: string
+          user_id: string
+          variance?: number
+          variance_reason?: string | null
+        }
+        Update: {
+          account_key?: string
+          audit_number?: string
+          counted_at?: string
+          counted_by?: string | null
+          created_at?: string
+          denominations?: Json
+          id?: string
+          notes?: string | null
+          status?: string
+          system_expected_cash?: number
+          total_actual_cash?: number
+          updated_at?: string
+          user_id?: string
+          variance?: number
+          variance_reason?: string | null
+        }
+        Relationships: []
+      }
+      treasury_manual_transactions: {
+        Row: {
+          account_key: string
+          amount: number
+          category: string
+          created_at: string
+          id: string
+          notes: string | null
+          payment_method: string | null
+          performed_by: string | null
+          reference_number: string | null
+          title: string
+          tx_date: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_key: string
+          amount?: number
+          category?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          performed_by?: string | null
+          reference_number?: string | null
+          title: string
+          tx_date?: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_key?: string
+          amount?: number
+          category?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          performed_by?: string | null
+          reference_number?: string | null
+          title?: string
+          tx_date?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      treasury_transfers: {
+        Row: {
+          amount: number
+          created_at: string
+          fee: number
+          fee_recorded_as_expense: boolean
+          from_account_key: string
+          id: string
+          notes: string | null
+          performed_by: string | null
+          reference_number: string | null
+          to_account_key: string
+          transfer_date: string
+          transfer_number: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          fee?: number
+          fee_recorded_as_expense?: boolean
+          from_account_key: string
+          id?: string
+          notes?: string | null
+          performed_by?: string | null
+          reference_number?: string | null
+          to_account_key: string
+          transfer_date?: string
+          transfer_number: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          fee?: number
+          fee_recorded_as_expense?: boolean
+          from_account_key?: string
+          id?: string
+          notes?: string | null
+          performed_by?: string | null
+          reference_number?: string | null
+          to_account_key?: string
+          transfer_date?: string
+          transfer_number?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
