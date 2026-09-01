@@ -69,7 +69,7 @@ export function SmartReturnModal({
 
       // 2. Restock Inventory if product is intact & requested
       let restockedCount = 0;
-      if (productCondition === "intact" && restockToInventory && matchedInvoiceItems.length > 0) {
+      if (willRestock && matchedInvoiceItems.length > 0) {
         for (const item of matchedInvoiceItems) {
           const matchedStock = stockItems.find(
             (s) => s.name.trim().toLowerCase() === item.name.trim().toLowerCase()
