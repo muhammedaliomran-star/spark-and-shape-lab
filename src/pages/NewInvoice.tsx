@@ -145,7 +145,14 @@ function NewInvoicePage() {
   const blocked = customer && (customer.frozen || customer.status === "defaulter");
 
   const totalCost = products.reduce((s, p) => s + Number(p.cost || 0) * Number(p.quantity || 1), 0);
-  const subtotal = products.reduce((s, p) => s + Number(p.price || 0) * Number(p.quantity || 1), 0);
+  const lineMetrics = (p: ProductRow) => {
+    const gross = Number(p.price || 0) * Number(p.quantity || 1);
+    const discount = gross * Math.min(100, Math.max(0, Number(p.discount || 0))) / 100;
+    const taxable = Math.max(0, gross - discount);
+    const tax = taxable * Math.max(0, Number(p.taxPct || 0)) / 100;
+    return { gross, discount, tax, total: taxable + tax };
+  };
+  const subtotal = products.reduce((s, p) => s + lineMetrics(p).total, 0);
   const discountValue = Math.min(subtotal, Math.max(0, Number(discountAmt || 0)));
   const afterDiscount = Math.max(0, subtotal - discountValue);
   const taxValue = Math.max(0, (afterDiscount * Number(taxPct || 0)) / 100);
@@ -360,6 +367,13 @@ function NewInvoicePage() {
     );
     if (validProducts.length === 0) return toast.error("أضف منتج واحد على الأقل بسعر صحيح");
     for (const p of validProducts) {
+      const serials = (p.serialNumbers || "").split(/[\n,]+/).map((value) => value.trim()).filter(Boolean);
+      if (serials.length > Number(p.quantity || 0)) {
+        return toast.error(`عدد أرقام السيريال للصنف «${p.name}» أكبر من الكمية`);
+      }
+      if (new Set(serials).size !== serials.length) {
+        return toast.error(`يوجد رقم سيريال مكرر داخل الصنف «${p.name}»`);
+      }
       if (!p.stockId) continue;
       const stock = data.stockItems.find((s) => s.id === p.stockId);
       const qty = Number(p.quantity || 0);
@@ -391,9 +405,10 @@ function NewInvoicePage() {
     const productNotes = `${summary}${notes ? ` — ${notes}` : ""}`;
 
     try {
-      const { data: invData, error: invErr } = await (supabase.from as any)("invoices")
+      const userId = await uid();
+      const { data: invData, error: invErr } = await supabase.from("invoices")
         .insert({
-          user_id: await uid(),
+          user_id: userId,
           customer_id: customerId,
           total: t,
           down_payment: isCash ? t : d,
@@ -419,11 +434,18 @@ function NewInvoicePage() {
           return [
             {
               user_id: invData.user_id,
+              user_id: userId,
               invoice_id: invData.id,
               name: p.name.trim(),
               cost: Number(p.cost || 0),
               price: Number(p.price || 0),
               quantity: qty,
+              discount_pct: Math.min(100, Math.max(0, Number(p.discount || 0))),
+              discount_amount: lineMetrics(p).discount,
+              tax_pct: Math.max(0, Number(p.taxPct || 0)),
+              tax_amount: lineMetrics(p).tax,
+              line_total: lineMetrics(p).total,
+              serial_numbers: (p.serialNumbers || "").split(/[\n,]+/).map((value) => value.trim()).filter(Boolean),
             },
           ];
         });
@@ -449,7 +471,7 @@ function NewInvoicePage() {
 
       const deductions = validProducts
         .filter((p) => p.stockId)
-        .map((p) => ({ stockId: p.stockId!, quantity: Number(p.quantity || 0) }));
+        .flatMap((p) => p.stockId ? [{ stockId: p.stockId, quantity: Number(p.quantity || 0) }] : []);
       if (deductions.length > 0) await db.deductStock(deductions);
 
       playCashSound();
@@ -875,7 +897,8 @@ ${enableSplitPayment ? `<div style="font-size:11px;padding:4px 0;border-bottom:1
                       ? data.stockItems.find((x) => x.id === p.stockId)
                       : undefined;
                     const qty = Number(p.quantity || 0);
-                    const lineTotal = Number(p.price || 0) * Number(p.quantity || 1);
+                    const metrics = lineMetrics(p);
+                    const lineTotal = metrics.total;
                     const hasVariants = s && s.variants && s.variants.length > 0;
 
                     return (
@@ -1003,9 +1026,25 @@ ${enableSplitPayment ? `<div style="font-size:11px;padding:4px 0;border-bottom:1
                           </div>
                         )}
 
+                        <div className="mt-2 grid grid-cols-1 gap-2 border-t border-border/30 pt-3 sm:grid-cols-[110px_110px_minmax(0,1fr)]">
+                          <div>
+                            <Label className="mb-1 block text-[10px] text-muted-foreground">خصم البند %</Label>
+                            <Input type="number" min="0" max="100" value={p.discount || ""} onChange={(e) => updateProduct(p.id, { discount: e.target.value })} className="h-9 text-center" placeholder="0" />
+                          </div>
+                          <div>
+                            <Label className="mb-1 block text-[10px] text-muted-foreground">ضريبة البند %</Label>
+                            <Input type="number" min="0" value={p.taxPct || ""} onChange={(e) => updateProduct(p.id, { taxPct: e.target.value })} className="h-9 text-center" placeholder="0" />
+                          </div>
+                          <div>
+                            <Label className="mb-1 block text-[10px] text-muted-foreground">السيريال / IMEI (افصل بفاصلة)</Label>
+                            <Input value={p.serialNumbers || ""} onChange={(e) => updateProduct(p.id, { serialNumbers: e.target.value })} className="h-9 font-mono text-xs" dir="ltr" placeholder="3569… , 3569…" />
+                          </div>
+                        </div>
+
                         <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
                           <span className="font-bold text-muted-foreground">
-                            الإجمالي: {fmt(lineTotal)} ج.م
+                            الصافي: {fmt(lineTotal)} ج.م
+                            {(metrics.discount > 0 || metrics.tax > 0) && <span className="mr-2 font-normal">(خصم {fmt(metrics.discount)} • ضريبة {fmt(metrics.tax)})</span>}
                           </span>
                           {s && (
                             <span
