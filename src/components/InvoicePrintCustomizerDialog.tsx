@@ -10,6 +10,8 @@ import { Printer, FileText, QrCode, ShieldCheck, Check, Store } from "lucide-rea
 import { pdfDocument, openPdfDocument, esc, pdfCss } from "@/lib/pdf-doc";
 import { calculateInstallmentSchedule } from "@/components/InstallmentScheduleMatrix";
 import { toArabicDigits } from "@/lib/arabic-digits";
+import { useDB } from "@/lib/store";
+import { getInvoiceBranchId, getBranchProfile } from "@/lib/branch-system";
 
 function isoToDDMMYYYY(iso: string): string {
   if (!iso) return "";
@@ -35,7 +37,9 @@ export function InvoicePrintCustomizerDialog({
   shopSettings: ShopSettings;
   onClose: () => void;
 }) {
+  const { branches } = useDB();
   const [paperFormat, setPaperFormat] = useState<"thermal" | "a4">("thermal");
+  const [showBranchInfo, setShowBranchInfo] = useState(true);
   const [showQr, setShowQr] = useState(true);
   const [showWarranty, setShowWarranty] = useState(true);
   const [showSchedule, setShowSchedule] = useState(true);
@@ -51,6 +55,15 @@ export function InvoicePrintCustomizerDialog({
     if (!inv) return [];
     return calculateInstallmentSchedule(inv, payments);
   }, [inv, payments]);
+
+  const invoiceBranch = useMemo(() => {
+    if (!inv) return null;
+    const bid = getInvoiceBranchId(inv.id);
+    if (bid) return branches.find((b) => b.id === bid) || null;
+    return branches.find((b) => b.isMain) || null;
+  }, [inv, branches]);
+
+  const branchProfile = invoiceBranch ? getBranchProfile(invoiceBranch.id) : {};
 
   if (!inv || !customer) return null;
 
@@ -152,7 +165,17 @@ export function InvoicePrintCustomizerDialog({
         </div>`
       : "";
 
+    const branchBar = (showBranchInfo && invoiceBranch)
+      ? `<div style="margin-bottom:10px; padding:8px 10px; border-radius:10px; background:#f1f5f9; border:1px solid #e2e8f0; font-size:11px; color:#0f172a; text-align:center;">
+          <b>${esc(invoiceBranch.name)}</b>${invoiceBranch.location ? ` — ${esc(invoiceBranch.location)}` : ""}
+          ${invoiceBranch.phone ? `<div dir="ltr" style="color:#475569;">${esc(invoiceBranch.phone)}</div>` : ""}
+          ${branchProfile.taxNumber ? `<div style="color:#475569;">س.ض: ${esc(branchProfile.taxNumber)}</div>` : ""}
+          ${branchProfile.commercialRecord ? `<div style="color:#475569;">س.ت: ${esc(branchProfile.commercialRecord)}</div>` : ""}
+        </div>`
+      : "";
+
     const body = `
+      ${branchBar}
       <div class="info" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
         <div class="box" style="border:1px solid #e2e8f0; border-radius:10px; padding:8px 10px; background:#fff;"><b>اسم العميل</b> ${esc(customer.name)}</div>
         <div class="box" style="border:1px solid #e2e8f0; border-radius:10px; padding:8px 10px; background:#fff;"><b>الهاتف</b> <span dir="ltr">${esc(customer.phone || "—")}</span></div>
@@ -206,6 +229,11 @@ export function InvoicePrintCustomizerDialog({
         ...(showShopInfo && shopSettings.phone ? [{ label: "هاتف المحل", value: esc(shopSettings.phone) }] : []),
         ...(showShopInfo && shopSettings.address ? [{ label: "العنوان", value: esc(shopSettings.address) }] : []),
         ...(showShopInfo && shopSettings.taxNumber ? [{ label: "الرقم الضريبي", value: esc(shopSettings.taxNumber) }] : []),
+        ...(showBranchInfo && invoiceBranch ? [{ label: "الفرع", value: esc(invoiceBranch.name) }] : []),
+        ...(showBranchInfo && invoiceBranch?.location ? [{ label: "عنوان الفرع", value: esc(invoiceBranch.location) }] : []),
+        ...(showBranchInfo && invoiceBranch?.phone ? [{ label: "هاتف الفرع", value: esc(invoiceBranch.phone) }] : []),
+        ...(showBranchInfo && branchProfile.taxNumber ? [{ label: "السجل الضريبي للفرع", value: esc(branchProfile.taxNumber) }] : []),
+        ...(showBranchInfo && branchProfile.commercialRecord ? [{ label: "السجل التجاري للفرع", value: esc(branchProfile.commercialRecord) }] : []),
       ],
       kpis: isThermal ? undefined : [
         { label: "إجمالي الفاتورة", value: `${fmt(inv.total)} ${cur}`, tone: "brand" },
@@ -305,6 +333,14 @@ export function InvoicePrintCustomizerDialog({
               <Switch checked={showShopInfo} onCheckedChange={setShowShopInfo} id="sw-shp" />
               <Label htmlFor="sw-shp" className="cursor-pointer text-xs flex items-center gap-2">
                 بيانات المتجر (العنوان، الهاتف، السجل)
+              </Label>
+            </div>
+
+            <div className="flex items-center justify-between py-1">
+              <Switch checked={showBranchInfo} onCheckedChange={setShowBranchInfo} id="sw-brn" />
+              <Label htmlFor="sw-brn" className="cursor-pointer text-xs flex items-center gap-2">
+                <Store className="w-3.5 h-3.5 text-primary" />
+                بيانات الفرع (الاسم، العنوان، الهاتف، السجل الضريبي)
               </Label>
             </div>
 
