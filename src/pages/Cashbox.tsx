@@ -1473,10 +1473,18 @@ export default function CashboxPage() {
           {/* ========================================================================= */}
           {/* Modal 1: تسجيل معاملة مالية يدوية (إيداع / سحب) */}
           {/* ========================================================================= */}
-          <Dialog open={isManualTxOpen} onOpenChange={setIsManualTxOpen}>
+          <Dialog
+            open={isManualTxOpen}
+            onOpenChange={(open) => {
+              setIsManualTxOpen(open);
+              if (!open) resetManualForm();
+            }}
+          >
             <DialogContent className="max-w-md rounded-2xl">
               <DialogHeader>
-                <DialogTitle className="text-base font-bold">تسجيل حركة مالية مباشرة بالصندوق</DialogTitle>
+                <DialogTitle className="text-base font-bold">
+                  {editingTxId ? "تعديل الحركة المالية اليدوية" : "تسجيل حركة مالية مباشرة بالصندوق"}
+                </DialogTitle>
                 <DialogDescription className="text-xs">
                   إيداع رأس مال، إيرادات خدمات، أو سحب مسحوبات شخصية ومصاريف نثرية
                 </DialogDescription>
