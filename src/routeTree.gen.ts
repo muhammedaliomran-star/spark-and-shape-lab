@@ -49,6 +49,7 @@ import { Route as InventoryNewRouteImport } from './routes/inventory_.new'
 import { Route as InvoicesNewRouteImport } from './routes/invoices_.new'
 import { Route as PurchasesIndexRouteImport } from './routes/purchases/index'
 import { Route as PurchasesNewRouteImport } from './routes/purchases/new'
+import { Route as ReceiptTokenRouteImport } from './routes/receipt.$token'
 import { Route as ReportsIndexRouteImport } from './routes/reports/index'
 import { Route as ShippingIndexRouteImport } from './routes/shipping.index'
 import { Route as ShippingCourierRouteImport } from './routes/shipping.courier'
@@ -261,6 +262,11 @@ const PurchasesNewRoute = PurchasesNewRouteImport.update({
   path: '/purchases/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReceiptTokenRoute = ReceiptTokenRouteImport.update({
+  id: '/receipt/$token',
+  path: '/receipt/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportsIndexRoute = ReportsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -357,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/inventory/new': typeof InventoryNewRoute
   '/invoices/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
+  '/receipt/$token': typeof ReceiptTokenRoute
   '/shipping/courier': typeof ShippingCourierRoute
   '/shipping/day': typeof ShippingDayRoute
   '/shipping/rescue': typeof ShippingRescueRoute
@@ -409,6 +416,7 @@ export interface FileRoutesByTo {
   '/inventory/new': typeof InventoryNewRoute
   '/invoices/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
+  '/receipt/$token': typeof ReceiptTokenRoute
   '/shipping/courier': typeof ShippingCourierRoute
   '/shipping/day': typeof ShippingDayRoute
   '/shipping/rescue': typeof ShippingRescueRoute
@@ -463,6 +471,7 @@ export interface FileRoutesById {
   '/inventory_/new': typeof InventoryNewRoute
   '/invoices_/new': typeof InvoicesNewRoute
   '/purchases/new': typeof PurchasesNewRoute
+  '/receipt/$token': typeof ReceiptTokenRoute
   '/shipping/courier': typeof ShippingCourierRoute
   '/shipping/day': typeof ShippingDayRoute
   '/shipping/rescue': typeof ShippingRescueRoute
@@ -518,6 +527,7 @@ export interface FileRouteTypes {
     | '/inventory/new'
     | '/invoices/new'
     | '/purchases/new'
+    | '/receipt/$token'
     | '/shipping/courier'
     | '/shipping/day'
     | '/shipping/rescue'
@@ -570,6 +580,7 @@ export interface FileRouteTypes {
     | '/inventory/new'
     | '/invoices/new'
     | '/purchases/new'
+    | '/receipt/$token'
     | '/shipping/courier'
     | '/shipping/day'
     | '/shipping/rescue'
@@ -623,6 +634,7 @@ export interface FileRouteTypes {
     | '/inventory_/new'
     | '/invoices_/new'
     | '/purchases/new'
+    | '/receipt/$token'
     | '/shipping/courier'
     | '/shipping/day'
     | '/shipping/rescue'
@@ -677,6 +689,7 @@ export interface RootRouteChildren {
   InventoryNewRoute: typeof InventoryNewRoute
   InvoicesNewRoute: typeof InvoicesNewRoute
   PurchasesNewRoute: typeof PurchasesNewRoute
+  ReceiptTokenRoute: typeof ReceiptTokenRoute
   ShippingCourierRoute: typeof ShippingCourierRoute
   ShippingDayRoute: typeof ShippingDayRoute
   ShippingRescueRoute: typeof ShippingRescueRoute
@@ -967,6 +980,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PurchasesNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/receipt/$token': {
+      id: '/receipt/$token'
+      path: '/receipt/$token'
+      fullPath: '/receipt/$token'
+      preLoaderRoute: typeof ReceiptTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reports/': {
       id: '/reports/'
       path: '/'
@@ -1128,6 +1148,7 @@ const rootRouteChildren: RootRouteChildren = {
   InventoryNewRoute: InventoryNewRoute,
   InvoicesNewRoute: InvoicesNewRoute,
   PurchasesNewRoute: PurchasesNewRoute,
+  ReceiptTokenRoute: ReceiptTokenRoute,
   ShippingCourierRoute: ShippingCourierRoute,
   ShippingDayRoute: ShippingDayRoute,
   ShippingRescueRoute: ShippingRescueRoute,
