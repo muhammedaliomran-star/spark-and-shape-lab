@@ -451,8 +451,9 @@ ${
           <ScrollArea className="max-h-[64vh]">
             <div className="flex flex-col gap-3 pl-1">
               {list.map((it, idx) => {
-                const out = it.quantity <= 0;
-                const low = !out && it.quantity < LOW_STOCK();
+                const shownQty = branchQty(it.id, it.quantity);
+                const out = shownQty <= 0;
+                const low = !out && shownQty < LOW_STOCK();
                 const profit = it.salePrice - it.lastUnitCost;
                 const margin = it.salePrice > 0 ? (profit / it.salePrice) * 100 : 0;
 
@@ -504,8 +505,13 @@ ${
                                 privacy && "privacy-blur",
                               )}
                             >
-                              {fmt(it.quantity)}
+                              {fmt(shownQty)}
                             </div>
+                            {!isAllBranches && activeBranch && (
+                              <div className="text-[9px] text-primary font-bold mt-0.5">
+                                رصيد {activeBranch.name}
+                              </div>
+                            )}
                           </div>
 
                           <div className="flex flex-col">
