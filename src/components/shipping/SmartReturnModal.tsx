@@ -57,9 +57,12 @@ export function SmartReturnModal({
   const handleConfirmReturn = async () => {
     setSubmitting(true);
     try {
+      const willRestock = productCondition === "intact" && restockToInventory;
       const fullReason = `${returnReason}${customNotes ? ` — ${customNotes}` : ""} [تحمل الشحن: ${
         shippingPayer === "store" ? "المتجر" : shippingPayer === "customer" ? "العميل" : "المندوب"
-      } | حالة البضاعة: ${productCondition === "intact" ? "سليمة" : "تالفة"}]`;
+      } | حالة البضاعة: ${conditionLabel}${
+        willRestock && effectiveBranch ? ` | فرع الاستلام: ${effectiveBranch.name}` : ""
+      }]`;
 
       // 1. Update Shipment Status to returned
       await db.updateShipmentStatus(shipment.id, "returned", fullReason);
