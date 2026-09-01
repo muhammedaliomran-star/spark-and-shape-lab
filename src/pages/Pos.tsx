@@ -31,7 +31,7 @@ import { openWhatsAppReceipt } from "@/lib/whatsapp";
 import { useHeldInvoices, type HeldInvoiceItem } from "@/lib/held-invoices";
 import { ShiftManagerDialog } from "@/components/ShiftManagerDialog";
 import { getActiveShift } from "@/lib/shifts";
-import { linkInvoiceToBranch, getActiveBranchId } from "@/lib/branch-system";
+import { linkInvoiceToBranch, resolveStampBranchId } from "@/lib/branch-system";
 import { PosSplitPaymentModal, type SplitPaymentDetail } from "@/components/PosSplitPaymentModal";
 import { PosQuickRefundModal } from "@/components/PosQuickRefundModal";
 import { PosKeyboardHUD } from "@/components/PosKeyboardHUD";
@@ -439,7 +439,7 @@ function PosPage() {
       if (invErr) throw invErr;
 
       // ختم الفاتورة بالفرع النشط
-      linkInvoiceToBranch(invData.id, getActiveBranchId());
+      linkInvoiceToBranch(invData.id, resolveStampBranchId(data.branches));
 
       // Insert Items
       const itemRows = cart.map((p) => ({
@@ -549,7 +549,7 @@ function PosPage() {
       if (invErr) throw invErr;
 
       // ختم الفاتورة بالفرع النشط
-      linkInvoiceToBranch(invData.id, getActiveBranchId());
+      linkInvoiceToBranch(invData.id, resolveStampBranchId(data.branches));
 
       // Insert Items
       const itemRows = cart.map((p) => ({

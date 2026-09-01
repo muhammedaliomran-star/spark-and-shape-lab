@@ -1071,3 +1071,11 @@ export function getBranchLowStockAlerts(
 
   return alerts.sort((a, b) => a.quantity - b.quantity);
 }
+
+/** الفرع الذي تُختم به العمليات الجديدة: الفرع النشط، وإن كان "كل الفروع" فالفرع الرئيسي. */
+export function resolveStampBranchId(branches: Branch[]): string {
+  const active = getActiveBranchId();
+  if (active && active !== "all" && branches.some((b) => b.id === active)) return active;
+  const main = branches.find((b) => b.isMain) || branches[0];
+  return main?.id || "";
+}
