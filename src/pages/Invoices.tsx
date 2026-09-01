@@ -67,6 +67,7 @@ function escapeHtml(s: string): string {
 
 function InvoicesPage() {
   const data = useDB();
+  const { activeBranchId, activeBranch, mainBranchId, isAllBranches } = useActiveBranch();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<Tab>("active");
