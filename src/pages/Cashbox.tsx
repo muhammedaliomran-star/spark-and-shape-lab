@@ -1126,10 +1126,34 @@ export default function CashboxPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* 7-Day In/Out Trend Chart */}
                 <div className="rounded-2xl border border-foreground/10 bg-card p-5">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <div>
-                      <h4 className="font-bold text-sm">حركة التدفق النقدي (آخر 7 أيام)</h4>
-                      <p className="text-xs text-muted-foreground">مقارنة المقبوضات اليومية بالمدفوعات</p>
+                      <h4 className="font-bold text-sm">
+                        حركة التدفق النقدي{" "}
+                        {trendMode === "daily" ? "(آخر 7 أيام)" : trendMode === "weekly" ? "(آخر 8 أسابيع)" : "(آخر 6 شهور)"}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">مقارنة المقبوضات بالمدفوعات حسب الفترة</p>
+                    </div>
+                    <div className="flex items-center gap-1 rounded-xl border border-foreground/10 bg-muted/30 p-1">
+                      {([
+                        { key: "daily", label: "يومي" },
+                        { key: "weekly", label: "أسبوعي" },
+                        { key: "monthly", label: "شهري" },
+                      ] as const).map((opt) => (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => setTrendMode(opt.key)}
+                          className={cn(
+                            "px-3 h-7 rounded-lg text-[11px] font-bold transition-colors",
+                            trendMode === opt.key
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:bg-foreground/5"
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
