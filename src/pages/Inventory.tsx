@@ -128,6 +128,7 @@ type Tab = "all" | "out" | "low";
 function InventoryPage() {
   useShopSettings(); // re-render when the low-stock threshold changes
   const data = useDB();
+  const { activeBranchId, activeBranch, isAllBranches } = useActiveBranch();
   const { privacy, toggle } = usePrivacy();
   const blurCls = privacy ? "privacy-blur" : "privacy-clear";
   const [q, setQ] = useState("");
@@ -177,7 +178,7 @@ function InventoryPage() {
         return st.quantity <= (st.minStock || LOW_STOCK());
       }).length;
       const avgCost = totalItems > 0 ? data.stockItems.reduce((s, it) => s + it.lastUnitCost, 0) / totalItems : 0;
-      return { totalItems, value: val.totalCostValue ?? val.totalCost ?? 0, low, avgCost };
+      return { totalItems, value: val.totalCostValue, low, avgCost };
     }
     const value = data.stockItems.reduce((s, it) => s + it.quantity * it.lastUnitCost, 0);
     const avgCost =
