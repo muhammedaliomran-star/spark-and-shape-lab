@@ -1743,7 +1743,12 @@ function EditInvoiceDialog({ inv, onClose }: { inv: Invoice | null; onClose: () 
   if (!inv) return null;
 
   const totalCost = products.reduce((s, p) => s + Number(p.cost || 0) * Number(p.quantity || 1), 0);
-  const totalPrice = products.reduce((s, p) => s + Number(p.price || 0) * Number(p.quantity || 1), 0);
+  const itemNet = (p: ProductRow) => {
+    const gross = Number(p.price || 0) * Number(p.quantity || 1);
+    const afterDiscount = gross * (1 - Math.min(100, Math.max(0, Number(p.discount || 0))) / 100);
+    return Math.max(0, afterDiscount) * (1 + Math.max(0, Number(p.taxPct || 0)) / 100);
+  };
+  const totalPrice = products.reduce((s, p) => s + itemNet(p), 0);
   const remaining = Math.max(0, totalPrice - Number(down || 0));
   const profit = totalPrice - totalCost;
   const isCash = totalPrice > 0 && Number(down) >= totalPrice;
@@ -1820,6 +1825,13 @@ function EditInvoiceDialog({ inv, onClose }: { inv: Invoice | null; onClose: () 
                       <div><Label className="text-xs">التكلفة (ج.م)</Label><Input type="number" value={p.cost} onChange={(e) => updateProduct(p.id, { cost: e.target.value })} className={blurCls} /></div>
                       <div><Label className="text-xs">سعر البيع (ج.م)</Label><Input type="number" value={p.price} onChange={(e) => updateProduct(p.id, { price: e.target.value })} className={blurCls} /></div>
                     </div>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-[90px_90px_90px_minmax(0,1fr)]">
+                      <div><Label className="text-xs">الكمية</Label><Input type="number" min="1" value={p.quantity} onChange={(e) => updateProduct(p.id, { quantity: e.target.value })} /></div>
+                      <div><Label className="text-xs">خصم %</Label><Input type="number" min="0" max="100" value={p.discount || ""} onChange={(e) => updateProduct(p.id, { discount: e.target.value })} /></div>
+                      <div><Label className="text-xs">ضريبة %</Label><Input type="number" min="0" value={p.taxPct || ""} onChange={(e) => updateProduct(p.id, { taxPct: e.target.value })} /></div>
+                      <div><Label className="text-xs">Serial / IMEI</Label><Input dir="ltr" className="font-mono text-xs" value={p.serialNumbers || ""} onChange={(e) => updateProduct(p.id, { serialNumbers: e.target.value })} placeholder="افصل بفاصلة" /></div>
+                    </div>
+                    <p className="text-[11px] font-bold text-primary">صافي البند: {fmt(itemNet(p))} ج.م</p>
                   </div>
                 </motion.div>
               ))}
