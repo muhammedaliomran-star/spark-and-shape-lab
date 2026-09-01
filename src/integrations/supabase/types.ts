@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      branches: {
+        Row: {
+          created_at: string
+          id: string
+          is_main: boolean
+          location: string | null
+          manager_name: string | null
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_main?: boolean
+          location?: string | null
+          manager_name?: string | null
+          name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_main?: boolean
+          location?: string | null
+          manager_name?: string | null
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       carrier_settlements: {
         Row: {
           amount: number
@@ -315,6 +351,69 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_vouchers: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string | null
+          description: string | null
+          id: string
+          party_name: string | null
+          party_phone: string | null
+          payment_method: string
+          supplier_id: string | null
+          type: string
+          updated_at: string
+          user_id: string
+          voucher_date: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          party_name?: string | null
+          party_phone?: string | null
+          payment_method?: string
+          supplier_id?: string | null
+          type?: string
+          updated_at?: string
+          user_id: string
+          voucher_date?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          party_name?: string | null
+          party_phone?: string | null
+          payment_method?: string
+          supplier_id?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+          voucher_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_vouchers_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_vouchers_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
         ]
