@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/tooltip";
 
 import { useEffect, useMemo, useState } from "react";
+import { useActiveBranch } from "@/hooks/use-active-branch";
+import { getInvoicesForBranch, getInvoiceBranchId } from "@/lib/branch-system";
 import { format, addMonths } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -354,10 +356,13 @@ function InvoicesPage() {
   }, [data.invoices, data.payments]);
 
   const list = useMemo(() => {
-    // Filtered list based on tab and search
+    // Filtered list based on tab, search and active branch
+    const branchScoped = isAllBranches
+      ? data.invoices
+      : getInvoicesForBranch(activeBranchId, data.invoices, mainBranchId);
     const fromTs = dateFrom ? new Date(dateFrom.getFullYear(), dateFrom.getMonth(), dateFrom.getDate()).getTime() : null;
     const toTs = dateTo ? new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 23, 59, 59).getTime() : null;
-    return data.invoices
+    return branchScoped
       .filter((i) => {
         const remaining = i.total - i.paid;
         if (tab === "active") return remaining > 0;
@@ -378,7 +383,7 @@ function InvoicesPage() {
         return true;
       })
       .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-  }, [data, q, tab, dateFrom, dateTo]);
+  }, [data, q, tab, dateFrom, dateTo, isAllBranches, activeBranchId, mainBranchId]);
 
   const findCustomer = (id: string) => data.customers.find((c) => c.id === id);
 
