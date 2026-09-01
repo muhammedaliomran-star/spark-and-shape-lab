@@ -468,6 +468,14 @@ function InvoicesPage() {
         }
       />
 
+      {!isAllBranches && activeBranch && (
+        <div className="mx-4 mt-3 flex items-center gap-2 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-2.5 text-xs font-bold text-primary">
+          <GitBranch className="h-4 w-4" />
+          عرض فواتير فرع «{activeBranch.name}» فقط ({list.length} فاتورة) — بدّل من محدد الفرع لعرض الكل.
+        </div>
+      )}
+
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
         <StatCard icon={<Wallet className="w-5 h-5" />} label="إجمالي المسدد" value={`${fmt(stats.totalPaid)} ج.م`} tone="neutral" trend="up" valueClassName={blurCls} />
         <StatCard icon={<TrendingUp className="w-5 h-5" />} label="إجمالي المبيعات" value={`${fmt(stats.totalSales)} ج.م`} tone="neutral" trend="up" valueClassName={blurCls} />
