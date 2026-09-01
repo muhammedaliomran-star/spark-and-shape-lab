@@ -1750,7 +1750,6 @@ export type Database = {
         }
       }
       expire_storefront_reservations: { Args: never; Returns: number }
-      get_public_invoice_receipt: { Args: { p_token: string }; Returns: Json }
       get_public_order_status: {
         Args: { p_customer_phone: string; p_public_number: string }
         Returns: Json
