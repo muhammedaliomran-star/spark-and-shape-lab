@@ -65,6 +65,8 @@ import {
   BranchStaffMember,
   getExpensesForBranch,
   linkExpenseToBranch,
+  saveBranchProfile,
+  getBranchProfile,
 } from "@/lib/branch-system";
 import {
   GitBranch,
@@ -149,6 +151,7 @@ export default function BranchesPage() {
   // Branch CRUD state
   const [isBranchDialogOpen, setIsBranchDialogOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const editingBranchProfile = editingBranch ? getBranchProfile(editingBranch.id) : {};
 
   // Transfer State
   const [transfers, setTransfers] = useState<BranchTransfer[]>(getBranchTransfers());
@@ -231,13 +234,22 @@ export default function BranchesPage() {
       managerName: formData.get("managerName") as string,
       isMain: formData.get("isMain") === "on",
     };
+    const profilePatch = {
+      code: (formData.get("branchCode") as string) || "",
+      taxNumber: (formData.get("taxNumber") as string) || "",
+      commercialRecord: (formData.get("commercialRecord") as string) || "",
+      email: (formData.get("branchEmail") as string) || "",
+    };
 
     try {
       if (editingBranch) {
         await updateBranch(editingBranch.id, data);
+        saveBranchProfile(editingBranch.id, profilePatch);
         toast.success("تم تحديث بيانات الفرع بنجاح");
       } else {
-        await addBranch(data);
+        const created = await addBranch(data);
+        const newId = (created as any)?.id;
+        if (newId) saveBranchProfile(newId, profilePatch);
         toast.success("تمت إضافة الفرع الجديد بنجاح");
       }
       setIsBranchDialogOpen(false);
@@ -1632,6 +1644,25 @@ export default function BranchesPage() {
                     <Input id="managerName" name="managerName" defaultValue={editingBranch?.managerName || ""} placeholder="محمد علي..." className="h-11 rounded-xl" />
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="branchCode">كود الفرع</Label>
+                    <Input id="branchCode" name="branchCode" defaultValue={editingBranchProfile.code || ""} placeholder="BR-01" className="h-11 rounded-xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="branchEmail">بريد الفرع</Label>
+                    <Input id="branchEmail" name="branchEmail" defaultValue={editingBranchProfile.email || ""} placeholder="branch@store.com" className="h-11 rounded-xl" dir="ltr" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="taxNumber">السجل الضريبي للفرع</Label>
+                    <Input id="taxNumber" name="taxNumber" defaultValue={editingBranchProfile.taxNumber || ""} placeholder="100-200-300" className="h-11 rounded-xl" dir="ltr" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="commercialRecord">السجل التجاري للفرع</Label>
+                    <Input id="commercialRecord" name="commercialRecord" defaultValue={editingBranchProfile.commercialRecord || ""} placeholder="12345" className="h-11 rounded-xl" dir="ltr" />
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between p-4 rounded-xl border border-foreground/10 bg-card/50">
                   <div className="space-y-0.5">
                     <Label>تعيين كفرع رئيسي</Label>

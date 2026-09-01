@@ -1,5 +1,7 @@
 import { EmptyState } from "@/components/EmptyState";
 import { useEffect, useMemo, useState } from "react";
+import { useActiveBranch } from "@/hooks/use-active-branch";
+import { getProductStockInBranch, calculateBranchStockValuation } from "@/lib/branch-system";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { PageTransition } from "@/components/PageTransition";
@@ -126,6 +128,7 @@ type Tab = "all" | "out" | "low";
 function InventoryPage() {
   useShopSettings(); // re-render when the low-stock threshold changes
   const data = useDB();
+  const { activeBranchId, activeBranch, isAllBranches } = useActiveBranch();
   const { privacy, toggle } = usePrivacy();
   const blurCls = privacy ? "privacy-blur" : "privacy-clear";
   const [q, setQ] = useState("");
@@ -162,25 +165,39 @@ function InventoryPage() {
     }
   };
 
+  // أرصدة الفرع النشط (Multi-Location view)
+  const branchQty = (itemId: string, fallback: number) =>
+    isAllBranches ? fallback : getProductStockInBranch(activeBranchId, itemId, fallback).quantity;
+
   const totals = useMemo(() => {
     const totalItems = data.stockItems.length;
+    if (!isAllBranches && activeBranch) {
+      const val = calculateBranchStockValuation(activeBranch.id, data.stockItems);
+      const low = data.stockItems.filter((it) => {
+        const st = getProductStockInBranch(activeBranch.id, it.id, it.quantity);
+        return st.quantity <= (st.minStock || LOW_STOCK());
+      }).length;
+      const avgCost = totalItems > 0 ? data.stockItems.reduce((s, it) => s + it.lastUnitCost, 0) / totalItems : 0;
+      return { totalItems, value: val.totalCostValue, low, avgCost };
+    }
     const value = data.stockItems.reduce((s, it) => s + it.quantity * it.lastUnitCost, 0);
     const avgCost =
       totalItems > 0 ? data.stockItems.reduce((s, it) => s + it.lastUnitCost, 0) / totalItems : 0;
     const low = data.stockItems.filter((it) => it.quantity < LOW_STOCK()).length;
     return { totalItems, value, low, avgCost };
-  }, [data.stockItems]);
+  }, [data.stockItems, isAllBranches, activeBranch]);
 
   const list = useMemo(() => {
     return data.stockItems
       .filter((it) => {
-        if (tab === "out") return it.quantity <= 0;
-        if (tab === "low") return it.quantity > 0 && it.quantity < LOW_STOCK();
+        const qty = branchQty(it.id, it.quantity);
+        if (tab === "out") return qty <= 0;
+        if (tab === "low") return qty > 0 && qty < LOW_STOCK();
         return true;
       })
       .filter((it) => (q ? it.name.includes(q) || (it.barcode ?? "").includes(q) : true))
-      .sort((a, b) => a.quantity - b.quantity);
-  }, [data.stockItems, q, tab]);
+      .sort((a, b) => branchQty(a.id, a.quantity) - branchQty(b.id, b.quantity));
+  }, [data.stockItems, q, tab, isAllBranches, activeBranchId]);
 
   const exportExcel = async () => {
     try {
@@ -434,8 +451,9 @@ ${
           <ScrollArea className="max-h-[64vh]">
             <div className="flex flex-col gap-3 pl-1">
               {list.map((it, idx) => {
-                const out = it.quantity <= 0;
-                const low = !out && it.quantity < LOW_STOCK();
+                const shownQty = branchQty(it.id, it.quantity);
+                const out = shownQty <= 0;
+                const low = !out && shownQty < LOW_STOCK();
                 const profit = it.salePrice - it.lastUnitCost;
                 const margin = it.salePrice > 0 ? (profit / it.salePrice) * 100 : 0;
 
@@ -487,8 +505,13 @@ ${
                                 privacy && "privacy-blur",
                               )}
                             >
-                              {fmt(it.quantity)}
+                              {fmt(shownQty)}
                             </div>
+                            {!isAllBranches && activeBranch && (
+                              <div className="text-[9px] text-primary font-bold mt-0.5">
+                                رصيد {activeBranch.name}
+                              </div>
+                            )}
                           </div>
 
                           <div className="flex flex-col">

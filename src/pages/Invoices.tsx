@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/tooltip";
 
 import { useEffect, useMemo, useState } from "react";
+import { useActiveBranch } from "@/hooks/use-active-branch";
+import { getInvoicesForBranch, getInvoiceBranchId } from "@/lib/branch-system";
 import { format, addMonths } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -32,7 +34,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { InstallmentScheduleMatrix } from "@/components/InstallmentScheduleMatrix";
 import { CreateInvoiceShipmentDialog } from "@/components/CreateInvoiceShipmentDialog";
 import { InvoicePrintCustomizerDialog } from "@/components/InvoicePrintCustomizerDialog";
-import { Plus, Search, Wallet, AlertTriangle, Printer, ShieldAlert, Eye, Pencil, Trash2, Bell, History, TrendingUp, CalendarDays, AlertCircle, MessageCircle, EyeOff, Download, FileSpreadsheet, FileText, X, ChevronsUpDown, Check, Package, ScanLine, Info, CreditCard, Receipt, Undo2, Copy, Share2, MoreVertical, Layers, CheckCircle2, Truck, CheckSquare, Square } from "lucide-react";
+import { Plus, Search, Wallet, AlertTriangle, Printer, ShieldAlert, Eye, Pencil, Trash2, Bell, History, TrendingUp, CalendarDays, AlertCircle, MessageCircle, EyeOff, Download, FileSpreadsheet, FileText, X, ChevronsUpDown, Check, Package, ScanLine, Info, CreditCard, Receipt, Undo2, Copy, Share2, MoreVertical, Layers, CheckCircle2, Truck, CheckSquare, Square, GitBranch } from "lucide-react";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { EmptyState } from "@/components/EmptyState";
 import { TableSkeleton } from "@/components/LoadingSkeletons";
@@ -65,6 +67,7 @@ function escapeHtml(s: string): string {
 
 function InvoicesPage() {
   const data = useDB();
+  const { activeBranchId, activeBranch, mainBranchId, isAllBranches } = useActiveBranch();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<Tab>("active");
@@ -354,10 +357,13 @@ function InvoicesPage() {
   }, [data.invoices, data.payments]);
 
   const list = useMemo(() => {
-    // Filtered list based on tab and search
+    // Filtered list based on tab, search and active branch
+    const branchScoped = isAllBranches
+      ? data.invoices
+      : getInvoicesForBranch(activeBranchId, data.invoices, mainBranchId);
     const fromTs = dateFrom ? new Date(dateFrom.getFullYear(), dateFrom.getMonth(), dateFrom.getDate()).getTime() : null;
     const toTs = dateTo ? new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 23, 59, 59).getTime() : null;
-    return data.invoices
+    return branchScoped
       .filter((i) => {
         const remaining = i.total - i.paid;
         if (tab === "active") return remaining > 0;
@@ -378,7 +384,7 @@ function InvoicesPage() {
         return true;
       })
       .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-  }, [data, q, tab, dateFrom, dateTo]);
+  }, [data, q, tab, dateFrom, dateTo, isAllBranches, activeBranchId, mainBranchId]);
 
   const findCustomer = (id: string) => data.customers.find((c) => c.id === id);
 
@@ -461,6 +467,14 @@ function InvoicesPage() {
           </div>
         }
       />
+
+      {!isAllBranches && activeBranch && (
+        <div className="mx-4 mt-3 flex items-center gap-2 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-2.5 text-xs font-bold text-primary">
+          <GitBranch className="h-4 w-4" />
+          عرض فواتير فرع «{activeBranch.name}» فقط ({list.length} فاتورة) — بدّل من محدد الفرع لعرض الكل.
+        </div>
+      )}
+
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
         <StatCard icon={<Wallet className="w-5 h-5" />} label="إجمالي المسدد" value={`${fmt(stats.totalPaid)} ج.م`} tone="neutral" trend="up" valueClassName={blurCls} />

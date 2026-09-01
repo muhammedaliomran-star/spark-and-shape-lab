@@ -14,6 +14,8 @@ import {
   type Customer,
   type Invoice,
 } from "@/lib/store";
+import { getBranchLowStockAlerts } from "@/lib/branch-system";
+import { useActiveBranch } from "@/hooks/use-active-branch";
 import {
   Bell,
   MessageCircle,
@@ -76,6 +78,7 @@ type SortOption = "late_desc" | "remaining_desc" | "due_asc";
 
 function AlertsPage() {
   const data = useDB();
+  const { activeBranchId, isAllBranches } = useActiveBranch();
   const { settings } = useShopSettings();
   const lowStockLimit = settings.lowStockThreshold;
   const daysBefore = settings.reminderDaysBefore;
@@ -154,6 +157,12 @@ function AlertsPage() {
       })
       .filter((item): item is typeof item & { customer: Customer } => !!item.customer);
   }, [data.invoices, data.customers, daysBefore, promises, snoozes, now]);
+
+  // نواقص كل فرع على حدة
+  const branchAlerts = useMemo(
+    () => getBranchLowStockAlerts(data.branches, data.stockItems, isAllBranches ? undefined : activeBranchId),
+    [data.branches, data.stockItems, isAllBranches, activeBranchId]
+  );
 
   // Stock items
   const lowStock = useMemo(() => {
@@ -439,6 +448,41 @@ function AlertsPage() {
                 إدارة المخزن بالكامل ←
               </Link>
             </div>
+
+            {branchAlerts.length > 0 && (
+              <div className="rounded-2xl border border-primary/25 bg-primary/[0.04] p-4 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-bold text-primary flex items-center gap-2">
+                    <Package className="w-4 h-4" /> نواقص على مستوى الفروع ({branchAlerts.length})
+                  </div>
+                  <Link to="/branches" className="text-[11px] font-bold text-primary hover:underline">
+                    إدارة الفروع ←
+                  </Link>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {branchAlerts.slice(0, 12).map((a) => (
+                    <div
+                      key={`${a.branchId}-${a.stockItemId}`}
+                      className={cn(
+                        "flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-xs",
+                        a.isOut ? "border-rose-500/40 bg-rose-500/[0.05]" : "border-amber-500/40 bg-amber-500/[0.05]"
+                      )}
+                    >
+                      <div className="min-w-0">
+                        <div className="font-bold truncate">{a.itemName}</div>
+                        <div className="text-[10px] text-muted-foreground">{a.branchName}</div>
+                      </div>
+                      <div className="text-left shrink-0">
+                        <div className={cn("font-extrabold text-numeric", a.isOut ? "text-rose-600" : "text-amber-600")}>
+                          {a.quantity}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground">الحد {a.minStock}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {lowStock.length === 0 ? (
               <div className="text-center py-16 bg-card border rounded-2xl p-6">

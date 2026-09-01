@@ -16,6 +16,7 @@ import {
   type SplitPaymentDetail,
 } from "@/lib/store";
 import { supabase } from "@/integrations/supabase/client";
+import { linkInvoiceToBranch, resolveStampBranchId } from "@/lib/branch-system";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -426,6 +427,9 @@ function NewInvoicePage() {
         .single();
 
       if (invErr) throw invErr;
+
+      // ختم الفاتورة بالفرع النشط
+      if (invData?.id) linkInvoiceToBranch(invData.id, resolveStampBranchId(data.branches));
 
       // Add Invoice Items
       if (validProducts.length > 0 && invData?.id) {

@@ -304,7 +304,7 @@ export interface DBState {
   shipments: Shipment[];
 
   loading: boolean;
-  addBranch: (b: Omit<Branch, "id" | "createdAt">) => Promise<void>;
+  addBranch: (b: Omit<Branch, "id" | "createdAt">) => Promise<{ id: string } | null>;
   updateBranch: (id: string, patch: Partial<Branch>) => Promise<void>;
   removeBranch: (id: string) => Promise<void>;
   addPaymentVoucher: (v: Omit<PaymentVoucher, "id" | "createdAt">) => Promise<void>;
@@ -791,12 +791,13 @@ export const db = {
   // Branches
   async addBranch(b: Omit<Branch, "id" | "createdAt">) {
     const user_id = await uid();
-    const { error } = await (supabase.from as any)("branches").insert({
+    const { data, error } = await (supabase.from as any)("branches").insert({
       user_id, name: b.name, location: b.location, phone: b.phone,
       manager_name: b.managerName, is_main: b.isMain
-    });
+    }).select("id").single();
     if (error) throw error;
     await fetchAll();
+    return data ? { id: data.id as string } : null;
   },
   async updateBranch(id: string, patch: Partial<Branch>) {
     const upd: any = {};

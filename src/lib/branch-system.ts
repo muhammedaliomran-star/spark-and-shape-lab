@@ -130,6 +130,7 @@ const STORAGE_KEYS = {
   BRANCH_STAFF: "segilly_branch_staff_v1",
   BRANCH_EXPENSES_ALLOC: "segilly_branch_expenses_alloc_v1",
   INVOICE_BRANCH_MAP: "segilly_invoice_branch_map_v1",
+  BRANCH_PROFILES: "segilly_branch_profiles_v1",
 };
 
 function readStorage<T>(key: string, fallback: T): T {
@@ -476,6 +477,13 @@ export function printBranchTransferNote(
     )
     .join("");
 
+  const transferQr = `https://api.qrserver.com/v1/create-qr-code/?size=170x170&margin=4&data=${encodeURIComponent(
+    `SEGILLY-TRANSFER:${transfer.transferNumber}`
+  )}`;
+  const transferBarcode = `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(
+    transfer.transferNumber
+  )}&code=Code128&translate-esc=false&dpi=96`;
+
   const body = `
     <div style="margin-bottom:20px; padding:12px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -484,6 +492,15 @@ export function printBranchTransferNote(
           ${statusLabel}
         </span>
       </div>
+      <div style="display:flex; align-items:center; gap:14px; margin-bottom:10px; padding:8px 10px; background:#fff; border:1px dashed #cbd5e1; border-radius:10px;">
+        <img src="${transferQr}" alt="QR" style="width:78px; height:78px;" />
+        <div style="flex:1; text-align:center;">
+          <img src="${transferBarcode}" alt="Barcode" style="max-width:230px; height:52px;" />
+          <div style="font-size:12px; font-weight:bold; letter-spacing:1px; direction:ltr; margin-top:2px;">${esc(transfer.transferNumber)}</div>
+          <div style="font-size:10px; color:#64748b;">امسح الكود لتأكيد استلام الإذن سريعًا</div>
+        </div>
+      </div>
+
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; font-size:13px;">
         <div>
           <p style="margin:3px 0;"><strong>فرع الإرسال (المصدر):</strong> ${esc(fromBranch?.name || "الفرع الرئيسي")}</p>
@@ -814,20 +831,34 @@ export function getInvoiceBranchMap(): Record<string, string> {
 }
 
 export function linkInvoiceToBranch(invoiceId: string, branchId: string): void {
+  if (!invoiceId || !branchId || branchId === "all") return;
   const map = getInvoiceBranchMap();
   map[invoiceId] = branchId;
   writeStorage(STORAGE_KEYS.INVOICE_BRANCH_MAP, map);
 }
 
-export function getInvoicesForBranch(branchId: string, allInvoices: Invoice[]): Invoice[] {
+export function getInvoiceBranchId(invoiceId: string): string | null {
+  return getInvoiceBranchMap()[invoiceId] || null;
+}
+
+/**
+ * فواتير فرع محدد. الفواتير غير المختومة بفرع تُنسب للفرع الرئيسي (fallbackBranchId)
+ * حتى لا تختفي البيانات القديمة عند التصفية.
+ */
+export function getInvoicesForBranch(
+  branchId: string,
+  allInvoices: Invoice[],
+  fallbackBranchId?: string
+): Invoice[] {
+  if (!branchId || branchId === "all") return allInvoices;
   const map = getInvoiceBranchMap();
-  // If no branch assigned yet, associate with main branch or return all if all
   return allInvoices.filter((inv) => {
     const assigned = map[inv.id];
     if (assigned) return assigned === branchId;
-    return true; // fallback
+    return fallbackBranchId ? fallbackBranchId === branchId : true;
   });
 }
+
 
 export function getExpenseBranchMap(): Record<string, string> {
   return readStorage<Record<string, string>>(STORAGE_KEYS.BRANCH_EXPENSES_ALLOC, {});
@@ -970,4 +1001,81 @@ export function getActiveBranchId(): string {
 export function setActiveBranchId(branchId: string): void {
   localStorage.setItem(STORAGE_KEYS.ACTIVE_BRANCH, branchId);
   window.dispatchEvent(new CustomEvent("segilly_active_branch_changed", { detail: { branchId } }));
+}
+
+// ==================== 9. الملف الرسمي للفرع (Tax / Legal Profile) ====================
+
+export interface BranchProfile {
+  code?: string;
+  taxNumber?: string;
+  commercialRecord?: string;
+  email?: string;
+}
+
+export function getBranchProfiles(): Record<string, BranchProfile> {
+  return readStorage<Record<string, BranchProfile>>(STORAGE_KEYS.BRANCH_PROFILES, {});
+}
+
+export function getBranchProfile(branchId: string): BranchProfile {
+  return getBranchProfiles()[branchId] || {};
+}
+
+export function saveBranchProfile(branchId: string, patch: BranchProfile): void {
+  const all = getBranchProfiles();
+  all[branchId] = { ...(all[branchId] || {}), ...patch };
+  writeStorage(STORAGE_KEYS.BRANCH_PROFILES, all);
+}
+
+// ==================== 10. تنبيهات نواقص الفروع (Branch Low Stock Alerts) ====================
+
+export interface BranchLowStockAlert {
+  branchId: string;
+  branchName: string;
+  stockItemId: string;
+  itemName: string;
+  quantity: number;
+  minStock: number;
+  shortage: number;
+  isOut: boolean;
+}
+
+export function getBranchLowStockAlerts(
+  branches: Branch[],
+  stockItems: StockItem[],
+  onlyBranchId?: string
+): BranchLowStockAlert[] {
+  const stockList = getBranchStockList();
+  const alerts: BranchLowStockAlert[] = [];
+  const scoped = onlyBranchId && onlyBranchId !== "all"
+    ? branches.filter((b) => b.id === onlyBranchId)
+    : branches;
+
+  for (const branch of scoped) {
+    for (const item of stockItems) {
+      const row = stockList.find((s) => s.branchId === branch.id && s.stockItemId === item.id);
+      if (!row) continue; // لم يُخصص رصيد لهذا الصنف في هذا الفرع
+      const minStock = row.minStock || 3;
+      if (row.quantity > minStock) continue;
+      alerts.push({
+        branchId: branch.id,
+        branchName: branch.name,
+        stockItemId: item.id,
+        itemName: item.name,
+        quantity: row.quantity,
+        minStock,
+        shortage: Math.max(0, minStock - row.quantity),
+        isOut: row.quantity <= 0,
+      });
+    }
+  }
+
+  return alerts.sort((a, b) => a.quantity - b.quantity);
+}
+
+/** الفرع الذي تُختم به العمليات الجديدة: الفرع النشط، وإن كان "كل الفروع" فالفرع الرئيسي. */
+export function resolveStampBranchId(branches: Branch[]): string {
+  const active = getActiveBranchId();
+  if (active && active !== "all" && branches.some((b) => b.id === active)) return active;
+  const main = branches.find((b) => b.isMain) || branches[0];
+  return main?.id || "";
 }
