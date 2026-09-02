@@ -24,7 +24,9 @@ import {
   addExpenseCategory,
   updateExpenseCategory,
   deleteExpenseCategory,
+  CATEGORY_ICON_OPTIONS,
 } from "@/lib/expenses-system";
+import { CategoryIcon, CATEGORY_COLOR_CLASSES } from "@/components/expenses/CategoryIcon";
 import { fmt, useDB } from "@/lib/store";
 import { toast } from "sonner";
 import {
@@ -67,6 +69,7 @@ export function CustomCategoriesTab() {
 
   const [label, setLabel] = useState("");
   const [color, setColor] = useState("emerald");
+  const [iconName, setIconName] = useState("Receipt");
   const [description, setDescription] = useState("");
 
   const refresh = () => setCategories(getAllExpenseCategories());
@@ -86,6 +89,7 @@ export function CustomCategoriesTab() {
     setEditingCat(null);
     setLabel("");
     setColor("emerald");
+    setIconName("Receipt");
     setDescription("");
     setOpenModal(true);
   };
@@ -94,6 +98,7 @@ export function CustomCategoriesTab() {
     setEditingCat(cat);
     setLabel(cat.label);
     setColor(cat.color || "emerald");
+    setIconName(cat.iconName || "Receipt");
     setDescription(cat.description || "");
     setOpenModal(true);
   };
@@ -108,6 +113,7 @@ export function CustomCategoriesTab() {
       updateExpenseCategory(editingCat.id, {
         label: label.trim(),
         color,
+        iconName,
         description: description.trim() || undefined,
       });
       toast.success("تم تحديث التصنيف");
@@ -117,7 +123,7 @@ export function CustomCategoriesTab() {
         name: internalName,
         label: label.trim(),
         color,
-        iconName: "Receipt",
+        iconName,
         description: description.trim() || undefined,
       });
       toast.success("تمت إضافة التصنيف الجديد بنجاح");
@@ -173,8 +179,13 @@ export function CustomCategoriesTab() {
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
-                      <Receipt className="w-4 h-4" />
+                    <div
+                      className={cn(
+                        "w-9 h-9 rounded-xl flex items-center justify-center font-bold shrink-0",
+                        CATEGORY_COLOR_CLASSES[cat.color]?.soft || "bg-primary/10 text-primary"
+                      )}
+                    >
+                      <CategoryIcon name={cat.iconName} className="w-4 h-4" />
                     </div>
                     <div>
                       <h4 className="font-bold text-foreground text-sm">{cat.label}</h4>
@@ -259,6 +270,28 @@ export function CustomCategoriesTab() {
                     title={c.label}
                   >
                     <div className={cn("w-4 h-4 rounded-full", c.bg)} />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs font-bold">أيقونة التصنيف</Label>
+              <div className="grid grid-cols-10 gap-1.5 mt-2">
+                {CATEGORY_ICON_OPTIONS.map((ic) => (
+                  <button
+                    key={ic}
+                    type="button"
+                    onClick={() => setIconName(ic)}
+                    className={cn(
+                      "h-8 rounded-lg flex items-center justify-center border transition-all",
+                      iconName === ic
+                        ? cn("ring-2 ring-primary ring-offset-1 border-transparent", CATEGORY_COLOR_CLASSES[color]?.soft)
+                        : "border-border/60 text-muted-foreground hover:bg-muted"
+                    )}
+                    title={ic}
+                  >
+                    <CategoryIcon name={ic} className="w-4 h-4" />
                   </button>
                 ))}
               </div>
