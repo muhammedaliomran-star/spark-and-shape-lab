@@ -30,6 +30,7 @@ import {
   ExpenseMeta,
   getCategoryInfo,
   issueVoucherNumber,
+  linkVoucherToExpense,
   COST_CENTERS,
 } from "@/lib/expenses-system";
 import {
@@ -248,14 +249,16 @@ export function ExpenseFormModal({
         saveExpenseMetaLocal(editing.id, meta);
         toast.success("تم تعديل المصروف وتحديث الخزينة");
       } else {
-        const newExpenseId = crypto.randomUUID();
-        await db.addExpense({
+        const newExpenseId = await db.addExpense({
           amount: numAmount,
           category: category as any,
           expenseDate,
           notes: finalNotes,
         });
-        saveExpenseMetaLocal(newExpenseId, meta);
+        if (newExpenseId) {
+          saveExpenseMetaLocal(newExpenseId, meta);
+          if (voucherNumber) linkVoucherToExpense(voucherNumber, newExpenseId);
+        }
         toast.success("تم تسجيل المصروف وخصمه من الخزينة المحددة");
       }
       onOpenChange(false);

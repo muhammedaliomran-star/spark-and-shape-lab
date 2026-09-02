@@ -900,14 +900,15 @@ export const db = {
     if (error) throw error;
     await fetchAll();
   },
-  async addExpense(exp: Omit<Expense, "id" | "createdAt">) {
+  async addExpense(exp: Omit<Expense, "id" | "createdAt">): Promise<string | undefined> {
     const user_id = await uid();
-    const { error } = await supabase.from("expenses").insert({
+    const { data, error } = await supabase.from("expenses").insert({
       user_id, amount: exp.amount, category: exp.category,
       expense_date: exp.expenseDate, notes: exp.notes,
-    });
+    }).select("id").single();
     if (error) throw error;
     await fetchAll();
+    return (data as { id?: string } | null)?.id;
   },
   async updateExpense(id: string, patch: Partial<Omit<Expense, "id" | "createdAt">>) {
     const upd: any = {};
