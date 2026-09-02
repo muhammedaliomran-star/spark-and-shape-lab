@@ -2,6 +2,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { usePrivacy } from "@/lib/privacy";
 import { Link } from "@/lib/router-compat";
 import { useMemo, useState, useEffect } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { CardsSkeleton, BlockSkeleton } from "@/components/LoadingSkeletons";
@@ -136,11 +137,13 @@ function SectionHead({
 }
 
 type TimeRange = "today" | "7d" | "30d" | "month" | "all";
+type TopProductsSort = "quantity" | "revenue";
 
 export function Dashboard() {
   const data = useDB();
   const { privacy, toggle } = usePrivacy();
   const [timeRange, setTimeRange] = useState<TimeRange>("month");
+  const [topProductsSort, setTopProductsSort] = useState<TopProductsSort>("quantity");
   const [customizationOpen, setCustomizationOpen] = useState(false);
   const { sections, isVisible, toggleSection, moveSection, resetToDefault } = useDashboardLayout();
 
@@ -148,11 +151,14 @@ export function Dashboard() {
   const [storefront, setStorefront] = useState<Storefront | null>(null);
   const [storeOrders, setStoreOrders] = useState<StoreOrder[]>([]);
   const [storefrontLoading, setStorefrontLoading] = useState(false);
+  const [storefrontError, setStorefrontError] = useState<string | null>(null);
+  const [storefrontLoadAttempt, setStorefrontLoadAttempt] = useState(0);
 
   useEffect(() => {
     let mounted = true;
     const loadStoreStats = async () => {
       setStorefrontLoading(true);
+      setStorefrontError(null);
       try {
         const shop = await getMyStorefront();
         if (!mounted) return;
@@ -161,8 +167,9 @@ export function Dashboard() {
           const orders = await getMyStoreOrders(shop.id);
           if (mounted) setStoreOrders(orders);
         }
-      } catch {
-        // silently fallback if storefront not created
+      } catch (error) {
+        console.error("تعذر تحميل بيانات المتجر", error);
+        if (mounted) setStorefrontError("تعذر تحميل بيانات المتجر الآن");
       } finally {
         if (mounted) setStorefrontLoading(false);
       }
@@ -171,7 +178,7 @@ export function Dashboard() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [storefrontLoadAttempt]);
 
   const m = (s: string) => (privacy ? "•••••" : s);
 
@@ -213,10 +220,6 @@ export function Dashboard() {
     d.getFullYear() === today.getFullYear() &&
     d.getMonth() === today.getMonth() &&
     d.getDate() === today.getDate();
-
-  const dailyCollections = data.payments
-    .filter((p) => isToday(new Date(p.paidAt)))
-    .reduce((s, p) => s + p.amount, 0);
 
   // Filtered collections based on selected time-range
   const rangeCollected = useMemo(() => {
@@ -261,7 +264,7 @@ export function Dashboard() {
   }, [data.stockItems]);
 
   // Cashbox live total liquidity across accounts
-  const treasuryLiquidity = useMemo(() => {
+  const treasuryLiquidityResult = useMemo((): { value: number | null; error: string | null } => {
     try {
       const accounts = getTreasuryAccounts();
       const manualTxs = getManualTransactions();
@@ -279,15 +282,13 @@ export function Dashboard() {
         );
         total += bal.currentBalance;
       }
-      return roundCurrency(total);
-    } catch {
-      // Fallback calculation: payments + downpayments - expenses - cash purchases
-      const paymentsSum = data.payments.reduce((s, p) => s + p.amount, 0);
-      const downSum = data.invoices.reduce((s, i) => s + (i.downPayment || 0), 0);
-      const expSum = data.expenses.reduce((s, e) => s + e.amount, 0);
-      return roundCurrency(paymentsSum + downSum - expSum);
+      return { value: roundCurrency(total), error: null };
+    } catch (error) {
+      console.error("تعذر التحقق من رصيد الخزينة", error);
+      return { value: null, error: "تعذر التحقق من الرصيد" };
     }
   }, [data.invoices, data.payments, data.expenses]);
+  const treasuryLiquidity = treasuryLiquidityResult.value;
 
   // Shipping & COD statistics
   const shippingStats = useMemo(() => {
@@ -295,7 +296,7 @@ export function Dashboard() {
       (s) => s.status === "shipped" || s.status === "processing"
     );
     const deliveredUnsettled = data.shipments.filter(
-      (s) => s.status === "delivered" && (s.collectionStatus === "uncollected" || s.collectionStatus === "collected" || !s.collectionStatus)
+      (s) => s.status === "delivered" && s.collectionStatus !== "settled"
     );
     const pendingCodAmount = deliveredUnsettled.reduce((s, sh) => s + (sh.codAmount || 0), 0);
 
@@ -311,13 +312,13 @@ export function Dashboard() {
     return runComprehensiveReconciliation(data, []);
   }, [data]);
 
-  // Top selling products (by volume and revenue)
+  // Top selling products for the selected period, ranked by volume or revenue
   const topProducts = useMemo(() => {
     const salesMap = new Map<string, { name: string; quantity: number; revenue: number; profit: number }>();
 
     for (const item of data.invoiceItems) {
       const inv = data.invoices.find((i) => i.id === item.invoiceId);
-      if (!inv || (inv as any).status === "cancelled") continue;
+      if (!inv || inv.status === "cancelled" || !isInRange(inv.createdAt)) continue;
 
       const curr = salesMap.get(item.name) || {
         name: item.name,
@@ -340,9 +341,9 @@ export function Dashboard() {
     }
 
     return Array.from(salesMap.values())
-      .sort((a, b) => b.quantity - a.quantity)
+      .sort((a, b) => topProductsSort === "quantity" ? b.quantity - a.quantity : b.revenue - a.revenue)
       .slice(0, 5);
-  }, [data.invoiceItems, data.invoices]);
+  }, [data.invoiceItems, data.invoices, rangeBounds, topProductsSort]);
 
   // Profit calculation (Dynamic based on selected time-range)
   const { netProfit, grossProfit, expensesTotal, cashPurchasesTotal, incompleteCostCount } = useMemo(() => {
@@ -432,7 +433,7 @@ export function Dashboard() {
     exportExecutiveReport({
       timeRangeLabel: rangeLabel,
       generatedAt: new Date(),
-      treasuryLiquidity,
+      treasuryLiquidity: treasuryLiquidity ?? 0,
       totalCustomerDebt: totalDebt,
       totalSupplierDebt,
       collectedAmount: totalCollections,
@@ -440,7 +441,7 @@ export function Dashboard() {
       expensesAmount: expensesTotal,
       netProfit,
       inventoryCostValuation: inventoryStats.totalCostValuation,
-      inventorySaleValuation: inventoryStats.totalCostValuation * 1.3,
+      inventorySaleValuation: inventoryStats.totalSaleValuation,
       lowStockCount: inventoryStats.lowStockCount,
       outOfStockCount: inventoryStats.outOfStockCount,
       pendingCodAmount: shippingStats.pendingCodAmount,
@@ -492,9 +493,13 @@ export function Dashboard() {
       if (i >= 0) payments[i] += p.amount;
     }
     const invoiced = zero();
+    const invoiceIdsByMonth = keys.map(() => new Set<string>());
     for (const inv of data.invoices) {
       const i = idxOf(inv.createdAt);
-      if (i >= 0) invoiced[i] += inv.total;
+      if (i >= 0 && inv.status !== "cancelled") {
+        invoiced[i] += inv.total - (inv.taxAmount ?? 0);
+        invoiceIdsByMonth[i].add(inv.id);
+      }
     }
     const expenses = zero();
     for (const e of data.expenses) {
@@ -520,16 +525,23 @@ export function Dashboard() {
       if (i >= 0) joins[i] += 1;
     }
 
-    // Cumulative debt trend, anchored so the last point equals the live total
-    const netPerMonth = keys.map((_, i) => invoiced[i] - payments[i]);
-    const debtRunning: number[] = [];
-    let acc = 0;
-    for (const n of netPerMonth) {
-      acc += n;
-      debtRunning.push(acc);
-    }
-    const shift = totalDebt - (debtRunning[debtRunning.length - 1] ?? 0);
-    const debtTrend = debtRunning.map((v) => Math.max(0, v + shift));
+    // Actual debt snapshot at each month end from records available at that date.
+    const debtTrend = keys.map((key) => {
+      const [year, month] = key.split("-").map(Number);
+      const end = new Date(year, month + 1, 1).getTime();
+      const opening = data.customers
+        .filter((customer) => new Date(customer.createdAt).getTime() < end)
+        .reduce((sum, customer) => sum + (customer.openingBalance || 0), 0);
+      const outstanding = data.invoices
+        .filter((invoice) => invoice.status !== "cancelled" && new Date(invoice.createdAt).getTime() < end)
+        .reduce((sum, invoice) => {
+          const paidByEnd = data.payments
+            .filter((payment) => payment.invoiceId === invoice.id && new Date(payment.paidAt).getTime() < end)
+            .reduce((paid, payment) => paid + payment.amount, 0);
+          return sum + Math.max(0, invoice.total - (invoice.downPayment || 0) - paidByEnd);
+        }, 0);
+      return roundCurrency(opening + outstanding);
+    });
 
     const supplierRunning: number[] = [];
     let sacc = 0;
@@ -538,8 +550,28 @@ export function Dashboard() {
       supplierRunning.push(Math.max(0, sacc));
     }
 
-    const profitTrend = keys.map(
-      (_, i) => Math.round(payments[i] * 0.25) - expenses[i] - cashPurchases[i],
+    const cogs = zero();
+    for (let i = 0; i < keys.length; i++) {
+      const invoiceIds = invoiceIdsByMonth[i];
+      const monthItems = data.invoiceItems.filter((item) => invoiceIds.has(item.invoiceId));
+      const incompleteIds = new Set(
+        [...invoiceIds].filter((invoiceId) => {
+          const items = monthItems.filter((item) => item.invoiceId === invoiceId);
+          return items.length === 0 || items.some((item) => !Number.isFinite(item.cost) || item.cost <= 0);
+        }),
+      );
+      cogs[i] = monthItems
+        .filter((item) => !incompleteIds.has(item.invoiceId))
+        .reduce((sum, item) => sum + item.cost * item.quantity, 0);
+    }
+    const returned = zero();
+    for (const record of data.returns) {
+      if (record.type !== "sale") continue;
+      const i = idxOf(record.createdAt);
+      if (i >= 0) returned[i] += record.totalAmount;
+    }
+    const profitTrend = keys.map((_, i) =>
+      roundCurrency(invoiced[i] - cogs[i] - returned[i] - expenses[i] - cashPurchases[i]),
     );
 
     const customersRunning: number[] = [];
@@ -566,7 +598,8 @@ export function Dashboard() {
     data.purchases,
     data.supplierPayments,
     data.customers,
-    totalDebt,
+    data.invoiceItems,
+    data.returns,
   ]);
 
   // ---- Expense breakdown (this month) ----
@@ -661,7 +694,7 @@ export function Dashboard() {
       .filter((i) => {
         const c = data.customers.find((cc) => cc.id === i.customerId);
         if (!c) return false;
-        return c.dueDay === dom || daysLate(i) > 0;
+        return c.dueDay === dom && daysLate(i) === 0;
       })
       .map((i) => {
         const c = data.customers.find((cc) => cc.id === i.customerId);
@@ -669,7 +702,7 @@ export function Dashboard() {
         const due = Math.min(i.monthlyInstallment || remaining, remaining);
         return { inv: i, customer: c, due, late: daysLate(i) };
       })
-      .sort((a, b) => b.late - a.late)
+      .sort((a, b) => a.customer?.name.localeCompare(b.customer?.name ?? "") ?? 0)
       .slice(0, 8);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.invoices, data.customers]);
@@ -741,11 +774,7 @@ export function Dashboard() {
     }
 
     const dom = today.getDate();
-    const dueTodayCount = data.invoices.filter((i) => {
-      if (i.paid >= i.total) return false;
-      const c = data.customers.find((cc) => cc.id === i.customerId);
-      return c && c.dueDay === dom && daysLate(i) === 0;
-    }).length;
+    const dueTodayCount = dueToday.length;
     if (dueTodayCount > 0) {
       out.push({ text: `${dueTodayCount} فاتورة تستحق التحصيل اليوم حسب الموعد المحدد`, tone: "warning" });
     }
@@ -760,7 +789,7 @@ export function Dashboard() {
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.payments, data.invoices, data.customers, atRiskCustomers, inventoryStats, shippingStats, reconciliationSummary]);
+  }, [data.payments, data.invoices, data.customers, atRiskCustomers, inventoryStats, shippingStats, reconciliationSummary, dueToday]);
 
   const totalSupplierDebt = data.suppliers.reduce(
     (s, sup) =>

@@ -41,6 +41,7 @@ import {
 import { toast } from "sonner";
 import { db, useDB, fmt, type Expense, useShopSettings } from "@/lib/store";
 import { usePrivacy } from "@/lib/privacy";
+import { useLocation } from "@/lib/router-compat";
 import { pdfDocument, openPdfDocument, esc } from "@/lib/pdf-doc";
 import { cn } from "@/lib/utils";
 import {
@@ -104,6 +105,7 @@ export default function Page() {
 }
 
 function ExpensesPage() {
+  const location = useLocation();
   const { expenses, branches } = useDB();
   const { settings: shopSettings } = useShopSettings();
   const { privacy, toggle } = usePrivacy();
@@ -129,6 +131,13 @@ function ExpensesPage() {
   const [filterBranch, setFilterBranch] = useState<string>("all");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get("create") !== "expense") return;
+    setEditing(null);
+    setActiveTab("list");
+    setOpenForm(true);
+  }, [location.search]);
 
   const categories = useMemo(() => getAllExpenseCategories(), [openForm]);
   const treasuryAccounts = useMemo(() => getTreasuryAccounts(), [openForm]);

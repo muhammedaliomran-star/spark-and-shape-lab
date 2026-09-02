@@ -14,9 +14,11 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { ar } from "date-fns/locale";
+import { useLocation } from "@/lib/router-compat";
 
 
 export default function PaymentsPage() {
+  const location = useLocation();
   const { paymentVouchers, customers, suppliers, addPaymentVoucher, removePaymentVoucher, loading } = useDB();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -25,6 +27,13 @@ export default function PaymentsPage() {
     from: format(startOfMonth(new Date()), "yyyy-MM-dd"),
     to: format(endOfMonth(new Date()), "yyyy-MM-dd")
   });
+
+  useEffect(() => {
+    const create = new URLSearchParams(location.search).get("create");
+    if (create !== "receipt" && create !== "payment") return;
+    setTypeFilter(create);
+    setIsDialogOpen(true);
+  }, [location.search]);
 
 
   const filteredVouchers = useMemo(() => {
