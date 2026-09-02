@@ -182,6 +182,38 @@ export function saveExpenseMetaLocal(expenseId: string, meta: ExpenseMeta): void
   writeStorage(STORAGE_KEYS.EXPENSE_META_MAP, map);
 }
 
+// ==================== 3-ب. سجل سندات الصرف المتسلسلة الرسمية ====================
+
+export function getVoucherRegistry(): VoucherRecord[] {
+  return readStorage<VoucherRecord[]>(STORAGE_KEYS.VOUCHER_REGISTRY, []);
+}
+
+/** يُصدر رقم سند متسلسل رسمي بصيغة VCH-YYYY-000001 ويحفظه في السجل */
+export function issueVoucherNumber(info: Omit<VoucherRecord, "number" | "seq" | "issuedAt">): VoucherRecord {
+  const registry = getVoucherRegistry();
+  const seq = registry.reduce((m, r) => Math.max(m, r.seq), 0) + 1;
+  const year = new Date().getFullYear();
+  const record: VoucherRecord = {
+    ...info,
+    number: `VCH-${year}-${String(seq).padStart(6, "0")}`,
+    seq,
+    issuedAt: new Date().toISOString(),
+  };
+  registry.unshift(record);
+  writeStorage(STORAGE_KEYS.VOUCHER_REGISTRY, registry);
+  return record;
+}
+
+/** ربط رقم السند بمعرف المصروف بعد حفظه في قاعدة البيانات */
+export function linkVoucherToExpense(voucherNumber: string, expenseId: string): void {
+  const registry = getVoucherRegistry();
+  const idx = registry.findIndex((r) => r.number === voucherNumber);
+  if (idx >= 0) {
+    registry[idx] = { ...registry[idx], expenseId };
+    writeStorage(STORAGE_KEYS.VOUCHER_REGISTRY, registry);
+  }
+}
+
 // ==================== 4. التصنيفات الافتراضية والمخصصة ====================
 
 export const DEFAULT_CUSTOM_CATEGORIES: CustomExpenseCategory[] = [
