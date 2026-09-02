@@ -27,6 +27,9 @@ import {
   calculateBudgetStatus,
   getAllExpenseCategories,
   getCategoryInfo,
+  budgetKey,
+  COST_CENTERS,
+  summarizeByDimension,
 } from "@/lib/expenses-system";
 import { fmt, useDB } from "@/lib/store";
 import { toast } from "sonner";
@@ -41,11 +44,12 @@ import {
   SlidersHorizontal,
   ShieldAlert,
   Percent,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BudgetsTab() {
-  const { expenses } = useDB();
+  const { expenses, branches } = useDB();
   const [budgets, setBudgets] = useState<CategoryBudget[]>(() => getCategoryBudgets());
   const [openModal, setOpenModal] = useState(false);
   const [editingBudget, setEditingBudget] = useState<CategoryBudget | null>(null);
@@ -54,6 +58,8 @@ export function BudgetsTab() {
   const [monthlyLimit, setMonthlyLimit] = useState("");
   const [warnThreshold, setWarnThreshold] = useState("80");
   const [notes, setNotes] = useState("");
+  const [scopeBranch, setScopeBranch] = useState("all");
+  const [scopeCostCenter, setScopeCostCenter] = useState("all");
 
   const refresh = () => setBudgets(getCategoryBudgets());
   const categories = useMemo(() => getAllExpenseCategories(), []);
@@ -69,6 +75,15 @@ export function BudgetsTab() {
   const totalRemaining = Math.max(0, totalBudgetLimit - totalActualSpent);
   const totalPct = totalBudgetLimit > 0 ? Math.round((totalActualSpent / totalBudgetLimit) * 100) : 0;
 
+  const byBranch = useMemo(() => summarizeByDimension(expenses, "branch", currentMonthStr), [expenses, currentMonthStr]);
+  const byCostCenter = useMemo(() => summarizeByDimension(expenses, "costCenter", currentMonthStr), [expenses, currentMonthStr]);
+  const scopeLabel = (b: { branchId?: string; costCenter?: string }) => {
+    const parts: string[] = [];
+    if (b.branchId) parts.push(branches.find((x) => x.id === b.branchId)?.name || "فرع");
+    if (b.costCenter) parts.push(COST_CENTERS.find((c) => c.value === b.costCenter)?.label || b.costCenter);
+    return parts.join(" • ");
+  };
+
   const exceededCount = statuses.filter((s) => s.status === "exceeded").length;
   const warningCount = statuses.filter((s) => s.status === "warning").length;
 
@@ -78,6 +93,8 @@ export function BudgetsTab() {
     setMonthlyLimit("");
     setWarnThreshold("80");
     setNotes("");
+    setScopeBranch("all");
+    setScopeCostCenter("all");
     setOpenModal(true);
   };
 
@@ -87,6 +104,8 @@ export function BudgetsTab() {
     setMonthlyLimit(String(b.monthlyLimit));
     setWarnThreshold(String(b.warnThresholdPct || 80));
     setNotes(b.notes || "");
+    setScopeBranch(b.branchId || "all");
+    setScopeCostCenter(b.costCenter || "all");
     setOpenModal(true);
   };
 
@@ -102,6 +121,8 @@ export function BudgetsTab() {
       monthlyLimit: limit,
       warnThresholdPct: Number(warnThreshold) || 80,
       notes: notes.trim() || undefined,
+      branchId: scopeBranch === "all" ? undefined : scopeBranch,
+      costCenter: scopeCostCenter === "all" ? undefined : scopeCostCenter,
     });
 
     toast.success("تم ضبط وتحديث ميزانية التصنيف");
@@ -109,9 +130,9 @@ export function BudgetsTab() {
     refresh();
   };
 
-  const handleDelete = (catKey: string) => {
+  const handleDelete = (key: string) => {
     if (confirm("هل تريد بالتأكيد حذف سقف الميزانية لهذا التصنيف؟")) {
-      const filtered = budgets.filter((b) => b.category !== catKey);
+      const filtered = budgets.filter((b) => budgetKey(b) !== key);
       saveCategoryBudgets(filtered);
       toast.success("تم حذف الميزانية");
       refresh();
@@ -201,10 +222,10 @@ export function BudgetsTab() {
       {/* Budget Category Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {statuses.map((st) => {
-          const rawBudget = budgets.find((b) => b.category === st.category);
+          const rawBudget = budgets.find((b) => budgetKey(b) === budgetKey(st));
           return (
             <div
-              key={st.category}
+              key={budgetKey(st)}
               className={cn(
                 "rounded-2xl border p-4.5 bg-card/80 flex flex-col justify-between gap-3 transition-all",
                 st.status === "exceeded"
@@ -218,6 +239,11 @@ export function BudgetsTab() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h4 className="font-bold text-foreground text-sm">{st.categoryLabel}</h4>
+                    {scopeLabel(st) && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-blue-700 dark:text-blue-300 bg-blue-500/10 px-1.5 py-0.5 rounded mt-0.5">
+                        <Building2 className="w-2.5 h-2.5" /> {scopeLabel(st)}
+                      </span>
+                    )}
                     {rawBudget?.notes && (
                       <p className="text-xs text-muted-foreground mt-0.5">{rawBudget.notes}</p>
                     )}
@@ -258,7 +284,7 @@ export function BudgetsTab() {
                         size="icon"
                         variant="ghost"
                         className="h-7 w-7 text-danger hover:bg-danger/10"
-                        onClick={() => handleDelete(st.category)}
+                        onClick={() => handleDelete(budgetKey(st))}
                       >
                         <Trash2 className="w-3 h-3" />
                       </Button>
@@ -311,6 +337,43 @@ export function BudgetsTab() {
         })}
       </div>
 
+      {/* تقرير الإنفاق حسب الفرع ومركز التكلفة (الشهر الحالي) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[
+          { title: "الإنفاق حسب الفرع", rows: byBranch },
+          { title: "الإنفاق حسب مركز التكلفة", rows: byCostCenter },
+        ].map((block) => {
+          const max = Math.max(1, ...block.rows.map((r) => r.total));
+          return (
+            <div key={block.title} className="rounded-2xl border border-border/60 bg-card/80 p-4.5">
+              <h4 className="font-bold text-foreground text-sm flex items-center gap-2 mb-3">
+                <Building2 className="w-4 h-4 text-primary" /> {block.title}
+                <span className="text-[10px] text-muted-foreground font-normal">— الشهر الحالي</span>
+              </h4>
+              {block.rows.length === 0 ? (
+                <p className="text-xs text-muted-foreground">لا توجد مصروفات مسجلة هذا الشهر.</p>
+              ) : (
+                <div className="space-y-2.5">
+                  {block.rows.map((r) => (
+                    <div key={r.key}>
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="font-semibold text-foreground">{r.label}</span>
+                        <span className="tabular-nums text-muted-foreground">
+                          {fmt(r.total)} ج.م <span className="text-[10px]">({r.count})</span>
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div className="h-full rounded-full bg-primary/70" style={{ width: `${(r.total / max) * 100}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
       {/* Dialog for Add/Edit Budget */}
       <Dialog open={openModal} onOpenChange={setOpenModal}>
         <DialogContent dir="rtl" className="max-w-md">
@@ -339,6 +402,37 @@ export function BudgetsTab() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-bold">نطاق الفرع</Label>
+                <Select value={scopeBranch} onValueChange={setScopeBranch} disabled={!!editingBudget}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    <SelectItem value="all">كل الفروع</SelectItem>
+                    {branches.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs font-bold">مركز التكلفة</Label>
+                <Select value={scopeCostCenter} onValueChange={setScopeCostCenter} disabled={!!editingBudget}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    <SelectItem value="all">كل المراكز</SelectItem>
+                    {COST_CENTERS.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div>
