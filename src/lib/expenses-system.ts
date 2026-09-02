@@ -92,6 +92,8 @@ export interface CategoryBudget {
   monthlyLimit: number;
   warnThresholdPct: number; // e.g. 80 for 80%
   notes?: string;
+  branchId?: string;    // ميزانية خاصة بفرع محدد (اختياري)
+  costCenter?: string;  // ميزانية خاصة بمركز تكلفة (اختياري)
 }
 
 // ==================== 2. التخزين المحلي والمزامنة ====================
