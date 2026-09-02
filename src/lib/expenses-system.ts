@@ -104,6 +104,8 @@ const STORAGE_KEYS = {
   RECURRING_EXPENSES: "segilly_recurring_expenses_v1",
   CATEGORY_BUDGETS: "segilly_category_budgets_v1",
   EXPENSE_SETTINGS: "segilly_expense_settings_v1",
+  VOUCHER_REGISTRY: "segilly_payment_vouchers_registry_v1",
+  RECURRING_AUTORUN: "segilly_recurring_autorun_date_v1",
 };
 
 function readStorage<T>(key: string, fallback: T): T {
