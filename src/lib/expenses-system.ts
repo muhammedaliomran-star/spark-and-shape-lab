@@ -727,7 +727,8 @@ export function tafqeetArabic(amount: number, currencyName = "جنيه مصري"
 export function printPaymentVoucherPdf(
   expense: Expense,
   meta?: ExpenseMeta,
-  shopName = "سِجلّي لإدارة المتاجر والأقساط"
+  shopName = "سِجلّي لإدارة المتاجر والأقساط",
+  opts?: { paper?: "a4" | "thermal"; thermalWidth?: string }
 ): boolean {
   const resolvedMeta = meta || getExpenseMeta(expense);
   const catInfo = getCategoryInfo(expense.category);
@@ -738,6 +739,9 @@ export function printPaymentVoucherPdf(
   const amountWords = tafqeetArabic(expense.amount);
   const dateFormatted = expense.expenseDate || new Date().toISOString().slice(0, 10);
   const timeFormatted = new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+  // البيان النظيف بدون البيانات الوصفية المخفية
+  const cleanStatement = decodeExpenseNotes(expense.notes).cleanNotes || "مصروف عام وتشغيلي.";
+  const costCenterLabel = COST_CENTERS.find((c) => c.value === resolvedMeta.costCenter)?.label || "";
 
   const body = `
 <div style="direction: rtl; font-family: 'IBM Plex Sans Arabic', 'Cairo', sans-serif;">
