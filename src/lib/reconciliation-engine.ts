@@ -3,6 +3,80 @@ import { supabase } from "@/integrations/supabase/client";
 import { pdfDocument, openPdfDocument, esc } from "@/lib/pdf-doc";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
+import { recordCarrierSettlementInTreasury } from "@/lib/shipping-finance";
+
+// ==========================================
+// سجل جولات التدقيق (Audit Runs History)
+// ==========================================
+export interface AuditRunRecord {
+  id: string;
+  createdAt: string;
+  healthScore: number;
+  totalDiscrepancy: number;
+  criticalCount: number;
+  warningCount: number;
+  noticeCount: number;
+  autoFixableCount: number;
+  findingsCount: number;
+  triggerSource: string;
+}
+
+export async function saveAuditRun(
+  summary: ReconciliationSummary,
+  triggerSource: "manual" | "auto" | "after_fix" = "manual"
+): Promise<AuditRunRecord | null> {
+  const { data: auth } = await supabase.auth.getUser();
+  const userId = auth.user?.id;
+  if (!userId) return null;
+  const { data: row, error } = await (supabase.from as any)("reconciliation_audit_runs")
+    .insert({
+      user_id: userId,
+      health_score: summary.healthScore,
+      total_discrepancy: summary.totalDiscrepancyAmount,
+      critical_count: summary.criticalCount,
+      warning_count: summary.warningCount,
+      notice_count: summary.noticeCount,
+      auto_fixable_count: summary.autoFixableCount,
+      findings_count: summary.findings.length,
+      category_counts: summary.categoryCounts,
+      trigger_source: triggerSource,
+    })
+    .select("*")
+    .single();
+  if (error) {
+    console.error("saveAuditRun", error);
+    return null;
+  }
+  return mapAuditRun(row);
+}
+
+export async function getAuditRuns(limit = 30): Promise<AuditRunRecord[]> {
+  const { data: rows, error } = await (supabase.from as any)("reconciliation_audit_runs")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error || !rows) return [];
+  return rows.map(mapAuditRun);
+}
+
+export async function deleteAuditRun(id: string): Promise<void> {
+  await (supabase.from as any)("reconciliation_audit_runs").delete().eq("id", id);
+}
+
+function mapAuditRun(r: any): AuditRunRecord {
+  return {
+    id: r.id,
+    createdAt: r.created_at,
+    healthScore: Number(r.health_score ?? 0),
+    totalDiscrepancy: Number(r.total_discrepancy ?? 0),
+    criticalCount: Number(r.critical_count ?? 0),
+    warningCount: Number(r.warning_count ?? 0),
+    noticeCount: Number(r.notice_count ?? 0),
+    autoFixableCount: Number(r.auto_fixable_count ?? 0),
+    findingsCount: Number(r.findings_count ?? 0),
+    triggerSource: r.trigger_source ?? "manual",
+  };
+}
 
 export type ReconciliationCategory =
   | "all"
@@ -539,7 +613,12 @@ export function runComprehensiveReconciliation(
         targetLabel: shp.trackingNumber || `شحنة #${shp.id.slice(0, 8)}`,
         autoFixable: true,
         fixType: "settle_shipment",
-        fixPayload: { shipmentId: shp.id },
+        fixPayload: {
+          shipmentId: shp.id,
+          codAmount: cod,
+          trackingNumber: shp.trackingNumber,
+          carrierName: data.carriers.find((c) => c.id === shp.carrierId)?.name ?? "مندوب/شركة شحن",
+        },
       });
     }
   }
@@ -639,12 +718,30 @@ export async function executeReconciliationFix(finding: ReconciliationFinding): 
     }
 
     if (finding.fixType === "settle_shipment") {
+      const settledAt = new Date().toISOString();
       const { error } = await (supabase.from as any)("shipments")
-        .update({ collection_status: "settled", settled_at: new Date().toISOString() })
+        .update({ collection_status: "settled", settled_at: settledAt })
         .eq("id", finding.targetId);
       if (error) throw error;
+      const payload = finding.fixPayload ?? {};
+      const amount = Number(payload.codAmount ?? finding.differenceAmount ?? 0);
+      let accountName: string | null = null;
+      if (amount > 0) {
+        accountName = recordCarrierSettlementInTreasury({
+          carrierName: payload.carrierName ?? "مندوب/شركة شحن",
+          amount,
+          paymentMethod: "cash",
+          referenceNumber: payload.trackingNumber ?? finding.targetId.slice(0, 8),
+          notes: `تسوية من مركز المطابقة — شحنة ${payload.trackingNumber ?? finding.targetId.slice(0, 8)}`,
+          date: settledAt,
+        });
+      }
       await db.invalidate();
-      toast.success("تمت تسوية وتوريد متحصلات الشحنة إلى الخزينة");
+      toast.success(
+        accountName
+          ? `تمت تسوية الشحنة وتسجيل ${fmt(amount)} ج.م كوارد في «${accountName}»`
+          : "تمت تسوية الشحنة (لم يُسجَّل وارد: لا توجد حسابات خزينة نشطة)"
+      );
       return true;
     }
 
