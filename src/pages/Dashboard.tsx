@@ -2,7 +2,6 @@ import { PageTransition } from "@/components/PageTransition";
 import { usePrivacy } from "@/lib/privacy";
 import { Link } from "@/lib/router-compat";
 import { useMemo, useState, useEffect } from "react";
-import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { CardsSkeleton, BlockSkeleton } from "@/components/LoadingSkeletons";
