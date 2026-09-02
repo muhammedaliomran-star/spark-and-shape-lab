@@ -815,6 +815,45 @@ export function printPaymentVoucherPdf(
 </div>
 `;
 
+  if (opts?.paper === "thermal") {
+    const width = opts.thermalWidth || "80mm";
+    const thermalBody = `
+<div style="direction: rtl; font-family: 'IBM Plex Sans Arabic', 'Cairo', sans-serif; font-size: 11px; line-height: 1.5;">
+  <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px;">
+    <div style="font-weight:900; font-size:13px;">إذن صرف نقدية</div>
+    <div style="font-weight:800;" dir="ltr">${esc(voucherNo)}</div>
+    <div dir="ltr">${esc(dateFormatted)} ${esc(timeFormatted)}</div>
+  </div>
+  <div style="text-align:center; margin:8px 0; padding:6px; border:1px solid #000;">
+    <div style="font-size:10px;">المبلغ المنصرف</div>
+    <div style="font-size:18px; font-weight:900;">${fmt(expense.amount)} ج.م</div>
+    <div style="font-size:9.5px; margin-top:2px;">${esc(amountWords)}</div>
+  </div>
+  <table style="width:100%; border-collapse:collapse; font-size:10.5px;">
+    <tr><td style="padding:2px 0; font-weight:700; width:38%;">المستفيد:</td><td>${esc(resolvedMeta.recipientName || "—")}</td></tr>
+    <tr><td style="padding:2px 0; font-weight:700;">البند:</td><td>${esc(catInfo.label)}</td></tr>
+    <tr><td style="padding:2px 0; font-weight:700;">الخزينة:</td><td>${esc(acc?.name || "الدرج الرئيسي")}</td></tr>
+    ${resolvedMeta.branchName ? `<tr><td style="padding:2px 0; font-weight:700;">الفرع:</td><td>${esc(resolvedMeta.branchName)}</td></tr>` : ""}
+    ${costCenterLabel ? `<tr><td style="padding:2px 0; font-weight:700;">مركز التكلفة:</td><td>${esc(costCenterLabel)}</td></tr>` : ""}
+    <tr><td style="padding:2px 0; font-weight:700; vertical-align:top;">البيان:</td><td>${esc(cleanStatement)}</td></tr>
+  </table>
+  <div style="border-top:1px dashed #000; margin-top:10px; padding-top:8px; font-size:10px;">
+    <div style="margin-bottom:14px;">توقيع أمين الخزينة: ....................</div>
+    <div>توقيع المستلم: ....................</div>
+  </div>
+</div>`;
+    const html = pdfDocument({
+      docTitle: `إذن صرف — ${voucherNo}`,
+      title: esc(shopName),
+      meta: [],
+      body: thermalBody,
+      paper: "thermal",
+      thermalWidth: width,
+      barcodeValue: voucherNo,
+    });
+    return openPdfDocument(html, { autoPrint: true });
+  }
+
   const html = pdfDocument({
     docTitle: `إذن صرف نقدية — ${voucherNo}`,
     badge: "إذن صرف مالي",
@@ -831,6 +870,7 @@ export function printPaymentVoucherPdf(
       { label: "حالة السند", value: "معتمد ومصروف" },
     ],
     body,
+    barcodeValue: voucherNo,
   });
 
   return openPdfDocument(html, { autoPrint: true });
