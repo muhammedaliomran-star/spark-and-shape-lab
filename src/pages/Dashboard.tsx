@@ -2,6 +2,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { usePrivacy } from "@/lib/privacy";
 import { Link } from "@/lib/router-compat";
 import { useMemo, useState, useEffect } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { CardsSkeleton, BlockSkeleton } from "@/components/LoadingSkeletons";
@@ -136,11 +137,13 @@ function SectionHead({
 }
 
 type TimeRange = "today" | "7d" | "30d" | "month" | "all";
+type TopProductsSort = "quantity" | "revenue";
 
 export function Dashboard() {
   const data = useDB();
   const { privacy, toggle } = usePrivacy();
   const [timeRange, setTimeRange] = useState<TimeRange>("month");
+  const [topProductsSort, setTopProductsSort] = useState<TopProductsSort>("quantity");
   const [customizationOpen, setCustomizationOpen] = useState(false);
   const { sections, isVisible, toggleSection, moveSection, resetToDefault } = useDashboardLayout();
 
@@ -148,11 +151,14 @@ export function Dashboard() {
   const [storefront, setStorefront] = useState<Storefront | null>(null);
   const [storeOrders, setStoreOrders] = useState<StoreOrder[]>([]);
   const [storefrontLoading, setStorefrontLoading] = useState(false);
+  const [storefrontError, setStorefrontError] = useState<string | null>(null);
+  const [storefrontLoadAttempt, setStorefrontLoadAttempt] = useState(0);
 
   useEffect(() => {
     let mounted = true;
     const loadStoreStats = async () => {
       setStorefrontLoading(true);
+      setStorefrontError(null);
       try {
         const shop = await getMyStorefront();
         if (!mounted) return;
@@ -161,8 +167,9 @@ export function Dashboard() {
           const orders = await getMyStoreOrders(shop.id);
           if (mounted) setStoreOrders(orders);
         }
-      } catch {
-        // silently fallback if storefront not created
+      } catch (error) {
+        console.error("تعذر تحميل بيانات المتجر", error);
+        if (mounted) setStorefrontError("تعذر تحميل بيانات المتجر الآن");
       } finally {
         if (mounted) setStorefrontLoading(false);
       }
@@ -171,7 +178,7 @@ export function Dashboard() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [storefrontLoadAttempt]);
 
   const m = (s: string) => (privacy ? "•••••" : s);
 
@@ -209,15 +216,6 @@ export function Dashboard() {
     data.invoices.reduce((s, i) => s + (i.total - i.paid), 0) +
     data.customers.reduce((s, c) => s + (c.openingBalance || 0), 0);
 
-  const isToday = (d: Date) =>
-    d.getFullYear() === today.getFullYear() &&
-    d.getMonth() === today.getMonth() &&
-    d.getDate() === today.getDate();
-
-  const dailyCollections = data.payments
-    .filter((p) => isToday(new Date(p.paidAt)))
-    .reduce((s, p) => s + p.amount, 0);
-
   // Filtered collections based on selected time-range
   const rangeCollected = useMemo(() => {
     return data.payments
@@ -237,7 +235,7 @@ export function Dashboard() {
       const qty = item.quantity || 0;
       const cost = item.lastUnitCost || 0;
       const price = item.salePrice || 0;
-      const min = item.minStock || 5;
+      const min = item.minStock ?? 5;
 
       totalUnits += qty;
       totalCostValuation += qty * cost;
@@ -261,7 +259,7 @@ export function Dashboard() {
   }, [data.stockItems]);
 
   // Cashbox live total liquidity across accounts
-  const treasuryLiquidity = useMemo(() => {
+  const treasuryLiquidityResult = useMemo((): { value: number | null; error: string | null } => {
     try {
       const accounts = getTreasuryAccounts();
       const manualTxs = getManualTransactions();
@@ -279,15 +277,13 @@ export function Dashboard() {
         );
         total += bal.currentBalance;
       }
-      return roundCurrency(total);
-    } catch {
-      // Fallback calculation: payments + downpayments - expenses - cash purchases
-      const paymentsSum = data.payments.reduce((s, p) => s + p.amount, 0);
-      const downSum = data.invoices.reduce((s, i) => s + (i.downPayment || 0), 0);
-      const expSum = data.expenses.reduce((s, e) => s + e.amount, 0);
-      return roundCurrency(paymentsSum + downSum - expSum);
+      return { value: roundCurrency(total), error: null };
+    } catch (error) {
+      console.error("تعذر التحقق من رصيد الخزينة", error);
+      return { value: null, error: "تعذر التحقق من الرصيد" };
     }
   }, [data.invoices, data.payments, data.expenses]);
+  const treasuryLiquidity = treasuryLiquidityResult.value;
 
   // Shipping & COD statistics
   const shippingStats = useMemo(() => {
@@ -295,7 +291,7 @@ export function Dashboard() {
       (s) => s.status === "shipped" || s.status === "processing"
     );
     const deliveredUnsettled = data.shipments.filter(
-      (s) => s.status === "delivered" && (s.collectionStatus === "uncollected" || s.collectionStatus === "collected" || !s.collectionStatus)
+      (s) => s.status === "delivered" && s.collectionStatus !== "settled"
     );
     const pendingCodAmount = deliveredUnsettled.reduce((s, sh) => s + (sh.codAmount || 0), 0);
 
@@ -311,13 +307,13 @@ export function Dashboard() {
     return runComprehensiveReconciliation(data, []);
   }, [data]);
 
-  // Top selling products (by volume and revenue)
+  // Top selling products for the selected period, ranked by volume or revenue
   const topProducts = useMemo(() => {
     const salesMap = new Map<string, { name: string; quantity: number; revenue: number; profit: number }>();
 
     for (const item of data.invoiceItems) {
       const inv = data.invoices.find((i) => i.id === item.invoiceId);
-      if (!inv || (inv as any).status === "cancelled") continue;
+      if (!inv || inv.status === "cancelled" || !isInRange(inv.createdAt)) continue;
 
       const curr = salesMap.get(item.name) || {
         name: item.name,
@@ -340,9 +336,9 @@ export function Dashboard() {
     }
 
     return Array.from(salesMap.values())
-      .sort((a, b) => b.quantity - a.quantity)
+      .sort((a, b) => topProductsSort === "quantity" ? b.quantity - a.quantity : b.revenue - a.revenue)
       .slice(0, 5);
-  }, [data.invoiceItems, data.invoices]);
+  }, [data.invoiceItems, data.invoices, rangeBounds, topProductsSort]);
 
   // Profit calculation (Dynamic based on selected time-range)
   const { netProfit, grossProfit, expensesTotal, cashPurchasesTotal, incompleteCostCount } = useMemo(() => {
@@ -421,6 +417,10 @@ export function Dashboard() {
 
   // Executive PDF export handler
   const handleExportExecutiveReport = () => {
+    if (treasuryLiquidity === null) {
+      toast.error("تعذر تصدير التقرير قبل التحقق من رصيد الخزينة");
+      return;
+    }
     const totalSalesRevenue = data.invoices
       .filter((i) => (i as any).status !== "cancelled" && isInRange(i.createdAt))
       .reduce((s, i) => s + (i.total || 0), 0);
@@ -440,7 +440,7 @@ export function Dashboard() {
       expensesAmount: expensesTotal,
       netProfit,
       inventoryCostValuation: inventoryStats.totalCostValuation,
-      inventorySaleValuation: inventoryStats.totalCostValuation * 1.3,
+      inventorySaleValuation: inventoryStats.totalSaleValuation,
       lowStockCount: inventoryStats.lowStockCount,
       outOfStockCount: inventoryStats.outOfStockCount,
       pendingCodAmount: shippingStats.pendingCodAmount,
@@ -492,9 +492,13 @@ export function Dashboard() {
       if (i >= 0) payments[i] += p.amount;
     }
     const invoiced = zero();
+    const invoiceIdsByMonth = keys.map(() => new Set<string>());
     for (const inv of data.invoices) {
       const i = idxOf(inv.createdAt);
-      if (i >= 0) invoiced[i] += inv.total;
+      if (i >= 0 && inv.status !== "cancelled") {
+        invoiced[i] += inv.total - (inv.taxAmount ?? 0);
+        invoiceIdsByMonth[i].add(inv.id);
+      }
     }
     const expenses = zero();
     for (const e of data.expenses) {
@@ -520,16 +524,23 @@ export function Dashboard() {
       if (i >= 0) joins[i] += 1;
     }
 
-    // Cumulative debt trend, anchored so the last point equals the live total
-    const netPerMonth = keys.map((_, i) => invoiced[i] - payments[i]);
-    const debtRunning: number[] = [];
-    let acc = 0;
-    for (const n of netPerMonth) {
-      acc += n;
-      debtRunning.push(acc);
-    }
-    const shift = totalDebt - (debtRunning[debtRunning.length - 1] ?? 0);
-    const debtTrend = debtRunning.map((v) => Math.max(0, v + shift));
+    // Actual debt snapshot at each month end from records available at that date.
+    const debtTrend = keys.map((key) => {
+      const [year, month] = key.split("-").map(Number);
+      const end = new Date(year, month + 1, 1).getTime();
+      const opening = data.customers
+        .filter((customer) => new Date(customer.createdAt).getTime() < end)
+        .reduce((sum, customer) => sum + (customer.openingBalance || 0), 0);
+      const outstanding = data.invoices
+        .filter((invoice) => invoice.status !== "cancelled" && new Date(invoice.createdAt).getTime() < end)
+        .reduce((sum, invoice) => {
+          const paidByEnd = data.payments
+            .filter((payment) => payment.invoiceId === invoice.id && new Date(payment.paidAt).getTime() < end)
+            .reduce((paid, payment) => paid + payment.amount, 0);
+          return sum + Math.max(0, invoice.total - (invoice.downPayment || 0) - paidByEnd);
+        }, 0);
+      return roundCurrency(opening + outstanding);
+    });
 
     const supplierRunning: number[] = [];
     let sacc = 0;
@@ -538,8 +549,28 @@ export function Dashboard() {
       supplierRunning.push(Math.max(0, sacc));
     }
 
-    const profitTrend = keys.map(
-      (_, i) => Math.round(payments[i] * 0.25) - expenses[i] - cashPurchases[i],
+    const cogs = zero();
+    for (let i = 0; i < keys.length; i++) {
+      const invoiceIds = invoiceIdsByMonth[i];
+      const monthItems = data.invoiceItems.filter((item) => invoiceIds.has(item.invoiceId));
+      const incompleteIds = new Set(
+        [...invoiceIds].filter((invoiceId) => {
+          const items = monthItems.filter((item) => item.invoiceId === invoiceId);
+          return items.length === 0 || items.some((item) => !Number.isFinite(item.cost) || item.cost <= 0);
+        }),
+      );
+      cogs[i] = monthItems
+        .filter((item) => !incompleteIds.has(item.invoiceId))
+        .reduce((sum, item) => sum + item.cost * item.quantity, 0);
+    }
+    const returned = zero();
+    for (const record of data.returns) {
+      if (record.type !== "sale") continue;
+      const i = idxOf(record.createdAt);
+      if (i >= 0) returned[i] += record.totalAmount;
+    }
+    const profitTrend = keys.map((_, i) =>
+      roundCurrency(invoiced[i] - cogs[i] - returned[i] - expenses[i] - cashPurchases[i]),
     );
 
     const customersRunning: number[] = [];
@@ -566,7 +597,8 @@ export function Dashboard() {
     data.purchases,
     data.supplierPayments,
     data.customers,
-    totalDebt,
+    data.invoiceItems,
+    data.returns,
   ]);
 
   // ---- Expense breakdown (this month) ----
@@ -661,7 +693,7 @@ export function Dashboard() {
       .filter((i) => {
         const c = data.customers.find((cc) => cc.id === i.customerId);
         if (!c) return false;
-        return c.dueDay === dom || daysLate(i) > 0;
+        return c.dueDay === dom && daysLate(i) === 0;
       })
       .map((i) => {
         const c = data.customers.find((cc) => cc.id === i.customerId);
@@ -669,7 +701,7 @@ export function Dashboard() {
         const due = Math.min(i.monthlyInstallment || remaining, remaining);
         return { inv: i, customer: c, due, late: daysLate(i) };
       })
-      .sort((a, b) => b.late - a.late)
+      .sort((a, b) => a.customer?.name.localeCompare(b.customer?.name ?? "") ?? 0)
       .slice(0, 8);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.invoices, data.customers]);
@@ -740,12 +772,7 @@ export function Dashboard() {
       });
     }
 
-    const dom = today.getDate();
-    const dueTodayCount = data.invoices.filter((i) => {
-      if (i.paid >= i.total) return false;
-      const c = data.customers.find((cc) => cc.id === i.customerId);
-      return c && c.dueDay === dom && daysLate(i) === 0;
-    }).length;
+    const dueTodayCount = dueToday.length;
     if (dueTodayCount > 0) {
       out.push({ text: `${dueTodayCount} فاتورة تستحق التحصيل اليوم حسب الموعد المحدد`, tone: "warning" });
     }
@@ -760,7 +787,7 @@ export function Dashboard() {
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.payments, data.invoices, data.customers, atRiskCustomers, inventoryStats, shippingStats, reconciliationSummary]);
+  }, [data.payments, data.invoices, data.customers, atRiskCustomers, inventoryStats, shippingStats, reconciliationSummary, dueToday]);
 
   const totalSupplierDebt = data.suppliers.reduce(
     (s, sup) =>
@@ -915,7 +942,7 @@ export function Dashboard() {
               <section key={section.id} className="mb-6">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <Link
-                    to="/invoices"
+                    to="/invoices/new"
                     className="flex items-center justify-between p-3.5 rounded-2xl bg-card border border-border/70 hover:border-primary/50 transition-all group hover:shadow-md"
                   >
                     <div className="flex items-center gap-3">
@@ -931,7 +958,7 @@ export function Dashboard() {
                   </Link>
 
                   <Link
-                    to="/payments"
+                    to="/payments?create=receipt"
                     className="flex items-center justify-between p-3.5 rounded-2xl bg-card border border-border/70 hover:border-emerald-500/50 transition-all group hover:shadow-md"
                   >
                     <div className="flex items-center gap-3">
@@ -947,7 +974,7 @@ export function Dashboard() {
                   </Link>
 
                   <Link
-                    to="/expenses"
+                    to="/expenses?create=expense"
                     className="flex items-center justify-between p-3.5 rounded-2xl bg-card border border-border/70 hover:border-rose-500/50 transition-all group hover:shadow-md"
                   >
                     <div className="flex items-center gap-3">
@@ -971,8 +998,10 @@ export function Dashboard() {
                         <Wallet className="h-4 w-4" />
                       </span>
                       <div className="text-right">
-                        <div className="text-xs font-bold text-foreground">حركة الخزينة</div>
-                        <div className="text-[10px] text-muted-foreground">{money(treasuryLiquidity)}</div>
+                        <div className="text-xs font-bold text-foreground">فحص رصيد الخزينة</div>
+                        <div className={cn("text-[10px]", treasuryLiquidityResult.error ? "text-danger" : "text-muted-foreground")}>
+                          {treasuryLiquidityResult.error ?? money(treasuryLiquidity ?? 0)}
+                        </div>
                       </div>
                     </div>
                     <ChevronLeft className="h-4 w-4 text-muted-foreground/50 group-hover:text-amber-600 transition-colors" />
@@ -984,7 +1013,30 @@ export function Dashboard() {
           case "storefront_bar":
             return (
               <section key={section.id} className="mb-6">
-                {storefront ? (
+                {storefrontLoading ? (
+                  <div className="flex min-h-24 items-center justify-center rounded-3xl border border-border/80 bg-muted/30 text-xs font-bold text-muted-foreground">
+                    جارٍ تحميل بيانات المتجر…
+                  </div>
+                ) : storefrontError ? (
+                  <div className="flex flex-col items-center justify-between gap-3 rounded-3xl border border-danger/25 bg-danger/[0.06] p-4 sm:flex-row">
+                    <div className="flex items-center gap-3 text-right">
+                      <span className="grid h-10 w-10 place-items-center rounded-full bg-danger/10 text-danger">
+                        <AlertTriangle className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <div className="text-xs font-bold text-danger">{storefrontError}</div>
+                        <div className="mt-1 text-[11px] text-muted-foreground">تحقق من الاتصال ثم حاول مرة أخرى.</div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStorefrontLoadAttempt((attempt) => attempt + 1)}
+                      className="shrink-0 rounded-xl bg-danger/10 px-4 py-2 text-xs font-bold text-danger ring-1 ring-danger/20 transition hover:bg-danger/15"
+                    >
+                      إعادة المحاولة
+                    </button>
+                  </div>
+                ) : storefront ? (
                   <div className="p-4 rounded-3xl bg-gradient-to-r from-primary/10 via-card to-emerald-500/10 border border-primary/20 shadow-sm">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       {/* Left: Store Stats */}
@@ -1102,13 +1154,12 @@ export function Dashboard() {
                     <MetricCard
                       className="h-full"
                       label="السيولة النقدية (الخزائن)"
-                      value={treasuryLiquidity}
-                      format={money}
+                      value={treasuryLiquidity ?? 0}
+                      format={treasuryLiquidity === null ? () => "غير متاح" : money}
                       masked={privacy}
-                      tone={treasuryLiquidity >= 0 ? "positive" : "danger"}
+                      tone={treasuryLiquidity === null || treasuryLiquidity < 0 ? "danger" : "positive"}
                       icon={Wallet}
-                      series={monthBuckets.payments}
-                      sub="إجمالي النقدية المتاحة بالدرج والحسابات"
+                      sub={treasuryLiquidityResult.error ?? "رصيد لحظي موثّق من جميع الخزائن والحسابات"}
                     />
                   </Reveal>
 
@@ -1143,6 +1194,21 @@ export function Dashboard() {
                       icon={PiggyBank}
                       series={monthBuckets.profitTrend}
                       sub={incompleteCostCount > 0 ? `${incompleteCostCount} فاتورة بيانات تكلفتها غير مكتملة` : `أرباح ${m(fmt(grossProfit))} − مصروفات ${m(fmt(expensesTotal))}`}
+                    />
+                  </Reveal>
+
+                  {/* التحصيلات للنطاق الزمني المحدد */}
+                  <Reveal className="h-full" delay={245}>
+                    <MetricCard
+                      className="h-full"
+                      label={`التحصيلات (${rangeLabel})`}
+                      value={rangeCollected}
+                      format={money}
+                      masked={privacy}
+                      tone={rangeCollected > 0 ? "positive" : "neutral"}
+                      icon={Banknote}
+                      series={monthBuckets.payments}
+                      sub="إجمالي الدفعات المحصلة خلال الفترة المختارة"
                     />
                   </Reveal>
 
@@ -1248,12 +1314,29 @@ export function Dashboard() {
                     title="الأصناف الأكثر مبيعاً وتحقيقاً للإيراد"
                     icon={<Flame className="h-5 w-5 text-amber-500" />}
                     aside={
-                      <Link
-                        to="/inventory"
-                        className="inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-3.5 py-1.5 text-[11px] font-bold text-foreground ring-1 ring-border transition hover:bg-foreground/[0.10]"
-                      >
-                        إدارة المخزون <ArrowLeft className="h-3.5 w-3.5" />
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <div className="flex rounded-lg bg-foreground/[0.05] p-1 text-[11px] ring-1 ring-border">
+                          {(["quantity", "revenue"] as TopProductsSort[]).map((sort) => (
+                            <button
+                              key={sort}
+                              type="button"
+                              onClick={() => setTopProductsSort(sort)}
+                              className={cn(
+                                "rounded-md px-2.5 py-1 font-bold transition",
+                                topProductsSort === sort ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                              )}
+                            >
+                              {sort === "quantity" ? "الكمية" : "الإيراد"}
+                            </button>
+                          ))}
+                        </div>
+                        <Link
+                          to="/inventory"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-3.5 py-1.5 text-[11px] font-bold text-foreground ring-1 ring-border transition hover:bg-foreground/[0.10]"
+                        >
+                          إدارة المخزون <ArrowLeft className="h-3.5 w-3.5" />
+                        </Link>
+                      </div>
                     }
                   />
 
@@ -1693,7 +1776,7 @@ export function Dashboard() {
                 <Reveal className="h-full" delay={0}>
                   <BezelCard variant="flat" className="h-full" innerClassName="flex h-full flex-col p-6 sm:p-8">
                     <SectionHead
-                      title="أقساط تستحق التحصيل اليوم"
+                        title="أقساط تستحق التحصيل اليوم"
                       icon={<CalendarCheck className="h-5 w-5 text-warning" />}
                       aside={
                         <div className="text-left">
@@ -1757,7 +1840,7 @@ export function Dashboard() {
                                   {money(row.due)}
                                 </div>
                                 <div className="mt-1.5 text-[11px] text-muted-foreground">
-                                  {row.late > 0 ? `متأخر ${row.late} يوم` : "مستحق اليوم"}
+                                  مستحق اليوم
                                 </div>
                               </div>
                             </div>
@@ -1787,7 +1870,7 @@ export function Dashboard() {
                         to="/cashbox"
                         icon={<Wallet className="h-4 w-4" />}
                         title="الخزائن والحسابات البنكية"
-                        sub={`الرصيد: ${money(treasuryLiquidity)}`}
+                        sub={treasuryLiquidityResult.error ?? `الرصيد: ${money(treasuryLiquidity ?? 0)}`}
                       />
                       <QuickLink
                         to="/inventory"
@@ -1818,7 +1901,7 @@ export function Dashboard() {
                         to="/storefront"
                         icon={<Store className="h-4 w-4 text-primary" />}
                         title="المتجر الإلكتروني"
-                        sub={storefront ? `${storefront.name} (نشط)` : "إنشاء متجر للبيع أونلاين"}
+                        sub={storefrontError ? "تعذر تحميل حالة المتجر" : storefront ? `${storefront.name} (نشط)` : "إنشاء متجر للبيع أونلاين"}
                       />
                     </div>
                   </BezelCard>

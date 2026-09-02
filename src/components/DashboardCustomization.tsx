@@ -117,21 +117,14 @@ export function useDashboardLayout() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed: SectionConfig[] = JSON.parse(saved);
-        // Ensure all default sections are present even if new sections were added
-        const parsedMap = new Map(parsed.map((s) => [s.id, s]));
-        const merged: SectionConfig[] = [];
-        for (const item of DEFAULT_SECTIONS) {
-          if (parsedMap.has(item.id)) {
-            merged.push({ ...item, ...parsedMap.get(item.id)! });
-          } else {
-            merged.push(item);
-          }
-        }
-        // Preserve user ordering
-        const ordered = parsed
-          .filter((p) => DEFAULT_SECTIONS.some((d) => d.id === p.id))
-          .map((p) => ({ ...p, ...DEFAULT_SECTIONS.find((d) => d.id === p.id)!, visible: p.visible }));
-        return ordered.length === DEFAULT_SECTIONS.length ? ordered : merged;
+        const defaultsById = new Map(DEFAULT_SECTIONS.map((section) => [section.id, section]));
+        const ordered = parsed.flatMap((savedSection) => {
+          const current = defaultsById.get(savedSection.id);
+          return current ? [{ ...current, visible: savedSection.visible }] : [];
+        });
+        const savedIds = new Set(ordered.map((section) => section.id));
+        const newlyAdded = DEFAULT_SECTIONS.filter((section) => !savedIds.has(section.id));
+        return [...ordered, ...newlyAdded];
       }
     } catch {
       // fallback
