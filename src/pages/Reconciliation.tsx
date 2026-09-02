@@ -13,7 +13,12 @@ import {
   ReconciliationCategory,
   ReconciliationSeverity,
   ReconciliationFinding,
+  saveAuditRun,
+  getAuditRuns,
+  deleteAuditRun,
+  type AuditRunRecord,
 } from "@/lib/reconciliation-engine";
+import { AuditRunsHistory } from "@/components/reconciliation/AuditRunsHistory";
 import {
   ClipboardCheck,
   AlertTriangle,
@@ -100,20 +105,55 @@ export default function Reconciliation() {
     loadMovements();
   }, []);
 
+  // Audit runs history
+  const [auditRuns, setAuditRuns] = useState<AuditRunRecord[]>([]);
+  const [pendingRunSave, setPendingRunSave] = useState<"manual" | "auto" | "after_fix" | null>(null);
+  const loadAuditRuns = async () => setAuditRuns(await getAuditRuns(30));
+  useEffect(() => {
+    loadAuditRuns();
+  }, []);
+
   const handleManualScan = async () => {
     setIsScanning(true);
     await db.invalidate();
     await loadMovements();
     setTimeout(() => {
       setIsScanning(false);
+      setPendingRunSave("manual");
       toast.success("تم الانتهاء من الفحص والتدقيق الشامل وتحديث النتائج");
     }, 400);
+  };
+
+  const handleDeleteRun = async (id: string) => {
+    await deleteAuditRun(id);
+    setAuditRuns((prev) => prev.filter((r) => r.id !== id));
   };
 
   // Run comprehensive reconciliation
   const summary = useMemo(() => {
     return runComprehensiveReconciliation(data, movements);
   }, [data, movements]);
+
+  // Persist an audit run once the fresh summary is computed
+  useEffect(() => {
+    if (!pendingRunSave) return;
+    const source = pendingRunSave;
+    setPendingRunSave(null);
+    saveAuditRun(summary, source).then((rec) => {
+      if (rec) setAuditRuns((prev) => [rec, ...prev].slice(0, 30));
+    });
+  }, [pendingRunSave, summary]);
+
+  // Auto-record a daily snapshot on first visit each day
+  useEffect(() => {
+    if (loadingMovements || data.loading) return;
+    const key = "segilly_recon_last_auto_run";
+    const todayKey = new Date().toISOString().slice(0, 10);
+    if (localStorage.getItem(key) === todayKey) return;
+    localStorage.setItem(key, todayKey);
+    setPendingRunSave("auto");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingMovements, data.loading]);
 
   // Filtered findings
   const filteredFindings = useMemo(() => {
@@ -157,7 +197,8 @@ export default function Reconciliation() {
 
     setFixingId(finding.id);
     try {
-      await executeReconciliationFix(finding);
+      const ok = await executeReconciliationFix(finding);
+      if (ok) setPendingRunSave("after_fix");
     } finally {
       setFixingId(null);
     }
@@ -170,6 +211,7 @@ export default function Reconciliation() {
       const res = await executeAutoFixAll(summary.findings);
       toast.success(`تم بنجاح إصلاح وتصحيح ${res.successCount} مشكلة حسابية ومزامنة القيود`);
       setBatchDialogOpen(false);
+      setPendingRunSave("after_fix");
     } catch (err: any) {
       toast.error(err.message || "حدث خطأ أثناء الإصلاح الشامل");
     } finally {
@@ -370,6 +412,9 @@ export default function Reconciliation() {
             </div>
           </BezelCard>
         </div>
+
+        {/* Audit Runs History */}
+        <AuditRunsHistory runs={auditRuns} currentScore={summary.healthScore} onDelete={handleDeleteRun} />
 
         {/* Filter Tabs & Search Controls */}
         <div className="space-y-4">
