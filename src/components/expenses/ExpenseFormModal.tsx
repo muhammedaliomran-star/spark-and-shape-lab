@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { db, useDB, type Expense } from "@/lib/store";
 import {
   getAllExpenseCategories,
@@ -28,8 +29,17 @@ import {
   saveExpenseMetaLocal,
   ExpenseMeta,
   getCategoryInfo,
+  issueVoucherNumber,
+  COST_CENTERS,
 } from "@/lib/expenses-system";
-import { getTreasuryAccounts, TreasuryAccount } from "@/lib/cashbox-system";
+import {
+  getTreasuryAccounts,
+  TreasuryAccount,
+  calculateAccountBalance,
+  getManualTransactions,
+  getInternalTransfers,
+} from "@/lib/cashbox-system";
+import { fmt } from "@/lib/store";
 import {
   Receipt,
   Wallet,
@@ -42,6 +52,8 @@ import {
   Loader2,
   FileCheck,
   User,
+  AlertTriangle,
+  Target,
 } from "lucide-react";
 
 interface ExpenseFormModalProps {
@@ -63,13 +75,14 @@ export function ExpenseFormModal({
   defaultAccountId,
   defaultBranchId,
 }: ExpenseFormModalProps) {
-  const { branches } = useDB();
+  const { branches, invoices, payments, expenses } = useDB();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("other");
   const [accountId, setAccountId] = useState("acc-cash-main");
   const [branchId, setBranchId] = useState("all");
+  const [costCenter, setCostCenter] = useState("none");
   const [recipientName, setRecipientName] = useState("");
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
@@ -80,6 +93,16 @@ export function ExpenseFormModal({
   const categories = useMemo(() => getAllExpenseCategories(), [open]);
   const treasuryAccounts = useMemo(() => getTreasuryAccounts().filter((a) => a.active), [open]);
 
+  // رصيد الخزينة المختارة الحالي (للتحقق من كفاية الرصيد قبل الصرف)
+  const accountBalance = useMemo(() => {
+    const acc = treasuryAccounts.find((a) => a.id === accountId);
+    if (!acc) return null;
+    const otherExpenses = editing ? expenses.filter((e) => e.id !== editing.id) : expenses;
+    return calculateAccountBalance(acc, invoices, payments, otherExpenses, getManualTransactions(), getInternalTransfers()).currentBalance;
+  }, [accountId, treasuryAccounts, invoices, payments, expenses, editing]);
+  const numericAmount = Number(amount) || 0;
+  const insufficient = accountBalance !== null && numericAmount > 0 && numericAmount > accountBalance;
+
   // Initialize data on open
   useMemo(() => {
     if (open) {
@@ -89,6 +112,7 @@ export function ExpenseFormModal({
         setCategory(editing.category || "other");
         setAccountId(meta.accountId || "acc-cash-main");
         setBranchId(meta.branchId || "all");
+        setCostCenter(meta.costCenter || "none");
         setRecipientName(meta.recipientName || "");
         setExpenseDate(editing.expenseDate || new Date().toISOString().slice(0, 10));
         
@@ -102,6 +126,7 @@ export function ExpenseFormModal({
         setCategory(defaultCategory || "other");
         setAccountId(defaultAccountId || "acc-cash-main");
         setBranchId(defaultBranchId || "all");
+        setCostCenter("none");
         setRecipientName("");
         setExpenseDate(new Date().toISOString().slice(0, 10));
         setNotes("");
@@ -180,17 +205,33 @@ export function ExpenseFormModal({
     }
 
     const selectedAcc = treasuryAccounts.find((a) => a.id === accountId);
+    if (!selectedAcc) {
+      toast.error("يرجى اختيار خزينة / قناة دفع صالحة للخصم");
+      return;
+    }
+    if (insufficient) {
+      const proceed = confirm(
+        `رصيد "${selectedAcc.name}" الحالي ${fmt(accountBalance || 0)} ج.م وهو أقل من المبلغ المطلوب (${fmt(numericAmount)} ج.م).\nهل تريد المتابعة وتسجيل الخزينة بالسالب؟`
+      );
+      if (!proceed) return;
+    }
     const selectedBranch = branches.find((b) => b.id === branchId);
+
+    // رقم سند متسلسل رسمي (يُصدر مرة واحدة فقط عند الإنشاء)
+    const voucherNumber = editing
+      ? getExpenseMeta(editing).voucherNumber
+      : issueVoucherNumber({ amount: numAmount, recipientName: recipientName.trim() || undefined, accountId }).number;
 
     const meta: ExpenseMeta = {
       accountId,
-      accountName: selectedAcc?.name || "الدرج الرئيسي (كاش)",
+      accountName: selectedAcc.name,
       branchId: branchId === "all" ? undefined : branchId,
       branchName: branchId === "all" ? "كل الفروع" : selectedBranch?.name,
+      costCenter: costCenter === "none" ? undefined : costCenter,
       recipientName: recipientName.trim() || undefined,
       receiptUrl: receiptUrl || undefined,
       receiptName: receiptName || undefined,
-      voucherNumber: editing ? getExpenseMeta(editing).voucherNumber : `VCH-${Math.floor(100000 + Math.random() * 900000)}`,
+      voucherNumber,
     };
 
     const finalNotes = encodeExpenseNotes(notes, meta);
@@ -306,6 +347,18 @@ export function ExpenseFormModal({
                   ))}
                 </SelectContent>
               </Select>
+              {accountBalance !== null && (
+                <p
+                  className={cn(
+                    "mt-1 text-[11px] font-semibold flex items-center gap-1",
+                    insufficient ? "text-danger" : "text-muted-foreground"
+                  )}
+                >
+                  {insufficient && <AlertTriangle className="w-3 h-3" />}
+                  الرصيد المتاح: <span className="tabular-nums">{fmt(accountBalance)}</span> ج.م
+                  {insufficient && " — لا يكفي لهذا المبلغ"}
+                </p>
+              )}
             </div>
 
             <div>
@@ -327,6 +380,27 @@ export function ExpenseFormModal({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* مركز التكلفة */}
+          <div>
+            <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <Target className="w-3.5 h-3.5 text-muted-foreground" />
+              مركز التكلفة (اختياري)
+            </Label>
+            <Select value={costCenter} onValueChange={setCostCenter}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="اختر مركز التكلفة" />
+              </SelectTrigger>
+              <SelectContent dir="rtl">
+                <SelectItem value="none">بدون مركز تكلفة</SelectItem>
+                {COST_CENTERS.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>
+                    {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* المستفيد والتاريخ */}
