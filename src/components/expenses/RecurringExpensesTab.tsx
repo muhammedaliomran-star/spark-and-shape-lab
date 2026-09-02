@@ -28,10 +28,9 @@ import {
   checkRecurringStatus,
   getCategoryInfo,
   getAllExpenseCategories,
-  encodeExpenseNotes,
-  saveExpenseMetaLocal,
-  ExpenseMeta,
+  executeRecurringExpense,
 } from "@/lib/expenses-system";
+import { Switch } from "@/components/ui/switch";
 import { getTreasuryAccounts } from "@/lib/cashbox-system";
 import { db, fmt, useDB } from "@/lib/store";
 import { toast } from "sonner";
@@ -79,6 +78,7 @@ export function RecurringExpensesTab() {
   const [recipientName, setRecipientName] = useState("");
   const [notes, setNotes] = useState("");
   const [active, setActive] = useState(true);
+  const [autoApprove, setAutoApprove] = useState(false);
 
   const onOpenAdd = () => {
     setEditingItem(null);
@@ -92,6 +92,7 @@ export function RecurringExpensesTab() {
     setRecipientName("");
     setNotes("");
     setActive(true);
+    setAutoApprove(false);
     setOpenModal(true);
   };
 
@@ -107,6 +108,7 @@ export function RecurringExpensesTab() {
     setRecipientName(item.recipientName || "");
     setNotes(item.notes || "");
     setActive(item.active);
+    setAutoApprove(!!item.autoApprove);
     setOpenModal(true);
   };
 
@@ -133,6 +135,7 @@ export function RecurringExpensesTab() {
         recipientName: recipientName.trim() || undefined,
         notes: notes.trim() || undefined,
         active,
+        autoApprove,
       });
       toast.success("تم تحديث المصروف الدوري");
     } else {
@@ -145,7 +148,7 @@ export function RecurringExpensesTab() {
         frequency,
         dayOfMonth: Number(dayOfMonth) || 1,
         startDate: new Date().toISOString().slice(0, 10),
-        autoApprove: false,
+        autoApprove,
         active,
         recipientName: recipientName.trim() || undefined,
         notes: notes.trim() || undefined,
@@ -169,54 +172,11 @@ export function RecurringExpensesTab() {
   const handleExecuteNow = async (item: RecurringExpense) => {
     setBusyId(item.id);
     try {
-      const selectedAcc = accounts.find((a) => a.id === item.accountId);
-      const selectedBranch = branches.find((b) => b.id === item.branchId);
-
-      const meta: ExpenseMeta = {
-        accountId: item.accountId,
-        accountName: selectedAcc?.name || "الدرج الرئيسي (كاش)",
-        branchId: item.branchId,
-        branchName: selectedBranch?.name || "الفرع الرئيسي",
-        recipientName: item.recipientName,
-        isRecurring: true,
-        recurringTemplateId: item.id,
-        voucherNumber: `VCH-${Math.floor(100000 + Math.random() * 900000)}`,
-      };
-
-      const finalNotes = encodeExpenseNotes(
-        `${item.title} — صرف دوري مجدول (${new Date().toLocaleDateString("ar-EG", { month: "long", year: "numeric" })})`,
-        meta
-      );
-
-      const expId = crypto.randomUUID();
-      await db.addExpense({
-        amount: item.amount,
-        category: item.category as any,
-        expenseDate: new Date().toISOString().slice(0, 10),
-        notes: finalNotes,
+      const voucher = await executeRecurringExpense(item, {
+        addExpense: (exp) => db.addExpense({ ...exp, category: exp.category as any }),
+        branches,
       });
-
-      saveExpenseMetaLocal(expId, meta);
-
-      // Advance next due date
-      const nextDate = new Date();
-      if (item.frequency === "monthly") {
-        nextDate.setMonth(nextDate.getMonth() + 1);
-        nextDate.setDate(Math.min(item.dayOfMonth || 1, 28));
-      } else if (item.frequency === "weekly") {
-        nextDate.setDate(nextDate.getDate() + 7);
-      } else if (item.frequency === "daily") {
-        nextDate.setDate(nextDate.getDate() + 1);
-      } else {
-        nextDate.setFullYear(nextDate.getFullYear() + 1);
-      }
-
-      updateRecurringExpense(item.id, {
-        lastGeneratedDate: new Date().toISOString().slice(0, 10),
-        nextDueDate: nextDate.toISOString().slice(0, 10),
-      });
-
-      toast.success(`تم صرف وتسجيل "${item.title}" بقيمة ${fmt(item.amount)} ج.م بنجاح`);
+      toast.success(`تم صرف "${item.title}" بقيمة ${fmt(item.amount)} ج.م — سند رقم ${voucher.number}`);
       refresh();
     } catch (err: any) {
       toast.error(err.message || "حدث خطأ أثناء تنفيذ المصروف الدوري");
@@ -328,6 +288,11 @@ export function RecurringExpensesTab() {
                       >
                         {status.badgeText}
                       </Badge>
+                      {item.autoApprove && (
+                        <Badge variant="outline" className="mt-1 mr-1 text-[10px] px-2 py-0.5 bg-primary/10 text-primary border-primary/30">
+                          <Sparkles className="w-2.5 h-2.5 ml-0.5" /> تلقائي
+                        </Badge>
+                      )}
                     </div>
                   </div>
 
@@ -496,6 +461,25 @@ export function RecurringExpensesTab() {
                 onChange={(e) => setRecipientName(e.target.value)}
                 className="mt-1"
               />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex items-center justify-between gap-3 p-3 rounded-xl border bg-card/60">
+                <div>
+                  <Label className="text-xs font-bold">القالب مفعّل</Label>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">إيقافه يمنع التنبيهات والتوليد</p>
+                </div>
+                <Switch checked={active} onCheckedChange={setActive} />
+              </div>
+              <div className="flex items-center justify-between gap-3 p-3 rounded-xl border bg-card/60">
+                <div>
+                  <Label className="text-xs font-bold flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-primary" /> اعتماد تلقائي
+                  </Label>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">يُسجَّل تلقائياً عند الاستحقاق دون تدخل</p>
+                </div>
+                <Switch checked={autoApprove} onCheckedChange={setAutoApprove} />
+              </div>
             </div>
 
             <div>

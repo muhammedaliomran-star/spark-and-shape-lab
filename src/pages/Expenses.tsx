@@ -51,7 +51,12 @@ import {
   getRecurringExpenses,
   checkRecurringStatus,
   decodeExpenseNotes,
+  runRecurringAutoGeneration,
+  getCategoryBudgets,
+  calculateBudgetStatus,
+  COST_CENTERS,
 } from "@/lib/expenses-system";
+import { CategoryIcon, CATEGORY_COLOR_CLASSES } from "@/components/expenses/CategoryIcon";
 import { getTreasuryAccounts } from "@/lib/cashbox-system";
 import { ExpenseFormModal } from "@/components/expenses/ExpenseFormModal";
 import { ReceiptViewerModal } from "@/components/expenses/ReceiptViewerModal";
@@ -129,8 +134,43 @@ function ExpensesPage() {
   const treasuryAccounts = useMemo(() => getTreasuryAccounts(), [openForm]);
 
   // Recurring check for badge
-  const recurringList = useMemo(() => getRecurringExpenses(), [activeTab]);
+  const [recurringTick, setRecurringTick] = useState(0);
+  const recurringList = useMemo(() => getRecurringExpenses(), [activeTab, recurringTick]);
   const dueRecurringCount = recurringList.filter((r) => r.active && checkRecurringStatus(r).isDue).length;
+
+  // المولّد التلقائي للمصروفات الدورية + تنبيهات عامة (مرة يومياً عند فتح الصفحة)
+  const autoRanRef = useRef(false);
+  useEffect(() => {
+    if (autoRanRef.current || branches === undefined) return;
+    autoRanRef.current = true;
+    runRecurringAutoGeneration({
+      addExpense: (exp) => db.addExpense({ ...exp, category: exp.category as Expense["category"] }),
+      branches,
+    })
+      .then(({ generated, pending }) => {
+        if (generated.length) {
+          setRecurringTick((t) => t + 1);
+          toast.success(
+            `تم تسجيل ${generated.length} مصروف دوري تلقائياً بقيمة ${fmt(generated.reduce((s, g) => s + g.amount, 0))} ج.م`,
+            { duration: 8000 }
+          );
+        }
+        if (pending.length) {
+          toast.warning(`لديك ${pending.length} مصروف دوري مستحق بانتظار الاعتماد`, {
+            duration: 8000,
+            action: { label: "عرض", onClick: () => setActiveTab("recurring") },
+          });
+        }
+      })
+      .catch((e) => console.error(e));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branches]);
+
+  // تنبيه تجاوز الميزانيات الشهرية
+  const exceededBudgets = useMemo(
+    () => calculateBudgetStatus(getCategoryBudgets(), expenses).filter((b) => b.status !== "safe"),
+    [expenses, activeTab]
+  );
 
   // Filtered List
   const filtered = useMemo(() => {
@@ -195,7 +235,10 @@ function ExpensesPage() {
 
   const handlePrintVoucher = (e: Expense) => {
     const meta = getExpenseMeta(e);
-    const ok = printPaymentVoucherPdf(e, meta, shopSettings?.shopName || "سِجلّي لإدارة المتاجر والأقساط");
+    const ok = printPaymentVoucherPdf(e, meta, shopSettings?.shopName || "سِجلّي لإدارة المتاجر والأقساط", {
+      paper: shopSettings?.printPaper === "thermal" ? "thermal" : "a4",
+      thermalWidth: shopSettings?.thermalPaperWidth || "80mm",
+    });
     if (!ok) {
       toast.error("يرجى السماح بفتح النوافذ المنبثقة للطباعة");
     }
@@ -354,9 +397,12 @@ function ExpensesPage() {
             )}
           </TabsTrigger>
 
-          <TabsTrigger value="budgets" className="rounded-xl py-2 gap-2 text-xs font-bold data-[state=active]:shadow-xs">
+          <TabsTrigger value="budgets" className="rounded-xl py-2 gap-2 text-xs font-bold data-[state=active]:shadow-xs relative">
             <Target className="w-4 h-4" />
             الميزانيات وسقف الإنفاق
+            {exceededBudgets.length > 0 && (
+              <span className="w-2 h-2 rounded-full bg-danger animate-pulse absolute top-1.5 left-2" />
+            )}
           </TabsTrigger>
 
           <TabsTrigger value="analytics" className="rounded-xl py-2 gap-2 text-xs font-bold data-[state=active]:shadow-xs">
@@ -369,6 +415,38 @@ function ExpensesPage() {
             التصنيفات المخصصة
           </TabsTrigger>
         </TabsList>
+
+        {activeTab === "list" && (dueRecurringCount > 0 || exceededBudgets.length > 0) && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {dueRecurringCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setActiveTab("recurring")}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs font-bold hover:bg-amber-500/15 transition-colors"
+              >
+                <CalendarClock className="w-3.5 h-3.5" />
+                {dueRecurringCount} مصروف دوري مستحق بانتظار الاعتماد
+              </button>
+            )}
+            {exceededBudgets.map((b) => (
+              <button
+                key={`${b.category}-${b.branchId || "all"}-${b.costCenter || "all"}`}
+                type="button"
+                onClick={() => setActiveTab("budgets")}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition-colors",
+                  b.status === "exceeded"
+                    ? "border-danger/30 bg-danger/10 text-danger hover:bg-danger/15"
+                    : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/15"
+                )}
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                {b.categoryLabel}: {b.percentage}% من الميزانية
+                {b.status === "exceeded" ? " (تجاوز!)" : ""}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* ================= TAB 1: سجل المصروفات ================= */}
         <TabsContent value="list" className="space-y-6 mt-6">
@@ -549,8 +627,13 @@ function ExpensesPage() {
                     >
                       {/* Left: Info */}
                       <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
-                        <div className="w-11 h-11 rounded-2xl bg-danger/10 text-danger flex items-center justify-center font-bold shrink-0 ring-1 ring-danger/20">
-                          <Receipt className="w-5 h-5" />
+                        <div
+                          className={cn(
+                            "w-11 h-11 rounded-2xl flex items-center justify-center font-bold shrink-0 ring-1 ring-border/40",
+                            CATEGORY_COLOR_CLASSES[catInfo.color]?.soft || "bg-danger/10 text-danger"
+                          )}
+                        >
+                          <CategoryIcon name={catInfo.iconName} className="w-5 h-5" />
                         </div>
 
                         <div className="min-w-0 flex-1">
@@ -579,6 +662,16 @@ function ExpensesPage() {
                             {br && (
                               <span className="flex items-center gap-1 text-blue-700 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md">
                                 <Building2 className="w-3 h-3" /> {br.name}
+                              </span>
+                            )}
+                            {meta.costCenter && (
+                              <span className="flex items-center gap-1 text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
+                                <Target className="w-3 h-3" /> {COST_CENTERS.find((c) => c.value === meta.costCenter)?.label}
+                              </span>
+                            )}
+                            {meta.autoGenerated && (
+                              <span className="flex items-center gap-1 text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                                <CalendarClock className="w-3 h-3" /> تلقائي
                               </span>
                             )}
                           </div>
