@@ -556,6 +556,51 @@ export type Database = {
           },
         ]
       }
+      reconciliation_audit_runs: {
+        Row: {
+          auto_fixable_count: number
+          category_counts: Json
+          created_at: string
+          critical_count: number
+          findings_count: number
+          health_score: number
+          id: string
+          notice_count: number
+          total_discrepancy: number
+          trigger_source: string
+          user_id: string
+          warning_count: number
+        }
+        Insert: {
+          auto_fixable_count?: number
+          category_counts?: Json
+          created_at?: string
+          critical_count?: number
+          findings_count?: number
+          health_score?: number
+          id?: string
+          notice_count?: number
+          total_discrepancy?: number
+          trigger_source?: string
+          user_id: string
+          warning_count?: number
+        }
+        Update: {
+          auto_fixable_count?: number
+          category_counts?: Json
+          created_at?: string
+          critical_count?: number
+          findings_count?: number
+          health_score?: number
+          id?: string
+          notice_count?: number
+          total_discrepancy?: number
+          trigger_source?: string
+          user_id?: string
+          warning_count?: number
+        }
+        Relationships: []
+      }
       return_items: {
         Row: {
           created_at: string

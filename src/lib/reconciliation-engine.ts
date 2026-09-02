@@ -3,6 +3,80 @@ import { supabase } from "@/integrations/supabase/client";
 import { pdfDocument, openPdfDocument, esc } from "@/lib/pdf-doc";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
+import { recordCarrierSettlementInTreasury } from "@/lib/shipping-finance";
+
+// ==========================================
+// سجل جولات التدقيق (Audit Runs History)
+// ==========================================
+export interface AuditRunRecord {
+  id: string;
+  createdAt: string;
+  healthScore: number;
+  totalDiscrepancy: number;
+  criticalCount: number;
+  warningCount: number;
+  noticeCount: number;
+  autoFixableCount: number;
+  findingsCount: number;
+  triggerSource: string;
+}
+
+export async function saveAuditRun(
+  summary: ReconciliationSummary,
+  triggerSource: "manual" | "auto" | "after_fix" = "manual"
+): Promise<AuditRunRecord | null> {
+  const { data: auth } = await supabase.auth.getUser();
+  const userId = auth.user?.id;
+  if (!userId) return null;
+  const { data: row, error } = await (supabase.from as any)("reconciliation_audit_runs")
+    .insert({
+      user_id: userId,
+      health_score: summary.healthScore,
+      total_discrepancy: summary.totalDiscrepancyAmount,
+      critical_count: summary.criticalCount,
+      warning_count: summary.warningCount,
+      notice_count: summary.noticeCount,
+      auto_fixable_count: summary.autoFixableCount,
+      findings_count: summary.findings.length,
+      category_counts: summary.categoryCounts,
+      trigger_source: triggerSource,
+    })
+    .select("*")
+    .single();
+  if (error) {
+    console.error("saveAuditRun", error);
+    return null;
+  }
+  return mapAuditRun(row);
+}
+
+export async function getAuditRuns(limit = 30): Promise<AuditRunRecord[]> {
+  const { data: rows, error } = await (supabase.from as any)("reconciliation_audit_runs")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error || !rows) return [];
+  return rows.map(mapAuditRun);
+}
+
+export async function deleteAuditRun(id: string): Promise<void> {
+  await (supabase.from as any)("reconciliation_audit_runs").delete().eq("id", id);
+}
+
+function mapAuditRun(r: any): AuditRunRecord {
+  return {
+    id: r.id,
+    createdAt: r.created_at,
+    healthScore: Number(r.health_score ?? 0),
+    totalDiscrepancy: Number(r.total_discrepancy ?? 0),
+    criticalCount: Number(r.critical_count ?? 0),
+    warningCount: Number(r.warning_count ?? 0),
+    noticeCount: Number(r.notice_count ?? 0),
+    autoFixableCount: Number(r.auto_fixable_count ?? 0),
+    findingsCount: Number(r.findings_count ?? 0),
+    triggerSource: r.trigger_source ?? "manual",
+  };
+}
 
 export type ReconciliationCategory =
   | "all"
@@ -224,6 +298,10 @@ export function runComprehensiveReconciliation(
   // ==========================================
   // 2. تدقيق حسابات العملاء والأقساط (Customers)
   // ==========================================
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  const in30Days = new Date(today.getTime() + 30 * 86400000);
+
   for (const customer of data.customers) {
     const custInvoices = data.invoices.filter(
       (inv) => inv.customerId === customer.id && inv.status !== "cancelled"
@@ -231,30 +309,88 @@ export function runComprehensiveReconciliation(
     const totalInvoiced = custInvoices.reduce((sum, inv) => sum + Number(inv.total || 0), 0);
     const totalPaid = custInvoices.reduce((sum, inv) => sum + Number(inv.paid || 0), 0);
     const openingBalance = Number(customer.openingBalance || 0);
+    // إجمالي التعرض الائتماني = كل ما لم يُسدد (يشمل الأقساط المستقبلية)
     const currentDebt = Math.max(0, openingBalance + totalInvoiced - totalPaid);
 
-    // سقف الائتمان المتجاوز
+    // تفكيك المديونية: مستحق حتى اليوم / أقساط خلال 30 يوم / أقساط مستقبلية
+    let maturedDebt = Math.max(0, openingBalance);
+    let dueWithin30 = 0;
+    let futureInstallments = 0;
+    for (const inv of custInvoices) {
+      const total = Number(inv.total || 0);
+      const paid = Number(inv.paid || 0);
+      const remaining = Math.max(0, total - paid);
+      if (remaining <= 0) continue;
+      const monthly = Number(inv.monthlyInstallment || 0);
+      const down = Number(inv.downPayment || 0);
+      if (monthly <= 0 || !inv.firstDueDate) {
+        maturedDebt += remaining;
+        continue;
+      }
+      const first = new Date(inv.firstDueDate);
+      const monthsElapsed = Number.isNaN(first.getTime())
+        ? 0
+        : Math.max(0, (today.getFullYear() - first.getFullYear()) * 12 + (today.getMonth() - first.getMonth()) + (today >= first ? 1 : 0));
+      const scheduledByToday = Math.min(total, down + monthly * monthsElapsed);
+      const matured = Math.max(0, Math.min(remaining, scheduledByToday - paid));
+      const monthsIn30 = Number.isNaN(first.getTime())
+        ? 0
+        : Math.max(0, (in30Days.getFullYear() - first.getFullYear()) * 12 + (in30Days.getMonth() - first.getMonth()) + (in30Days >= first ? 1 : 0));
+      const scheduledIn30 = Math.min(total, down + monthly * monthsIn30);
+      const soon = Math.max(0, Math.min(remaining - matured, scheduledIn30 - Math.max(paid, scheduledByToday)));
+      maturedDebt += matured;
+      dueWithin30 += soon;
+      futureInstallments += Math.max(0, remaining - matured - soon);
+    }
+
     const limit = Number(customer.creditLimit || 0);
+    const exposureDetails = {
+      "المستحق حتى اليوم": `${fmt(maturedDebt)} ج.م`,
+      "أقساط خلال 30 يوم": `${fmt(dueWithin30)} ج.م`,
+      "أقساط مستقبلية": `${fmt(futureInstallments)} ج.م`,
+      "إجمالي التعرض الائتماني": `${fmt(currentDebt)} ج.م`,
+      "سقف الائتمان": `${fmt(limit)} ج.م`,
+    };
+
     if (limit > 0 && currentDebt > limit) {
       const overLimit = currentDebt - limit;
+      const maturedOver = maturedDebt > limit;
       findings.push({
         id: `cust-credit-limit-${customer.id}`,
         category: "customers",
-        severity: "warning",
-        title: `تجاوز سقف الائتمان للعميل «${customer.name}»`,
-        description: `المديونية الحالية (${fmt(currentDebt)} ج.م) تتجاوز الحد الائتماني المصرح (${fmt(limit)} ج.م) بمقدار ${fmt(overLimit)} ج.م.`,
-        impact: "خطر ائتماني يستوجب تجميد المبيعات الآجلة الإضافية.",
+        severity: maturedOver ? "critical" : "warning",
+        title: maturedOver
+          ? `تجاوز فعلي لسقف الائتمان للعميل «${customer.name}»`
+          : `تجاوز سقف الائتمان بالأقساط المستقبلية للعميل «${customer.name}»`,
+        description: maturedOver
+          ? `المستحق حتى اليوم (${fmt(maturedDebt)} ج.م) وحده يتجاوز الحد الائتماني (${fmt(limit)} ج.م). إجمالي التعرض شاملًا الأقساط القادمة ${fmt(currentDebt)} ج.م بفارق ${fmt(overLimit)} ج.م.`
+          : `المستحق حتى اليوم (${fmt(maturedDebt)} ج.م) ضمن الحد، لكن مع احتساب الأقساط القادمة (${fmt(dueWithin30 + futureInstallments)} ج.م) يبلغ التعرض الكلي ${fmt(currentDebt)} ج.م متجاوزًا الحد (${fmt(limit)} ج.م) بمقدار ${fmt(overLimit)} ج.م.`,
+        impact: maturedOver
+          ? "خطر ائتماني قائم يستوجب تجميد المبيعات الآجلة الإضافية ومتابعة التحصيل فورًا."
+          : "التعرض الكلي يتجاوز الحد؛ يُنصح بعدم فتح أقساط جديدة حتى تنخفض المديونية.",
         differenceAmount: overLimit,
         targetId: customer.id,
         targetType: "customer",
         targetLabel: customer.name,
         autoFixable: false,
         fixType: "edit_target",
-        details: {
-          "المديونية الحالية": `${fmt(currentDebt)} ج.م`,
-          "سقف الائتمان": `${fmt(limit)} ج.م`,
-          "المبلغ المتجاوز": `${fmt(overLimit)} ج.م`,
-        },
+        details: { ...exposureDetails, "المبلغ المتجاوز": `${fmt(overLimit)} ج.م` },
+      });
+    } else if (limit > 0 && currentDebt > 0 && currentDebt >= limit * 0.9) {
+      findings.push({
+        id: `cust-credit-near-limit-${customer.id}`,
+        category: "customers",
+        severity: "notice",
+        title: `اقتراب من سقف الائتمان للعميل «${customer.name}»`,
+        description: `التعرض الكلي شاملًا الأقساط المستقبلية (${fmt(currentDebt)} ج.م) يمثل ${Math.round((currentDebt / limit) * 100)}% من الحد الائتماني (${fmt(limit)} ج.م).`,
+        impact: "أي فاتورة آجلة جديدة ستتجاوز الحد الائتماني.",
+        differenceAmount: 0,
+        targetId: customer.id,
+        targetType: "customer",
+        targetLabel: customer.name,
+        autoFixable: false,
+        fixType: "edit_target",
+        details: exposureDetails,
       });
     }
 
@@ -477,7 +613,12 @@ export function runComprehensiveReconciliation(
         targetLabel: shp.trackingNumber || `شحنة #${shp.id.slice(0, 8)}`,
         autoFixable: true,
         fixType: "settle_shipment",
-        fixPayload: { shipmentId: shp.id },
+        fixPayload: {
+          shipmentId: shp.id,
+          codAmount: cod,
+          trackingNumber: shp.trackingNumber,
+          carrierName: data.carriers.find((c) => c.id === shp.carrierId)?.name ?? "مندوب/شركة شحن",
+        },
       });
     }
   }
@@ -577,12 +718,30 @@ export async function executeReconciliationFix(finding: ReconciliationFinding): 
     }
 
     if (finding.fixType === "settle_shipment") {
+      const settledAt = new Date().toISOString();
       const { error } = await (supabase.from as any)("shipments")
-        .update({ collection_status: "settled", settled_at: new Date().toISOString() })
+        .update({ collection_status: "settled", settled_at: settledAt })
         .eq("id", finding.targetId);
       if (error) throw error;
+      const payload = finding.fixPayload ?? {};
+      const amount = Number(payload.codAmount ?? finding.differenceAmount ?? 0);
+      let accountName: string | null = null;
+      if (amount > 0) {
+        accountName = recordCarrierSettlementInTreasury({
+          carrierName: payload.carrierName ?? "مندوب/شركة شحن",
+          amount,
+          paymentMethod: "cash",
+          referenceNumber: payload.trackingNumber ?? finding.targetId.slice(0, 8),
+          notes: `تسوية من مركز المطابقة — شحنة ${payload.trackingNumber ?? finding.targetId.slice(0, 8)}`,
+          date: settledAt,
+        });
+      }
       await db.invalidate();
-      toast.success("تمت تسوية وتوريد متحصلات الشحنة إلى الخزينة");
+      toast.success(
+        accountName
+          ? `تمت تسوية الشحنة وتسجيل ${fmt(amount)} ج.م كوارد في «${accountName}»`
+          : "تمت تسوية الشحنة (لم يُسجَّل وارد: لا توجد حسابات خزينة نشطة)"
+      );
       return true;
     }
 
