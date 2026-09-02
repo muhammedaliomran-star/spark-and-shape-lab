@@ -11,3 +11,15 @@
 
 ## Invoices (earlier)
 - [x] Per-line discount/tax/serial, public receipt links, receipt image export
+
+## Dashboard accuracy and actions
+- [ ] Show verified treasury state and explicit load failure
+- [ ] Replace estimated profit and debt trends with accounting calculations
+- [ ] Use actual inventory sale valuation in executive export
+- [ ] Unify due-today definitions
+- [ ] Time-filter and rank top products by quantity or revenue
+- [ ] Correct unsettled COD semantics
+- [ ] Open quick-operation forms directly
+- [ ] Surface range collections as a KPI
+- [ ] Distinguish storefront missing vs load failure
+- [ ] Preserve custom section order when new sections are introduced
