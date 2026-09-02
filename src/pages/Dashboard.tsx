@@ -216,11 +216,6 @@ export function Dashboard() {
     data.invoices.reduce((s, i) => s + (i.total - i.paid), 0) +
     data.customers.reduce((s, c) => s + (c.openingBalance || 0), 0);
 
-  const isToday = (d: Date) =>
-    d.getFullYear() === today.getFullYear() &&
-    d.getMonth() === today.getMonth() &&
-    d.getDate() === today.getDate();
-
   // Filtered collections based on selected time-range
   const rangeCollected = useMemo(() => {
     return data.payments
@@ -773,7 +768,6 @@ export function Dashboard() {
       });
     }
 
-    const dom = today.getDate();
     const dueTodayCount = dueToday.length;
     if (dueTodayCount > 0) {
       out.push({ text: `${dueTodayCount} فاتورة تستحق التحصيل اليوم حسب الموعد المحدد`, tone: "warning" });
@@ -944,7 +938,7 @@ export function Dashboard() {
               <section key={section.id} className="mb-6">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <Link
-                    to="/invoices"
+                    to="/invoices/new"
                     className="flex items-center justify-between p-3.5 rounded-2xl bg-card border border-border/70 hover:border-primary/50 transition-all group hover:shadow-md"
                   >
                     <div className="flex items-center gap-3">
@@ -960,7 +954,7 @@ export function Dashboard() {
                   </Link>
 
                   <Link
-                    to="/payments"
+                    to="/payments?create=receipt"
                     className="flex items-center justify-between p-3.5 rounded-2xl bg-card border border-border/70 hover:border-emerald-500/50 transition-all group hover:shadow-md"
                   >
                     <div className="flex items-center gap-3">
@@ -976,7 +970,7 @@ export function Dashboard() {
                   </Link>
 
                   <Link
-                    to="/expenses"
+                    to="/expenses?create=expense"
                     className="flex items-center justify-between p-3.5 rounded-2xl bg-card border border-border/70 hover:border-rose-500/50 transition-all group hover:shadow-md"
                   >
                     <div className="flex items-center gap-3">
@@ -1000,8 +994,10 @@ export function Dashboard() {
                         <Wallet className="h-4 w-4" />
                       </span>
                       <div className="text-right">
-                        <div className="text-xs font-bold text-foreground">حركة الخزينة</div>
-                        <div className="text-[10px] text-muted-foreground">{money(treasuryLiquidity)}</div>
+                        <div className="text-xs font-bold text-foreground">فحص رصيد الخزينة</div>
+                        <div className={cn("text-[10px]", treasuryLiquidityResult.error ? "text-danger" : "text-muted-foreground")}>
+                          {treasuryLiquidityResult.error ?? money(treasuryLiquidity ?? 0)}
+                        </div>
                       </div>
                     </div>
                     <ChevronLeft className="h-4 w-4 text-muted-foreground/50 group-hover:text-amber-600 transition-colors" />
@@ -1013,7 +1009,30 @@ export function Dashboard() {
           case "storefront_bar":
             return (
               <section key={section.id} className="mb-6">
-                {storefront ? (
+                {storefrontLoading ? (
+                  <div className="flex min-h-24 items-center justify-center rounded-3xl border border-border/80 bg-muted/30 text-xs font-bold text-muted-foreground">
+                    جارٍ تحميل بيانات المتجر…
+                  </div>
+                ) : storefrontError ? (
+                  <div className="flex flex-col items-center justify-between gap-3 rounded-3xl border border-danger/25 bg-danger/[0.06] p-4 sm:flex-row">
+                    <div className="flex items-center gap-3 text-right">
+                      <span className="grid h-10 w-10 place-items-center rounded-full bg-danger/10 text-danger">
+                        <AlertTriangle className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <div className="text-xs font-bold text-danger">{storefrontError}</div>
+                        <div className="mt-1 text-[11px] text-muted-foreground">تحقق من الاتصال ثم حاول مرة أخرى.</div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStorefrontLoadAttempt((attempt) => attempt + 1)}
+                      className="shrink-0 rounded-xl bg-danger/10 px-4 py-2 text-xs font-bold text-danger ring-1 ring-danger/20 transition hover:bg-danger/15"
+                    >
+                      إعادة المحاولة
+                    </button>
+                  </div>
+                ) : storefront ? (
                   <div className="p-4 rounded-3xl bg-gradient-to-r from-primary/10 via-card to-emerald-500/10 border border-primary/20 shadow-sm">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       {/* Left: Store Stats */}
@@ -1131,13 +1150,12 @@ export function Dashboard() {
                     <MetricCard
                       className="h-full"
                       label="السيولة النقدية (الخزائن)"
-                      value={treasuryLiquidity}
-                      format={money}
+                      value={treasuryLiquidity ?? 0}
+                      format={treasuryLiquidity === null ? () => "غير متاح" : money}
                       masked={privacy}
-                      tone={treasuryLiquidity >= 0 ? "positive" : "danger"}
+                      tone={treasuryLiquidity === null || treasuryLiquidity < 0 ? "danger" : "positive"}
                       icon={Wallet}
-                      series={monthBuckets.payments}
-                      sub="إجمالي النقدية المتاحة بالدرج والحسابات"
+                      sub={treasuryLiquidityResult.error ?? "رصيد لحظي موثّق من جميع الخزائن والحسابات"}
                     />
                   </Reveal>
 
@@ -1172,6 +1190,21 @@ export function Dashboard() {
                       icon={PiggyBank}
                       series={monthBuckets.profitTrend}
                       sub={incompleteCostCount > 0 ? `${incompleteCostCount} فاتورة بيانات تكلفتها غير مكتملة` : `أرباح ${m(fmt(grossProfit))} − مصروفات ${m(fmt(expensesTotal))}`}
+                    />
+                  </Reveal>
+
+                  {/* التحصيلات للنطاق الزمني المحدد */}
+                  <Reveal className="h-full" delay={245}>
+                    <MetricCard
+                      className="h-full"
+                      label={`التحصيلات (${rangeLabel})`}
+                      value={rangeCollected}
+                      format={money}
+                      masked={privacy}
+                      tone={rangeCollected > 0 ? "positive" : "neutral"}
+                      icon={Banknote}
+                      series={monthBuckets.payments}
+                      sub="إجمالي الدفعات المحصلة خلال الفترة المختارة"
                     />
                   </Reveal>
 
@@ -1277,12 +1310,29 @@ export function Dashboard() {
                     title="الأصناف الأكثر مبيعاً وتحقيقاً للإيراد"
                     icon={<Flame className="h-5 w-5 text-amber-500" />}
                     aside={
-                      <Link
-                        to="/inventory"
-                        className="inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-3.5 py-1.5 text-[11px] font-bold text-foreground ring-1 ring-border transition hover:bg-foreground/[0.10]"
-                      >
-                        إدارة المخزون <ArrowLeft className="h-3.5 w-3.5" />
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <div className="flex rounded-lg bg-foreground/[0.05] p-1 text-[11px] ring-1 ring-border">
+                          {(["quantity", "revenue"] as TopProductsSort[]).map((sort) => (
+                            <button
+                              key={sort}
+                              type="button"
+                              onClick={() => setTopProductsSort(sort)}
+                              className={cn(
+                                "rounded-md px-2.5 py-1 font-bold transition",
+                                topProductsSort === sort ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                              )}
+                            >
+                              {sort === "quantity" ? "الكمية" : "الإيراد"}
+                            </button>
+                          ))}
+                        </div>
+                        <Link
+                          to="/inventory"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-foreground/[0.06] px-3.5 py-1.5 text-[11px] font-bold text-foreground ring-1 ring-border transition hover:bg-foreground/[0.10]"
+                        >
+                          إدارة المخزون <ArrowLeft className="h-3.5 w-3.5" />
+                        </Link>
+                      </div>
                     }
                   />
 
@@ -1722,7 +1772,7 @@ export function Dashboard() {
                 <Reveal className="h-full" delay={0}>
                   <BezelCard variant="flat" className="h-full" innerClassName="flex h-full flex-col p-6 sm:p-8">
                     <SectionHead
-                      title="أقساط تستحق التحصيل اليوم"
+                        title="أقساط تستحق التحصيل اليوم"
                       icon={<CalendarCheck className="h-5 w-5 text-warning" />}
                       aside={
                         <div className="text-left">
@@ -1786,7 +1836,7 @@ export function Dashboard() {
                                   {money(row.due)}
                                 </div>
                                 <div className="mt-1.5 text-[11px] text-muted-foreground">
-                                  {row.late > 0 ? `متأخر ${row.late} يوم` : "مستحق اليوم"}
+                                  مستحق اليوم
                                 </div>
                               </div>
                             </div>
@@ -1816,7 +1866,7 @@ export function Dashboard() {
                         to="/cashbox"
                         icon={<Wallet className="h-4 w-4" />}
                         title="الخزائن والحسابات البنكية"
-                        sub={`الرصيد: ${money(treasuryLiquidity)}`}
+                        sub={treasuryLiquidityResult.error ?? `الرصيد: ${money(treasuryLiquidity ?? 0)}`}
                       />
                       <QuickLink
                         to="/inventory"
