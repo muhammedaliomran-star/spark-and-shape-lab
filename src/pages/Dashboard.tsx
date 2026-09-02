@@ -2,6 +2,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { usePrivacy } from "@/lib/privacy";
 import { Link } from "@/lib/router-compat";
 import { useMemo, useState, useEffect } from "react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "@/components/PageHeader";
 import { CardsSkeleton, BlockSkeleton } from "@/components/LoadingSkeletons";
@@ -416,6 +417,10 @@ export function Dashboard() {
 
   // Executive PDF export handler
   const handleExportExecutiveReport = () => {
+    if (treasuryLiquidity === null) {
+      toast.error("تعذر تصدير التقرير قبل التحقق من رصيد الخزينة");
+      return;
+    }
     const totalSalesRevenue = data.invoices
       .filter((i) => (i as any).status !== "cancelled" && isInRange(i.createdAt))
       .reduce((s, i) => s + (i.total || 0), 0);
@@ -427,7 +432,7 @@ export function Dashboard() {
     exportExecutiveReport({
       timeRangeLabel: rangeLabel,
       generatedAt: new Date(),
-      treasuryLiquidity: treasuryLiquidity ?? 0,
+      treasuryLiquidity,
       totalCustomerDebt: totalDebt,
       totalSupplierDebt,
       collectedAmount: totalCollections,
