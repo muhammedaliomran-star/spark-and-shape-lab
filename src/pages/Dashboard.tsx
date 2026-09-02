@@ -234,7 +234,7 @@ export function Dashboard() {
       const qty = item.quantity || 0;
       const cost = item.lastUnitCost || 0;
       const price = item.salePrice || 0;
-      const min = item.minStock || 5;
+      const min = item.minStock ?? 5;
 
       totalUnits += qty;
       totalCostValuation += qty * cost;
@@ -1896,7 +1896,7 @@ export function Dashboard() {
                         to="/storefront"
                         icon={<Store className="h-4 w-4 text-primary" />}
                         title="المتجر الإلكتروني"
-                        sub={storefront ? `${storefront.name} (نشط)` : "إنشاء متجر للبيع أونلاين"}
+                        sub={storefrontError ? "تعذر تحميل حالة المتجر" : storefront ? `${storefront.name} (نشط)` : "إنشاء متجر للبيع أونلاين"}
                       />
                     </div>
                   </BezelCard>
