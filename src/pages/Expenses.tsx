@@ -51,6 +51,9 @@ import {
   getRecurringExpenses,
   checkRecurringStatus,
   decodeExpenseNotes,
+  runRecurringAutoGeneration,
+  getCategoryBudgets,
+  calculateBudgetStatus,
 } from "@/lib/expenses-system";
 import { getTreasuryAccounts } from "@/lib/cashbox-system";
 import { ExpenseFormModal } from "@/components/expenses/ExpenseFormModal";
@@ -129,8 +132,43 @@ function ExpensesPage() {
   const treasuryAccounts = useMemo(() => getTreasuryAccounts(), [openForm]);
 
   // Recurring check for badge
-  const recurringList = useMemo(() => getRecurringExpenses(), [activeTab]);
+  const [recurringTick, setRecurringTick] = useState(0);
+  const recurringList = useMemo(() => getRecurringExpenses(), [activeTab, recurringTick]);
   const dueRecurringCount = recurringList.filter((r) => r.active && checkRecurringStatus(r).isDue).length;
+
+  // المولّد التلقائي للمصروفات الدورية + تنبيهات عامة (مرة يومياً عند فتح الصفحة)
+  const autoRanRef = useRef(false);
+  useEffect(() => {
+    if (autoRanRef.current || branches === undefined) return;
+    autoRanRef.current = true;
+    runRecurringAutoGeneration({
+      addExpense: (exp) => db.addExpense({ ...exp, category: exp.category as Expense["category"] }),
+      branches,
+    })
+      .then(({ generated, pending }) => {
+        if (generated.length) {
+          setRecurringTick((t) => t + 1);
+          toast.success(
+            `تم تسجيل ${generated.length} مصروف دوري تلقائياً بقيمة ${fmt(generated.reduce((s, g) => s + g.amount, 0))} ج.م`,
+            { duration: 8000 }
+          );
+        }
+        if (pending.length) {
+          toast.warning(`لديك ${pending.length} مصروف دوري مستحق بانتظار الاعتماد`, {
+            duration: 8000,
+            action: { label: "عرض", onClick: () => setActiveTab("recurring") },
+          });
+        }
+      })
+      .catch((e) => console.error(e));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branches]);
+
+  // تنبيه تجاوز الميزانيات الشهرية
+  const exceededBudgets = useMemo(
+    () => calculateBudgetStatus(getCategoryBudgets(), expenses).filter((b) => b.status !== "safe"),
+    [expenses, activeTab]
+  );
 
   // Filtered List
   const filtered = useMemo(() => {
@@ -195,7 +233,10 @@ function ExpensesPage() {
 
   const handlePrintVoucher = (e: Expense) => {
     const meta = getExpenseMeta(e);
-    const ok = printPaymentVoucherPdf(e, meta, shopSettings?.shopName || "سِجلّي لإدارة المتاجر والأقساط");
+    const ok = printPaymentVoucherPdf(e, meta, shopSettings?.shopName || "سِجلّي لإدارة المتاجر والأقساط", {
+      paper: shopSettings?.printPaper === "thermal" ? "thermal" : "a4",
+      thermalWidth: shopSettings?.thermalPaperWidth || "80mm",
+    });
     if (!ok) {
       toast.error("يرجى السماح بفتح النوافذ المنبثقة للطباعة");
     }
