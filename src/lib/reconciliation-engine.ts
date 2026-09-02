@@ -224,6 +224,10 @@ export function runComprehensiveReconciliation(
   // ==========================================
   // 2. تدقيق حسابات العملاء والأقساط (Customers)
   // ==========================================
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  const in30Days = new Date(today.getTime() + 30 * 86400000);
+
   for (const customer of data.customers) {
     const custInvoices = data.invoices.filter(
       (inv) => inv.customerId === customer.id && inv.status !== "cancelled"
@@ -231,30 +235,88 @@ export function runComprehensiveReconciliation(
     const totalInvoiced = custInvoices.reduce((sum, inv) => sum + Number(inv.total || 0), 0);
     const totalPaid = custInvoices.reduce((sum, inv) => sum + Number(inv.paid || 0), 0);
     const openingBalance = Number(customer.openingBalance || 0);
+    // إجمالي التعرض الائتماني = كل ما لم يُسدد (يشمل الأقساط المستقبلية)
     const currentDebt = Math.max(0, openingBalance + totalInvoiced - totalPaid);
 
-    // سقف الائتمان المتجاوز
+    // تفكيك المديونية: مستحق حتى اليوم / أقساط خلال 30 يوم / أقساط مستقبلية
+    let maturedDebt = Math.max(0, openingBalance);
+    let dueWithin30 = 0;
+    let futureInstallments = 0;
+    for (const inv of custInvoices) {
+      const total = Number(inv.total || 0);
+      const paid = Number(inv.paid || 0);
+      const remaining = Math.max(0, total - paid);
+      if (remaining <= 0) continue;
+      const monthly = Number(inv.monthlyInstallment || 0);
+      const down = Number(inv.downPayment || 0);
+      if (monthly <= 0 || !inv.firstDueDate) {
+        maturedDebt += remaining;
+        continue;
+      }
+      const first = new Date(inv.firstDueDate);
+      const monthsElapsed = Number.isNaN(first.getTime())
+        ? 0
+        : Math.max(0, (today.getFullYear() - first.getFullYear()) * 12 + (today.getMonth() - first.getMonth()) + (today >= first ? 1 : 0));
+      const scheduledByToday = Math.min(total, down + monthly * monthsElapsed);
+      const matured = Math.max(0, Math.min(remaining, scheduledByToday - paid));
+      const monthsIn30 = Number.isNaN(first.getTime())
+        ? 0
+        : Math.max(0, (in30Days.getFullYear() - first.getFullYear()) * 12 + (in30Days.getMonth() - first.getMonth()) + (in30Days >= first ? 1 : 0));
+      const scheduledIn30 = Math.min(total, down + monthly * monthsIn30);
+      const soon = Math.max(0, Math.min(remaining - matured, scheduledIn30 - Math.max(paid, scheduledByToday)));
+      maturedDebt += matured;
+      dueWithin30 += soon;
+      futureInstallments += Math.max(0, remaining - matured - soon);
+    }
+
     const limit = Number(customer.creditLimit || 0);
+    const exposureDetails = {
+      "المستحق حتى اليوم": `${fmt(maturedDebt)} ج.م`,
+      "أقساط خلال 30 يوم": `${fmt(dueWithin30)} ج.م`,
+      "أقساط مستقبلية": `${fmt(futureInstallments)} ج.م`,
+      "إجمالي التعرض الائتماني": `${fmt(currentDebt)} ج.م`,
+      "سقف الائتمان": `${fmt(limit)} ج.م`,
+    };
+
     if (limit > 0 && currentDebt > limit) {
       const overLimit = currentDebt - limit;
+      const maturedOver = maturedDebt > limit;
       findings.push({
         id: `cust-credit-limit-${customer.id}`,
         category: "customers",
-        severity: "warning",
-        title: `تجاوز سقف الائتمان للعميل «${customer.name}»`,
-        description: `المديونية الحالية (${fmt(currentDebt)} ج.م) تتجاوز الحد الائتماني المصرح (${fmt(limit)} ج.م) بمقدار ${fmt(overLimit)} ج.م.`,
-        impact: "خطر ائتماني يستوجب تجميد المبيعات الآجلة الإضافية.",
+        severity: maturedOver ? "critical" : "warning",
+        title: maturedOver
+          ? `تجاوز فعلي لسقف الائتمان للعميل «${customer.name}»`
+          : `تجاوز سقف الائتمان بالأقساط المستقبلية للعميل «${customer.name}»`,
+        description: maturedOver
+          ? `المستحق حتى اليوم (${fmt(maturedDebt)} ج.م) وحده يتجاوز الحد الائتماني (${fmt(limit)} ج.م). إجمالي التعرض شاملًا الأقساط القادمة ${fmt(currentDebt)} ج.م بفارق ${fmt(overLimit)} ج.م.`
+          : `المستحق حتى اليوم (${fmt(maturedDebt)} ج.م) ضمن الحد، لكن مع احتساب الأقساط القادمة (${fmt(dueWithin30 + futureInstallments)} ج.م) يبلغ التعرض الكلي ${fmt(currentDebt)} ج.م متجاوزًا الحد (${fmt(limit)} ج.م) بمقدار ${fmt(overLimit)} ج.م.`,
+        impact: maturedOver
+          ? "خطر ائتماني قائم يستوجب تجميد المبيعات الآجلة الإضافية ومتابعة التحصيل فورًا."
+          : "التعرض الكلي يتجاوز الحد؛ يُنصح بعدم فتح أقساط جديدة حتى تنخفض المديونية.",
         differenceAmount: overLimit,
         targetId: customer.id,
         targetType: "customer",
         targetLabel: customer.name,
         autoFixable: false,
         fixType: "edit_target",
-        details: {
-          "المديونية الحالية": `${fmt(currentDebt)} ج.م`,
-          "سقف الائتمان": `${fmt(limit)} ج.م`,
-          "المبلغ المتجاوز": `${fmt(overLimit)} ج.م`,
-        },
+        details: { ...exposureDetails, "المبلغ المتجاوز": `${fmt(overLimit)} ج.م` },
+      });
+    } else if (limit > 0 && currentDebt > 0 && currentDebt >= limit * 0.9) {
+      findings.push({
+        id: `cust-credit-near-limit-${customer.id}`,
+        category: "customers",
+        severity: "notice",
+        title: `اقتراب من سقف الائتمان للعميل «${customer.name}»`,
+        description: `التعرض الكلي شاملًا الأقساط المستقبلية (${fmt(currentDebt)} ج.م) يمثل ${Math.round((currentDebt / limit) * 100)}% من الحد الائتماني (${fmt(limit)} ج.م).`,
+        impact: "أي فاتورة آجلة جديدة ستتجاوز الحد الائتماني.",
+        differenceAmount: 0,
+        targetId: customer.id,
+        targetType: "customer",
+        targetLabel: customer.name,
+        autoFixable: false,
+        fixType: "edit_target",
+        details: exposureDetails,
       });
     }
 
