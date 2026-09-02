@@ -395,9 +395,12 @@ function ExpensesPage() {
             )}
           </TabsTrigger>
 
-          <TabsTrigger value="budgets" className="rounded-xl py-2 gap-2 text-xs font-bold data-[state=active]:shadow-xs">
+          <TabsTrigger value="budgets" className="rounded-xl py-2 gap-2 text-xs font-bold data-[state=active]:shadow-xs relative">
             <Target className="w-4 h-4" />
             الميزانيات وسقف الإنفاق
+            {exceededBudgets.length > 0 && (
+              <span className="w-2 h-2 rounded-full bg-danger animate-pulse absolute top-1.5 left-2" />
+            )}
           </TabsTrigger>
 
           <TabsTrigger value="analytics" className="rounded-xl py-2 gap-2 text-xs font-bold data-[state=active]:shadow-xs">
@@ -410,6 +413,38 @@ function ExpensesPage() {
             التصنيفات المخصصة
           </TabsTrigger>
         </TabsList>
+
+        {activeTab === "list" && (dueRecurringCount > 0 || exceededBudgets.length > 0) && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {dueRecurringCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setActiveTab("recurring")}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 text-xs font-bold hover:bg-amber-500/15 transition-colors"
+              >
+                <CalendarClock className="w-3.5 h-3.5" />
+                {dueRecurringCount} مصروف دوري مستحق بانتظار الاعتماد
+              </button>
+            )}
+            {exceededBudgets.map((b) => (
+              <button
+                key={`${b.category}-${b.branchId || "all"}-${b.costCenter || "all"}`}
+                type="button"
+                onClick={() => setActiveTab("budgets")}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition-colors",
+                  b.status === "exceeded"
+                    ? "border-danger/30 bg-danger/10 text-danger hover:bg-danger/15"
+                    : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/15"
+                )}
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                {b.categoryLabel}: {b.percentage}% من الميزانية
+                {b.status === "exceeded" ? " (تجاوز!)" : ""}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* ================= TAB 1: سجل المصروفات ================= */}
         <TabsContent value="list" className="space-y-6 mt-6">
