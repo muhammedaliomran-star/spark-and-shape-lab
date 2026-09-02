@@ -541,9 +541,13 @@ export function saveCategoryBudgets(list: CategoryBudget[]): void {
   writeStorage(STORAGE_KEYS.CATEGORY_BUDGETS, list);
 }
 
+export function budgetKey(b: Pick<CategoryBudget, "category" | "branchId" | "costCenter">): string {
+  return `${b.category}::${b.branchId || "all"}::${b.costCenter || "all"}`;
+}
+
 export function setCategoryBudget(budget: CategoryBudget): void {
   const list = getCategoryBudgets();
-  const idx = list.findIndex((b) => b.category === budget.category);
+  const idx = list.findIndex((b) => budgetKey(b) === budgetKey(budget));
   if (idx >= 0) {
     list[idx] = budget;
   } else {
@@ -559,6 +563,8 @@ export function calculateBudgetStatus(
 ): Array<{
   category: string;
   categoryLabel: string;
+  branchId?: string;
+  costCenter?: string;
   limit: number;
   spent: number;
   remaining: number;
@@ -568,14 +574,18 @@ export function calculateBudgetStatus(
   const currentMonth = targetMonthStr || new Date().toISOString().slice(0, 7);
   const monthExpenses = expenses.filter((e) => e.expenseDate && e.expenseDate.startsWith(currentMonth));
 
-  // Map category spent
-  const spentMap: Record<string, number> = {};
-  monthExpenses.forEach((e) => {
-    spentMap[e.category] = (spentMap[e.category] || 0) + (e.amount || 0);
-  });
+  // Pre-resolve meta once per expense (branch / cost center scoping)
+  const resolved = monthExpenses.map((e) => ({ e, meta: getExpenseMeta(e) }));
 
   return budgets.map((b) => {
-    const spent = spentMap[b.category] || 0;
+    const spent = resolved
+      .filter(({ e, meta }) => {
+        if (e.category !== b.category) return false;
+        if (b.branchId && meta.branchId !== b.branchId) return false;
+        if (b.costCenter && meta.costCenter !== b.costCenter) return false;
+        return true;
+      })
+      .reduce((s, { e }) => s + (e.amount || 0), 0);
     const remaining = Math.max(0, b.monthlyLimit - spent);
     const pct = b.monthlyLimit > 0 ? (spent / b.monthlyLimit) * 100 : 0;
     
@@ -589,6 +599,8 @@ export function calculateBudgetStatus(
     return {
       category: b.category,
       categoryLabel: getCategoryInfo(b.category).label,
+      branchId: b.branchId,
+      costCenter: b.costCenter,
       limit: b.monthlyLimit,
       spent: Math.round(spent * 100) / 100,
       remaining: Math.round(remaining * 100) / 100,
@@ -596,6 +608,32 @@ export function calculateBudgetStatus(
       status,
     };
   });
+}
+
+/** تجميع المصروفات حسب الفرع أو مركز التكلفة لفترة محددة (للتقارير) */
+export function summarizeByDimension(
+  expenses: Expense[],
+  dimension: "branch" | "costCenter",
+  monthStr?: string
+): Array<{ key: string; label: string; total: number; count: number }> {
+  const month = monthStr || new Date().toISOString().slice(0, 7);
+  const map: Record<string, { label: string; total: number; count: number }> = {};
+  expenses
+    .filter((e) => e.expenseDate?.startsWith(month))
+    .forEach((e) => {
+      const meta = getExpenseMeta(e);
+      const key = dimension === "branch" ? meta.branchId || "all" : meta.costCenter || "none";
+      const label =
+        dimension === "branch"
+          ? meta.branchName || "الفرع الرئيسي / عام"
+          : COST_CENTERS.find((c) => c.value === meta.costCenter)?.label || "بدون مركز تكلفة";
+      if (!map[key]) map[key] = { label, total: 0, count: 0 };
+      map[key].total += e.amount || 0;
+      map[key].count += 1;
+    });
+  return Object.entries(map)
+    .map(([key, v]) => ({ key, ...v, total: Math.round(v.total * 100) / 100 }))
+    .sort((a, b) => b.total - a.total);
 }
 
 // ==================== 7. التفقيط العربي للأرقام والمبالغ (Tafqeet Engine) ====================
