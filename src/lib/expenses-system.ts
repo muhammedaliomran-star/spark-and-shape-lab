@@ -783,12 +783,17 @@ export function printPaymentVoucherPdf(
         </tr>
         ${resolvedMeta.branchName ? `
         <tr style="border-bottom: 1px solid #f1f5f9;">
-          <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">الفرع / مركز التكلفة:</td>
+          <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">الفرع:</td>
           <td style="padding: 10px 8px; color: #0f172a; font-weight: 600;">🏢 ${esc(resolvedMeta.branchName)}</td>
+        </tr>` : ""}
+        ${costCenterLabel ? `
+        <tr style="border-bottom: 1px solid #f1f5f9;">
+          <td style="padding: 10px 8px; color: #64748b; font-weight: 600;">مركز التكلفة:</td>
+          <td style="padding: 10px 8px; color: #0f172a; font-weight: 600;">${esc(costCenterLabel)}</td>
         </tr>` : ""}
         <tr>
           <td style="padding: 10px 8px; color: #64748b; font-weight: 600; vertical-align: top;">وذلك مقابل (البيان):</td>
-          <td style="padding: 10px 8px; color: #334155; font-size: 12.5px; line-height: 1.6;">${esc(expense.notes || "مصروف عام وتشغيلي.")}</td>
+          <td style="padding: 10px 8px; color: #334155; font-size: 12.5px; line-height: 1.6;">${esc(cleanStatement)}</td>
         </tr>
       </tbody>
     </table>
