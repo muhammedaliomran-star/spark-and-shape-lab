@@ -288,6 +288,11 @@ export function RecurringExpensesTab() {
                       >
                         {status.badgeText}
                       </Badge>
+                      {item.autoApprove && (
+                        <Badge variant="outline" className="mt-1 mr-1 text-[10px] px-2 py-0.5 bg-primary/10 text-primary border-primary/30">
+                          <Sparkles className="w-2.5 h-2.5 ml-0.5" /> تلقائي
+                        </Badge>
+                      )}
                     </div>
                   </div>
 
